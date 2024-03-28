@@ -5,7 +5,6 @@ var viewer = new BpmnViewer({
   container: '#canvas'
 });
 
-
 viewer.importXML(pizzaDiagram).then(function(result) {
 
   const { warnings } = result;

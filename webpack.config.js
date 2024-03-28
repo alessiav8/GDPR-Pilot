@@ -1,10 +1,20 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'development',
+  entry: './src/app.js',
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'public'),
+  },
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'public'),
+      publicPath: '/',
+    },
+    port: 8080,
+    open: true,
+    hot: true,
+    historyApiFallback: true,
   },
   module: {
     rules: [
@@ -14,4 +24,5 @@ module.exports = {
       },
     ],
   },
+  mode: 'development',
 };
