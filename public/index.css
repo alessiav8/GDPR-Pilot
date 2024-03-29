@@ -26,7 +26,7 @@
     cursor: pointer;
     padding: 8px 12px;
     border-radius: 4px;
-    background-color: #faf5f5;
+    background-color: #f0f0f0;
     text-align: center;
     text-decoration: none;
     margin-top: 0.9vh;
@@ -39,4 +39,15 @@
     vertical-align: middle;
   }
 
+  .label_button {
+    font-size: 1.5vh;
+    display: none;
+    position: absolute;
+    transform: translateX(75%) translateY(-300%); 
+
+  }
+  
+  #export_button:hover + #label_export_button {
+    display: block;
+  }
   
