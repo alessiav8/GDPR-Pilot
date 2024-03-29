@@ -1,4 +1,6 @@
 import BpmnModeler from 'bpmn-js';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import diagram from '../resources/diagram.bpmn';
 
@@ -7,6 +9,8 @@ var viewer = new BpmnJS({
 });
 
 const export_button=document.getElementById('export_button');
+const import_button=document.getElementById('import_button');
+
 
 try {
   viewer.importXML(diagram);
@@ -39,6 +43,15 @@ export_button.addEventListener('mouseover', () =>{
 export_button.addEventListener('mouseout', () =>{
   document.getElementById("label_export_button").innerHtml = "";
 });
+
+import_button.addEventListener('mouseover', () =>{
+  document.getElementById("label_import_button").innerHtml = "Import";
+});
+
+import_button.addEventListener('mouseout', () =>{
+  document.getElementById("label_import_button").innerHtml = "";
+});
+
 
 function download(content, filename, contentType) {
   var a = document.createElement('a');

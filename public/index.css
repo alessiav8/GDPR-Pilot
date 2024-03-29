@@ -1,36 +1,43 @@
 #canvas {
-    height: 87vh;
+    height: 85vh;
     width: 97vw;
     background-color: #f0f0f0;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: 3vh;
-    margin-left: 2vh;
+    margin-left: 4vh;
+    margin-right: 3vh;
     
   }
+.PrimaryContainer{
+  width: 100%;
+  height: 100%;
+}
 
 #status_row{
     height: 1vh;
     font-size: 2vh;
     text-align: left;
     margin-left: 2vh;
-    margin-top: 1vh;
+    margin-top: 2vh;
+    margin-bottom: 0.5vh;
     width: auto;
-    
-
 }
 
 #settings_area {
-    display: inline-block;
     cursor: pointer;
     padding: 8px 12px;
     border-radius: 4px;
     background-color: #f0f0f0;
     text-align: center;
     text-decoration: none;
-    margin-top: 0.9vh;
-    margin-left: 20vh;
+    margin-top: 1vh;
+    margin-left: 2.8vh;
+    margin-right: 2.8vh;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
+    gap: 10px;
   }
   
   .button-icon {
@@ -43,11 +50,14 @@
     font-size: 1.5vh;
     display: none;
     position: absolute;
-    transform: translateX(75%) translateY(-300%); 
+    transform: translateX(75%) translateY(-200%); 
 
   }
   
-  #export_button:hover + #label_export_button {
+  #export_button:hover + .label_button {
     display: block;
   }
   
+  #import_button:hover + .label_button {
+    display: block;
+  }
