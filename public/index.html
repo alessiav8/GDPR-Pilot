@@ -4,9 +4,45 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My BPMN App</title>
+    <!-- Stili richiesti per il viewer -->
+  <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.0.2/dist/assets/bpmn-js.css" />
+
+  <!-- Script del viewer -->
+  <script src="https://unpkg.com/bpmn-js@17.0.2/dist/bpmn-viewer.development.js"></script>
+
+
+    <!-- Stili richiesti per il modeler -->
+  <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.0.2/dist/assets/diagram-js.css" />
+  <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.0.2/dist/assets/bpmn-js.css" />
+  <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.0.2/dist/assets/bpmn-font/css/bpmn.css" />
+
+  <!-- Script del modeler -->
+  <script src="https://unpkg.com/bpmn-js@17.0.2/dist/bpmn-modeler.development.js"></script>
+
+  <link rel="stylesheet" href="index.css">
+
+
+
 </head>
 <body>
-  <div id="canvas"></div>
+  <div class="container">
+    <div class="row" id="status_row">
+      Status row
+    </div>
+  <div class="row">
+    <div id="canvas"></div>
+  </div>
+  <div class="row" id="settings_area">
+    <div class="col">
+      <div id="export-button" >
+        <svg class="button-icon" fill="#000000" width="60px" height="60px" viewBox="0 0 24 24" id="download-double-arrow" data-name="Line Color" xmlns="http://www.w3.org/2000/svg" class="icon line-color"><polyline id="secondary" points="15 14 12 17 9 14" style="fill: none; stroke: rgb(44, 169, 18); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"></polyline><polyline id="secondary-2" data-name="secondary" points="15 9 12 12 9 9" style="fill: none; stroke: rgb(44, 169, 18); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"></polyline><line id="secondary-3" data-name="secondary" x1="12" y1="12" x2="12" y2="3" style="fill: none; stroke: rgb(44, 169, 18); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;"></line><path id="primary" d="M19,10h1a1,1,0,0,1,1,1v9a1,1,0,0,1-1,1H4a1,1,0,0,1-1-1V11a1,1,0,0,1,1-1H5" style="fill: none; stroke: rgb(0, 0, 0); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2;">
+        </path>
+      </svg>
+    </div>
+    </div>
+    <div>
+    </div>
+  </div></div>
   <script src="bundle.js"></script>
 </body>
 </html>

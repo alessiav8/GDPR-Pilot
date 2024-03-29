@@ -1,0 +1,42 @@
+#canvas {
+    height: 87vh;
+    width: 97vw;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 3vh;
+    margin-left: 2vh;
+    
+  }
+
+#status_row{
+    height: 1vh;
+    font-size: 2vh;
+    text-align: left;
+    margin-left: 2vh;
+    margin-top: 1vh;
+    width: auto;
+    
+
+}
+
+#settings_area {
+    display: inline-block;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: #faf5f5;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 0.9vh;
+    margin-left: 20vh;
+  }
+  
+  .button-icon {
+    width: 4vh;
+    height: 4vh;
+    vertical-align: middle;
+  }
+
+  
