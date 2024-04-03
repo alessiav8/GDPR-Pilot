@@ -1,4 +1,5 @@
 import BpmnModeler from 'bpmn-js';
+import BpmnViewer from 'bpmn-js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
@@ -8,18 +9,18 @@ var viewer = new BpmnJS({
   container: '#canvas'
 });
 
-const export_button=document.getElementById('export_button');
-const import_button=document.getElementById('import_button');
-
-
 try {
   viewer.importXML(diagram);
-  console.log('success!');
   viewer.get('canvas').zoom('fit-viewport');
 } catch (err) {
   console.error('something went wrong:', err);
 }
 
+
+const export_button=document.getElementById('export_button');
+const import_button=document.getElementById('import_button');
+
+//export handler 
 
 export_button.addEventListener('click', function () {
 
@@ -107,14 +108,6 @@ export_button.addEventListener('mouseout', () =>{
   document.getElementById("label_export_button").innerHtml = "";
 });
 
-import_button.addEventListener('mouseover', () =>{
-  document.getElementById("label_import_button").innerHtml = "Import";
-});
-
-import_button.addEventListener('mouseout', () =>{
-  document.getElementById("label_import_button").innerHtml = "";
-});
-
 
 function download(content, filename, contentType) {
   var a = document.createElement('a');
@@ -124,6 +117,35 @@ function download(content, filename, contentType) {
   a.click();
 }
 
+//import handler
 
+import_button.addEventListener('mouseover', () =>{
+  document.getElementById("label_import_button").innerHtml = "Import";
+});
 
+import_button.addEventListener('mouseout', () =>{
+  document.getElementById("label_import_button").innerHtml = "";
+});
 
+import_button.addEventListener('click', () =>{
+var input = document.createElement('input');
+input.type = 'file';
+
+input.addEventListener('change', function(event) {var diagram_imported = event.target.files[0];
+  console.log(diagram_imported);
+  if (diagram_imported) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+          const fileXML = event.target.result;
+          try{
+            viewer.importXML(fileXML);
+          }catch(e){
+            console.error("Error in importing the diagram",e)
+          }
+      };
+      reader.readAsText(diagram_imported);
+  }
+})
+
+input.click();
+});

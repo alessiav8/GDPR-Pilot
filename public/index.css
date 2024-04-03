@@ -58,7 +58,7 @@
     font-size: 1.5vh;
     display: none;
     position: absolute;
-    transform: translateX(0%) translateY(-200%); 
+    transform: translateY(-200%); 
 
   }
   
@@ -118,8 +118,8 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Sfondo grigio con trasparenza */
-    backdrop-filter: blur(5px); /* Effetto di sfocatura */
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px); 
     justify-content: center;
     align-items: center;
     z-index: 999;
