@@ -1,15 +1,19 @@
 #canvas {
     height: 85vh;
-    width: 97vw;
+    width: 98.2%;
     background-color: #f0f0f0;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 2vh;
-    margin-left: 4vh;
+    margin-top: 3vh;
+    margin-left: 3vh;
     margin-right: 3vh;
     z-index: 0;
   }
+
+#canvas_raw{
+  display: flex;
+}
 .PrimaryContainer{
   position: relative;
   width: 100%;
@@ -40,7 +44,7 @@
     background-color: #f0f0f0;
     text-align: center;
     text-decoration: none;
-    margin-top: 1vh;
+    margin-top: 2vh;
     margin-left: 2.8vh;
     margin-right: 2.8vh;
     display: grid;
@@ -131,4 +135,16 @@
     right: 10px;
     cursor: pointer;
 
+  }
+
+  .main-column {
+    width: 100%; 
+  }
+  
+  .sidebar-column {
+    background-color:#f0f0f0;
+  }
+
+  .space-between{
+    width: 0%;
   }

@@ -16,12 +16,17 @@ try {
   console.error('something went wrong:', err);
 }
 
-
+//statements
 const export_button=document.getElementById('export_button');
 const import_button=document.getElementById('import_button');
+const gdpr_button=document.getElementById('gdpr_compliant_button');
+const canvas_raw=document.getElementById('canvas_raw');
+const canvas= document.getElementById('canvas');
+const canvas_col=document.getElementById('canvas_col');
+const survey_col=document.getElementById('survey_col');
+//end statements
 
 //export handler 
-
 export_button.addEventListener('click', function () {
 
   var container = document.getElementById('canvas');
@@ -86,6 +91,7 @@ export_button.addEventListener('click', function () {
 
 });
 
+//part where i actually generate the xml file
 function exportDiagram(title){
   viewer.saveXML({ format: true, preamble: false })
   .then(({ xml, error }) => {
@@ -100,15 +106,6 @@ function exportDiagram(title){
   });
 }
 
-export_button.addEventListener('mouseover', () =>{
-  document.getElementById("label_export_button").innerHtml = "Export";
-});
-
-export_button.addEventListener('mouseout', () =>{
-  document.getElementById("label_export_button").innerHtml = "";
-});
-
-
 function download(content, filename, contentType) {
   var a = document.createElement('a');
   var file = new Blob([content], { type: contentType });
@@ -116,9 +113,21 @@ function download(content, filename, contentType) {
   a.download = filename;
   a.click();
 }
+//
+
+//in order to make visible and invisible the label over the export button
+export_button.addEventListener('mouseover', () =>{
+  document.getElementById("label_export_button").innerHtml = "Export";
+});
+
+export_button.addEventListener('mouseout', () =>{
+  document.getElementById("label_export_button").innerHtml = "";
+});
+//
+//end export handler
+
 
 //import handler
-
 import_button.addEventListener('mouseover', () =>{
   document.getElementById("label_import_button").innerHtml = "Import";
 });
@@ -149,3 +158,54 @@ input.addEventListener('change', function(event) {var diagram_imported = event.t
 
 input.click();
 });
+//end import handler 
+
+
+// gdpr compliance button
+gdpr_button.addEventListener('click', () =>{
+
+  const mainColumn = document.querySelector('.main-column');
+  const sidebarColumn = document.querySelector('.sidebar-column');
+  const canvasRaw = document.querySelector('#canvas-raw');
+  const spaceBetween=document.querySelector('.space-between');
+
+  if(!document.getElementById("survey_area")){
+
+    // Aggiorna le larghezze delle colonne
+    mainColumn.style.width = '74.8%';
+    spaceBetween.style.width='0.1%'
+    sidebarColumn.style.width = '22.8%';
+
+    sidebarColumn.style.height = canvas.clientHeight + 'px';
+    sidebarColumn.style.marginTop = '3vh';
+
+    //start survey area handler
+    const survey_area = document.createElement('div');
+    survey_area.id="survey_area";
+    survey_col.appendChild(survey_area);
+
+    const close_survey = document.createElement('span');
+    close_survey.classList.add('close-btn');
+    close_survey.textContent = 'X';
+    close_survey.style.marginTop="2.5vh";
+    close_survey.style.marginRight="3.5vh"
+
+    close_survey.addEventListener('click', () =>{
+      survey_col.removeChild(document.getElementById("survey_area"));
+      mainColumn.style.width = '100%';
+      spaceBetween.style.width='0%'
+      sidebarColumn.style.width = '0%';
+      sidebarColumn.style.height = '0%';
+      sidebarColumn.style.marginTop = '0vh';
+    });
+
+    survey_area.appendChild(close_survey);
+
+
+    //end survey area 
+
+  }
+
+});
+
+//
