@@ -4,6 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import diagram from '../resources/diagram.bpmn';
+import {yesdropDownA, nodropDownA} from './questions.js';
+import {createDropDown,removeUlFromDropDown,closeSideBarSurvey} from './support.js';
 
 var viewer = new BpmnJS({
   container: '#canvas'
@@ -24,6 +26,12 @@ const canvas_raw=document.getElementById('canvas_raw');
 const canvas= document.getElementById('canvas');
 const canvas_col=document.getElementById('canvas_col');
 const survey_col=document.getElementById('survey_col');
+
+//gdpr questions
+const YA=document.getElementById('yes_dropDownA');
+const NA=document.getElementById('no_dropDownA');
+//end gdpr questions
+
 //end statements
 
 //export handler 
@@ -157,6 +165,12 @@ input.addEventListener('change', function(event) {var diagram_imported = event.t
 })
 
 input.click();
+try{
+  closeSideBarSurvey();
+}
+catch(e){
+  console.error("Error",e);
+}
 });
 //end import handler 
 
@@ -173,11 +187,12 @@ gdpr_button.addEventListener('click', () =>{
 
     // Aggiorna le larghezze delle colonne
     mainColumn.style.width = '74.8%';
-    spaceBetween.style.width='0.1%'
-    sidebarColumn.style.width = '22.8%';
+    sidebarColumn.style.width = '23.8%';
+    sidebarColumn.style.marginLeft="0.5%";
 
     sidebarColumn.style.height = canvas.clientHeight + 'px';
-    sidebarColumn.style.marginTop = '3vh';
+    sidebarColumn.style.marginTop = '2vh';
+    sidebarColumn.style.borderRadius="4px"
 
     //start survey area handler
     const survey_area = document.createElement('div');
@@ -190,22 +205,60 @@ gdpr_button.addEventListener('click', () =>{
     close_survey.style.marginTop="2.5vh";
     close_survey.style.marginRight="3.5vh"
 
-    close_survey.addEventListener('click', () =>{
-      survey_col.removeChild(document.getElementById("survey_area"));
-      mainColumn.style.width = '100%';
-      spaceBetween.style.width='0%'
-      sidebarColumn.style.width = '0%';
-      sidebarColumn.style.height = '0%';
-      sidebarColumn.style.marginTop = '0vh';
+    close_survey.addEventListener('click', () => {
+     closeSideBarSurvey();
     });
 
     survey_area.appendChild(close_survey);
 
+    const title = "GDPR compliance";
+    const textNode = document.createTextNode(title);
 
+    const divTitle= document.createElement("div");
+    divTitle.className = "container-centered";
+    divTitle.style.marginTop="4vh";
+    divTitle.style.marginBottom="2vh";
+    divTitle.style.fontWeight = 'bold';
+    divTitle.style.fontSize = '2vh';
+
+    divTitle.appendChild(textNode);
+    survey_area.appendChild(divTitle);
+
+    const areaDropDowns= document.createElement("div");
+    areaDropDowns.className = "container";
+    areaDropDowns.id="areaDropDowns";
+    survey_area.appendChild(areaDropDowns)
+
+    const dropDownA = createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
     //end survey area 
 
   }
 
 });
 
+
+//end gdpr handler
+
+//function to get the diagram
+function getDiagram() {
+  return new Promise((resolve, reject) => {
+      viewer.saveXML({ format: true, preamble: false })
+          .then(({ xml, error }) => {
+              if (error) {
+                  console.log(error);
+                  reject(error); 
+              } else {
+                  resolve(xml); 
+              }
+          })
+          .catch(error => {
+              console.log(error);
+              reject(error); 
+          });
+  });
+}
 //
+
+
+
+export {getDiagram}
