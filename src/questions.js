@@ -1,9 +1,10 @@
 //-----------------------------QUESTIONS-----------------------------------
 
-import { createDropDown, removeUlFromDropDown,createUlandSelectActivities } from "./support.js";
+import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMetaInformation } from "./support.js";
+import { getDiagram,pushDiagram } from "./app.js";
 
 //handle click yes for question A
-function yesdropDownA() {
+async function yesdropDownA() {
   removeUlFromDropDown("#dropDownA");
   const dropdownB = createDropDown(
     "dropDownB",
@@ -11,6 +12,15 @@ function yesdropDownA() {
     "Consent",
     "Did you ask for consent before?"
   );
+    const meta= {questionA: "completed"};
+    addMetaInformation(meta)
+    .then((updatedXmlString) => {
+        pushDiagram(updatedXmlString);
+    })
+    .catch((error) => {
+        console.error("Errore durante l'aggiunta delle informazioni meta:", error);
+    });    
+  
 }
 
 //end handle click yes for question A
@@ -38,8 +48,17 @@ function yesdropDownB() {
 //
 
 //handle click no for question B
-function nodropDownB() {
-    createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time");
+async function nodropDownB() {
+    const activities = createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time");
+    //do something to add the path 
+    const meta={questionB: "completed"}
+    addMetaInformation(meta)
+        .then((updatedXmlString) => {
+            pushDiagram(updatedXmlString);
+        })
+        .catch((error) => {
+            console.error("Errore durante l'aggiunta delle informazioni meta:", error);
+        });  
 }
 //
 

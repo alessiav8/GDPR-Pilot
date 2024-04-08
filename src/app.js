@@ -1,22 +1,119 @@
-import BpmnModeler from 'bpmn-js';
-import BpmnViewer from 'bpmn-js';
+import BpmnJS from 'bpmn-js/dist/bpmn-modeler.production.min.js';
+import 'bpmn-js/dist/assets/diagram-js.css';
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css';
+import BpmnModdle from 'bpmn-moddle';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import diagram from '../resources/diagram.bpmn';
-import {yesdropDownA, nodropDownA} from './questions.js';
-import {createDropDown,removeUlFromDropDown,closeSideBarSurvey} from './support.js';
+import { yesdropDownA, nodropDownA } from './questions.js';
+import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse } from './support.js';
+var MetaPackage = require('./metaInfo.json');
+
+var moddle = new BpmnModdle();
 
 var viewer = new BpmnJS({
-  container: '#canvas'
+    container: '#canvas',
+    moddleExtensions: {
+        meta: MetaPackage
+    }
 });
 
-try {
-  viewer.importXML(diagram);
-  viewer.get('canvas').zoom('fit-viewport');
-} catch (err) {
-  console.error('something went wrong:', err);
+function getExtension(element, type) {
+  if (!element.extensionElements) {
+    return null;
+  }
+
+  return element.extensionElements.filter(function(e) {
+    return e.$instanceOf(type);
+  })[0];
 }
+
+async function Starter() {
+    try {
+        viewer.importXML(diagram)
+            .then(async () => {
+                const definitions = viewer.getDefinitions();
+                viewer.get('canvas').zoom('fit-viewport');
+
+                const Mod= viewer._moddle;
+                const elementFactory = viewer.get('elementFactory');
+
+                const processElements = getProcessElement();
+                if (processElements.length > 0) {
+                    var firstProcessElement = processElements[0];
+                    var processBusinessObject = firstProcessElement.businessObject;
+                    
+                    var processExtension = getExtension(processBusinessObject, 'meta:ModelMetaData');
+                    if (processExtension) {
+                        console.log("Dati dell'estensione del processo:", processExtension);
+                    } else {
+                        const meta = Mod.create('meta:ModelMetaData');
+                        console.log("meta",meta)
+                        processBusinessObject.extensionElements = Mod.create('bpmn:ExtensionElements');
+                        processBusinessObject.extensionElements.get('values').push(meta);
+
+                        meta.questionA="Yes"
+                        const saved = await viewer.saveXML({ format: true });
+                          if (saved.error) {
+                              console.error(saved.error);
+                          } else {
+                              console.log("XML generato:", saved.xml);
+                              console.log('Elemento personalizzato aggiunto al diagramma con successo!');
+                          }
+                        console.log("Nessuna estensione trovata per il processo.");
+                    }
+                } else {
+                    console.log("Nessun processo trovato nel diagramma.");
+                }
+
+                
+
+
+                /*const saved = await viewer.saveXML({ format: true });
+                if (saved.error) {
+                    console.error(saved.error);
+                } else {
+                    console.log("XML generato:", saved.xml);
+                    console.log('Elemento personalizzato aggiunto al diagramma con successo!');
+                }*/
+                console.log('Elemento personalizzato aggiunto al diagramma con successo!');
+            })
+            .catch(error => {
+                console.error('Errore nell\'importazione dell\'XML:', error);
+            });
+    } catch (err) {
+        console.error('Si è verificato un errore:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
+    await Starter();
+});
+
+//Function to check if already have the gdpr marks or add it
+function checkMetaInfo(){
+  
+}
+
+//
+
+//TODO: Può esserci più di un processo? 
+
+//Function to get the element process without knowing the ID
+function getProcessElement(){
+  var allElements = viewer.get('elementRegistry').getAll();
+
+  var processElements = allElements.filter(function(element) {
+      return element.type === 'bpmn:Process';
+  });
+  return processElements;
+}
+//end function to get the element process
+
+
 
 //statements
 const export_button=document.getElementById('export_button');
@@ -36,6 +133,12 @@ const NA=document.getElementById('no_dropDownA');
 
 //export handler 
 export_button.addEventListener('click', function () {
+  try{
+    closeSideBarSurvey();
+  }
+  catch(e){
+    console.error("Error",e);
+  }
 
   var container = document.getElementById('canvas');
 
@@ -98,14 +201,15 @@ export_button.addEventListener('click', function () {
   });
 
 });
-
 //part where i actually generate the xml file
 function exportDiagram(title){
-  viewer.saveXML({ format: true, preamble: false })
+
+  viewer.saveXML({ format: true })
   .then(({ xml, error }) => {
       if (error) {
           console.log(error);
       } else {
+          console.log("exportDiagram",xml);
           download(xml, title + '.bpmn', 'text/xml');
       }
   })
@@ -148,14 +252,15 @@ import_button.addEventListener('click', () =>{
 var input = document.createElement('input');
 input.type = 'file';
 
-input.addEventListener('change', function(event) {var diagram_imported = event.target.files[0];
-  console.log(diagram_imported);
+input.addEventListener('change', function(event) {
+  var diagram_imported = event.target.files[0];
   if (diagram_imported) {
       const reader = new FileReader();
       reader.onload = function(event) {
           const fileXML = event.target.result;
           try{
             viewer.importXML(fileXML);
+            window.alert("Diagram imported successfully");
           }catch(e){
             console.error("Error in importing the diagram",e)
           }
@@ -182,6 +287,9 @@ gdpr_button.addEventListener('click', () =>{
   const sidebarColumn = document.querySelector('.sidebar-column');
   const canvasRaw = document.querySelector('#canvas-raw');
   const spaceBetween=document.querySelector('.space-between');
+
+  const questions = getMetaInformationResponse();
+  console.log("questions",questions);
 
   if(!document.getElementById("survey_area")){
 
@@ -259,6 +367,23 @@ function getDiagram() {
 }
 //
 
+//function to push the diagram
+function pushDiagram(diagram) {
+  try{
+    console.log("pushDiagram",diagram);
+    console.log("def",viewer.getDefinitions());
+    console.log("def",viewer.setDefinitions("meta","metaInfo"))
+    console.log(viewer.getDefinitions());
+    viewer.importXML(diagram);
+    viewer.get('canvas').zoom('fit-viewport');
+
+  }
+  catch(error){
+    console.error("Error in importing xml",error);
+  }
+}
+//
 
 
-export {getDiagram}
+
+export {getDiagram,pushDiagram}

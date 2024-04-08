@@ -1,0 +1,67 @@
+{
+    "name": "MetaInfoExtension",
+    "uri": "http://example.com/schema/bpmn/custom",
+    "prefix": "meta",
+    "xml": {
+      "tagAlias": "lowerCase"
+    },
+    "types": [
+      {
+        "name": "ModelMetaData",
+        "superClass": [ "Element" ],
+        "properties": [
+          {
+            "name": "questionA",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionB",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionC",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionD",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionE",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionF",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionG",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionH",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionI",
+            "isAttr": true,
+            "type": "String"
+          },
+          {
+            "name": "questionL",
+            "isAttr": true,
+            "type": "String"
+          }
+        ]
+      }
+    ]
+  }
+  
