@@ -8,6 +8,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import diagram from '../resources/diagram.bpmn';
+import diagram_two_activities from '../resources/diagram_two_activities.bpmn';
+
 import { yesdropDownA, nodropDownA } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse } from './support.js';
 var MetaPackage = require('./metaInfo.json');
@@ -21,84 +23,119 @@ var viewer = new BpmnJS({
     }
 });
 
+//statements
+const export_button=document.getElementById('export_button');
+const import_button=document.getElementById('import_button');
+const gdpr_button=document.getElementById('gdpr_compliant_button');
+const canvas_raw=document.getElementById('canvas_raw');
+const canvas= document.getElementById('canvas');
+const canvas_col=document.getElementById('canvas_col');
+const survey_col=document.getElementById('survey_col');
+var elementFactory;
+var modeling;
+var elementRegistry;
+
+//gdpr questions
+const YA=document.getElementById('yes_dropDownA');
+const NA=document.getElementById('no_dropDownA');
+//end gdpr questions
+
+//
+
+//questa funzione mi ritorna true se esiste un extended element che ha un tag meta al suo interno
 function getExtension(element, type) {
   if (!element.extensionElements) {
     return null;
   }
-
-  return element.extensionElements.filter(function(e) {
-    return e.$instanceOf(type);
-  })[0];
+  if (Array.isArray(element.extensionElements)) {
+    return element.extensionElements.some(function(e) {
+      return e.values.some(function(meta) {
+        return meta.$instanceOf(type);
+      });
+    });
+  } else {
+    return element.extensionElements.values.some(function(meta) {
+      return meta.$instanceOf(type);
+    });
+  }
 }
-
-async function Starter() {
-    try {
-        viewer.importXML(diagram)
-            .then(async () => {
-                const definitions = viewer.getDefinitions();
-                viewer.get('canvas').zoom('fit-viewport');
-
-                const Mod= viewer._moddle;
-                const elementFactory = viewer.get('elementFactory');
-
-                const processElements = getProcessElement();
-                if (processElements.length > 0) {
-                    var firstProcessElement = processElements[0];
-                    var processBusinessObject = firstProcessElement.businessObject;
-                    
-                    var processExtension = getExtension(processBusinessObject, 'meta:ModelMetaData');
-                    if (processExtension) {
-                        console.log("Dati dell'estensione del processo:", processExtension);
-                    } else {
-                        const meta = Mod.create('meta:ModelMetaData');
-                        console.log("meta",meta)
-                        processBusinessObject.extensionElements = Mod.create('bpmn:ExtensionElements');
-                        processBusinessObject.extensionElements.get('values').push(meta);
-
-                        meta.questionA="Yes"
-                        const saved = await viewer.saveXML({ format: true });
-                          if (saved.error) {
-                              console.error(saved.error);
-                          } else {
-                              console.log("XML generato:", saved.xml);
-                              console.log('Elemento personalizzato aggiunto al diagramma con successo!');
-                          }
-                        console.log("Nessuna estensione trovata per il processo.");
-                    }
-                } else {
-                    console.log("Nessun processo trovato nel diagramma.");
-                }
-
-                
+//
 
 
-                /*const saved = await viewer.saveXML({ format: true });
-                if (saved.error) {
-                    console.error(saved.error);
-                } else {
-                    console.log("XML generato:", saved.xml);
-                    console.log('Elemento personalizzato aggiunto al diagramma con successo!');
-                }*/
-                console.log('Elemento personalizzato aggiunto al diagramma con successo!');
-            })
-            .catch(error => {
-                console.error('Errore nell\'importazione dell\'XML:', error);
-            });
-    } catch (err) {
-        console.error('Si è verificato un errore:', err);
-    }
-}
 
+
+//function that loads the first diagram displayed at every load
 document.addEventListener('DOMContentLoaded', async function () {
-    await Starter();
+    await loadDiagram(diagram_two_activities);
 });
+// end function to load the first diagram 
+
+//function to load the diagram through importXML
+async function loadDiagram(diagram){
+    try {
+      viewer.importXML(diagram)
+          .then(async () => {
+              viewer.get('canvas').zoom('fit-viewport');
+              elementFactory = viewer.get('elementFactory');
+              modeling = viewer.get('modeling');
+              elementRegistry=viewer.get('elementRegistry');
+              changeID();
+              checkMetaInfo();
+              checkUniqueID("StartEvent_1");
+
+          })
+          .catch(error => {
+              console.error('Errore nell\'importazione dell\'XML:', error);
+          });
+  } catch (err) {
+      console.error('Si è verificato un errore:', err);
+  }
+}
+//end function to load the diagram 
+
+//function to change the ID for the mainProcess
+function changeID(){
+  const processElement = elementRegistry.filter(element => {
+    return element.type === 'bpmn:Process' && element.parent==null ; 
+  }).pop();
+  console.log(processElement)
+  if (processElement) {
+    const newProcessId = 'Main_Process';
+    modeling.updateProperties(processElement, {
+      id: newProcessId
+    });
+  } else {
+    console.error('Il processo con l\'ID specificato non è stato trovato.');
+  }
+}
+//
 
 //Function to check if already have the gdpr marks or add it
 function checkMetaInfo(){
-  
+  const Mod = viewer._moddle;
+  const processElements = getProcessElement();
+  if (processElements.length > 0) {
+      var firstProcessElement = processElements[0];
+      var processBusinessObject = firstProcessElement.businessObject;
+      var processExtension = getExtension(processBusinessObject, 'meta:ModelMetaData');
+      //the function returns the business object
+      if (processExtension) {
+          console.log("already have an extention",processExtension);
+          return processBusinessObject.extensionElements;
+      } else {
+          const meta = Mod.create('meta:ModelMetaData');
+          processBusinessObject.extensionElements = Mod.create('bpmn:ExtensionElements');
+          processBusinessObject.extensionElements.get('values').push(meta);
+          meta.gdpr_compliant = false;
+          console.log("not have an extention",processBusinessObject.extensionElements);
+          return processBusinessObject.extensionElements;
+      }
+    } else {
+          console.log("Nessun processo trovato nel diagramma.");
+    }
 }
+//end checkMetaInfo 
 
-//
 
 //TODO: Può esserci più di un processo? 
 
@@ -113,21 +150,36 @@ function getProcessElement(){
 }
 //end function to get the element process
 
+//function to edit MetaInfo
+function editMetaInfo(question,value_to_assign){
+
+  const businessObject = checkMetaInfo();
+  if (businessObject && businessObject.values.length > 0) {
+    businessObject.values.forEach(value => {
+      if (value.$type === 'meta:ModelMetaData') {
+        switch (question) {
+          case 'A':
+            value.questionA=value_to_assign;
+            break;
+          case 'B':
+            value.questionB=value_to_assign;
+            break;
+          case "gdpr":
+            value.gdpr_compliant=value_to_assign;
+          default:
+            break;
+        }
+      }
+    });
+  }
+
+  return;
+
+}
+
+//
 
 
-//statements
-const export_button=document.getElementById('export_button');
-const import_button=document.getElementById('import_button');
-const gdpr_button=document.getElementById('gdpr_compliant_button');
-const canvas_raw=document.getElementById('canvas_raw');
-const canvas= document.getElementById('canvas');
-const canvas_col=document.getElementById('canvas_col');
-const survey_col=document.getElementById('survey_col');
-
-//gdpr questions
-const YA=document.getElementById('yes_dropDownA');
-const NA=document.getElementById('no_dropDownA');
-//end gdpr questions
 
 //end statements
 
@@ -137,7 +189,7 @@ export_button.addEventListener('click', function () {
     closeSideBarSurvey();
   }
   catch(e){
-    console.error("Error",e);
+    console.log("Error",e);
   }
 
   var container = document.getElementById('canvas');
@@ -258,12 +310,7 @@ input.addEventListener('change', function(event) {
       const reader = new FileReader();
       reader.onload = function(event) {
           const fileXML = event.target.result;
-          try{
-            viewer.importXML(fileXML);
-            window.alert("Diagram imported successfully");
-          }catch(e){
-            console.error("Error in importing the diagram",e)
-          }
+          loadDiagram(fileXML);
       };
       reader.readAsText(diagram_imported);
   }
@@ -274,7 +321,7 @@ try{
   closeSideBarSurvey();
 }
 catch(e){
-  console.error("Error",e);
+  console.log("Error",e);
 }
 });
 //end import handler 
@@ -283,14 +330,15 @@ catch(e){
 // gdpr compliance button
 gdpr_button.addEventListener('click', () =>{
 
+  viewer.get('canvas').zoom('fit-viewport');
+
+
   const mainColumn = document.querySelector('.main-column');
   const sidebarColumn = document.querySelector('.sidebar-column');
   const canvasRaw = document.querySelector('#canvas-raw');
   const spaceBetween=document.querySelector('.space-between');
 
   const questions = getMetaInformationResponse();
-  console.log("questions",questions);
-
   if(!document.getElementById("survey_area")){
 
     // Aggiorna le larghezze delle colonne
@@ -367,6 +415,7 @@ function getDiagram() {
 }
 //
 
+//TODO: maybe to remove
 //function to push the diagram
 function pushDiagram(diagram) {
   try{
@@ -384,6 +433,133 @@ function pushDiagram(diagram) {
 }
 //
 
+//TODO: remodel it because if there are collaborations we have a problem :(
+//function to get the main process
+function getMainProcess(){
+  const mainProcess = elementRegistry.filter(element => {
+    return element.type === 'bpmn:Process' && element.id == 'Main_Process'; 
+  });
+  return mainProcess.pop();
+}
+//
 
+function checkUniqueID(id){
+  console.log("checkUniqueID",id);
+  try{
+    elementRegistry = viewer.get('elementRegistry');
+    const uniqueID = elementRegistry.get(id);
+    console.log("unique", uniqueID)
+    if(uniqueID){
+      const parse = id.split('_');
+      const name=parse[0];
 
-export {getDiagram,pushDiagram}
+      const elementNumber = parseInt(parse[1]);
+      const nextElementNumber = elementNumber + 1;
+      const nextID = `${parse[0]}_${nextElementNumber}`;
+      return nextID;
+      }
+    else{
+      return id;
+    }
+
+  }
+  catch(error){
+    console.log("Error in checking unique id");
+  }
+}
+
+//funtion to create the subprocess for the questions
+//id: id of the subprocess, content_label: the label is visualized in the subprocess,
+//diagram_to_import: the diagram that will be inserted into the subprocess
+async function subProcessGeneration( id_passed, content_label, diagram_to_import){
+  try {
+
+    const id = checkUniqueID(id_passed);
+    const subprocess = elementFactory.createShape({
+        type: 'bpmn:SubProcess',
+        id: id,
+        name: content_label,
+    });
+    const mainProcess = getMainProcess();     
+    modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
+    subprocess.businessObject.name = content_label;
+    modeling.updateProperties(subprocess, { name: content_label });
+    
+    //canvas.zoom('fit-viewport');
+
+    return subprocess;
+
+} catch (error) {
+    console.error('Si è verificato un errore durante la creazione del sottoprocesso con processo interno:', error);
+}
+
+}
+//
+
+//function to get the reference of an element
+function getElement(id){
+    const elementRegistry = viewer.get("elementRegistry");
+    const element = elementRegistry.get(id);
+    if (element) {
+      return element;
+    } else {
+      console.log("Element not found with ID:", id);
+      return null;
+    }
+}
+//
+
+//function to get the referenc of the previous element of a certain element 
+function getPreviousElement(referenceElement) {
+  const elementRegistry = viewer.get("elementRegistry");
+  const elements = elementRegistry.getAll();
+  const index = elements.findIndex(element => element === referenceElement);
+
+  if (index !== -1 && index > 0) {
+    const previousElement = elements[index - 1];
+    return previousElement;
+  } else {
+    return null;
+  }
+}
+//
+
+//function to add an element between two 
+function addActivityBetweenTwoElements(firstElement, secondElement, newElement) {
+  const elementRegistry = viewer.get("elementRegistry");
+
+  const firstElementPosition = firstElement.di.bounds;
+  const secondElementPosition = secondElement.di.bounds;
+
+  const newX = (firstElementPosition.x + secondElementPosition.x + firstElementPosition.width) / 2;
+  const newY = (firstElementPosition.y + secondElementPosition.y) / 2;
+
+  const newXforElem = (firstElementPosition.x + secondElementPosition.x)/2
+
+  var newSequenceFlowAttrsIncoming = {
+    id: 'sequenceFlowAttrsInc' + newElement.id,
+    type: "bpmn:SequenceFlow",
+
+  };
+
+  const outgoingFlow = firstElement.outgoing[0];
+  console.log(outgoingFlow)
+
+  modeling.removeConnection(outgoingFlow)
+
+  modeling.moveElements([newElement], {x: newXforElem, y: firstElementPosition.y});
+  modeling.createConnection(firstElement,newElement, newSequenceFlowAttrsIncoming, firstElement.parent);
+
+  var newSequenceFlowAttrsOutcoming = {
+    id: 'sequenceFlowAttrsOut' + newElement.id,
+    type: "bpmn:SequenceFlow",
+  };
+  modeling.createConnection(newElement,secondElement, newSequenceFlowAttrsOutcoming, secondElement.parent);
+
+  
+
+}
+
+//
+
+export {getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements}

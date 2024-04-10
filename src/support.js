@@ -4,6 +4,7 @@ import {
   nodropDownA,
   yesdropDownB,
   nodropDownB,
+  addBPath,
 } from "./questions.js";
 import { getDiagram } from "./app.js";
 
@@ -197,6 +198,23 @@ function removeUlFromDropDown(dropDown) {
 }
 //end function to remove ul
 
+//function to sign the question as done
+function questionDone(dD){
+  const dropDown = document.querySelector(dD);
+  const button = dropDown.querySelector(".btn");
+  button.click();
+    if (button) {
+      button.className = "btn";
+      button.style.boxShadow = "0 0 0 2px #2CA912";
+      button.style.borderRadius = "1vh";
+      button.style.marginTop = "0.3vh";
+    } else {
+      console.error("error in finding the button");
+    }
+}
+
+//
+
 //function to create ul and handle activity selection
 async function createUlandSelectActivities(dropDownID, titleText) {
   const dropDown = document.querySelector(dropDownID);
@@ -275,7 +293,7 @@ async function createUlandSelectActivities(dropDownID, titleText) {
         ulDropDown.appendChild(form);
         ulDropDown.appendChild(subDiv);
 
-        form.addEventListener("submit", (event) => {
+        submitButton.addEventListener("click", (event) => {
           event.preventDefault();
           const selectedActivities = Array.from(
             form.querySelectorAll("input[name='activity']:checked")
@@ -284,7 +302,8 @@ async function createUlandSelectActivities(dropDownID, titleText) {
             activities.find((activity) => activity.id === checkbox.value)
           );
           submitButton.className = "btn-completed";
-          return selectedActivities;
+          questionDone("#dropDownB")
+          addBPath(selectedActivities);
         });
 
         divActivities.appendChild(form);

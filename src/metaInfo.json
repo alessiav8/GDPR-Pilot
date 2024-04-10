@@ -11,6 +11,11 @@
         "superClass": [ "Element" ],
         "properties": [
           {
+            "name": "gdpr_compliant",
+            "isAttr": true,
+            "type": "boolean"
+          },
+          {
             "name": "questionA",
             "isAttr": true,
             "type": "String"
