@@ -9,10 +9,13 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import diagram from '../resources/diagram.bpmn';
 import diagram_two_activities from '../resources/diagram_two_activities.bpmn';
+import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
 import { yesdropDownA, nodropDownA } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse } from './support.js';
+
 var MetaPackage = require('./metaInfo.json');
+var current_diagram = diagram_two_activities;
 
 var moddle = new BpmnModdle();
 
@@ -31,9 +34,12 @@ const canvas_raw=document.getElementById('canvas_raw');
 const canvas= document.getElementById('canvas');
 const canvas_col=document.getElementById('canvas_col');
 const survey_col=document.getElementById('survey_col');
+const over_canvas=document.getElementById('over_canvas');
 var elementFactory;
 var modeling;
 var elementRegistry;
+var canvas_ref;
+var eventBus;
 
 //gdpr questions
 const YA=document.getElementById('yes_dropDownA');
@@ -73,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 //function to load the diagram through importXML
 async function loadDiagram(diagram){
     try {
-      viewer.importXML(diagram)
+      const res = viewer.importXML(diagram)
           .then(async () => {
               viewer.get('canvas').zoom('fit-viewport');
               elementFactory = viewer.get('elementFactory');
@@ -81,17 +87,86 @@ async function loadDiagram(diagram){
               elementRegistry=viewer.get('elementRegistry');
               changeID();
               checkMetaInfo();
-              checkUniqueID("StartEvent_1");
+              canvas_ref = viewer.get('canvas');
+              eventBus = viewer.get('eventBus');
 
+              //function to toggle the subprocess
+              eventBus.on('element.click', function(event) {
+                const element = event.element;
+                if (element.type === 'bpmn:SubProcess') {
+                  switch(element.name){
+                    case "Right to be Informed and to Consent":
+                      viewer.saveXML({ format: true })
+                      .then(({ xml, error }) => {
+                          if (error) {
+                              console.log(error);
+                          } else {
+                              console.log("exportDiagram",xml);
+                              current_diagram = xml;
+                              viewer.importXML(consent_to_use_the_data).then(() => {
+                                backArrowSubProcess();
+                                canvas_ref.zoom('fit-viewport');
+                              })
+                              
+                          }
+                      })
+                      .catch(error => {
+                          console.log(error);
+                      });
+                    default:
+                      console.log(element.name);
+          
+                  }
+                }
+              });
+              //
           })
           .catch(error => {
               console.error('Errore nell\'importazione dell\'XML:', error);
           });
+
   } catch (err) {
       console.error('Si è verificato un errore:', err);
   }
 }
 //end function to load the diagram 
+
+
+//function create backArrow subProcess
+function backArrowSubProcess(){
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  svg.setAttribute("width", "50");
+  svg.setAttribute("height", "50");
+  svg.setAttribute("fill", "#2CA912");
+  svg.setAttribute("class", "bi bi-arrow-left");
+  svg.setAttribute("viewBox", "0 0 16 16");
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("fill-rule", "evenodd");
+  path.setAttribute("d", "M4.354 8.354a.5.5 0 0 1 0-.708l3.293-3.293a.5.5 0 0 1 .708.708L5.707 8l2.648 2.647a.5.5 0 0 1-.708.708l-3.293-3.293a.5.5 0 0 1 0-.708z");
+
+  svg.appendChild(path);
+
+  var closeBtn = document.createElement('span');
+  closeBtn.classList.add('close-btn');
+  closeBtn.style.marginBottom="4vh";
+  closeBtn.style.marginRight="55vh";
+
+  closeBtn.prepend(svg);
+
+  over_canvas.appendChild(closeBtn);
+
+  closeBtn.addEventListener("click", ()=>{
+    loadDiagram(current_diagram);
+    over_canvas.removeChild(closeBtn);
+  });
+
+
+}
+//
+
+
 
 //function to change the ID for the mainProcess
 function changeID(){
@@ -149,6 +224,8 @@ function getProcessElement(){
   return processElements;
 }
 //end function to get the element process
+
+
 
 //function to edit MetaInfo
 function editMetaInfo(question,value_to_assign){
@@ -448,7 +525,7 @@ function checkUniqueID(id){
   try{
     elementRegistry = viewer.get('elementRegistry');
     const uniqueID = elementRegistry.get(id);
-    console.log("unique", uniqueID)
+    console.log(" searching for id: ",id,"is unique?", uniqueID)
     if(uniqueID){
       const parse = id.split('_');
       const name=parse[0];
@@ -471,28 +548,34 @@ function checkUniqueID(id){
 //funtion to create the subprocess for the questions
 //id: id of the subprocess, content_label: the label is visualized in the subprocess,
 //diagram_to_import: the diagram that will be inserted into the subprocess
-async function subProcessGeneration( id_passed, content_label, diagram_to_import){
+async function subProcessGeneration(id_passed, content_label, diagram_to_import) {
   try {
-
-    const id = checkUniqueID(id_passed);
+    const id = id_passed;
+    const elementRegistry = viewer.get('elementRegistry');
+    if(!elementRegistry.get(id_passed)){
     const subprocess = elementFactory.createShape({
-        type: 'bpmn:SubProcess',
-        id: id,
-        name: content_label,
+      type: 'bpmn:SubProcess',
+      id: id,
+      name: content_label,
+      isExpanded: false,
     });
-    const mainProcess = getMainProcess();     
+    const mainProcess = getMainProcess();
     modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
     subprocess.businessObject.name = content_label;
     modeling.updateProperties(subprocess, { name: content_label });
+
+   
     
-    //canvas.zoom('fit-viewport');
+    //modeling.createShape(consent_to_use_the_data, { x: 0, y: 0 }, subprocess);
+    
 
     return subprocess;
+  }
 
-} catch (error) {
+  } catch (error) {
     console.error('Si è verificato un errore durante la creazione del sottoprocesso con processo interno:', error);
-}
-
+    return null;
+  }
 }
 //
 
@@ -526,38 +609,112 @@ function getPreviousElement(referenceElement) {
 
 //function to add an element between two 
 function addActivityBetweenTwoElements(firstElement, secondElement, newElement) {
-  const elementRegistry = viewer.get("elementRegistry");
+  const modeling = viewer.get("modeling");
 
   const firstElementPosition = firstElement.di.bounds;
   const secondElementPosition = secondElement.di.bounds;
 
-  const newX = (firstElementPosition.x + secondElementPosition.x + firstElementPosition.width) / 2;
-  const newY = (firstElementPosition.y + secondElementPosition.y) / 2;
+  console.log("first element position", firstElementPosition,"second element position", secondElementPosition);
 
-  const newXforElem = (firstElementPosition.x + secondElementPosition.x)/2
-
-  var newSequenceFlowAttrsIncoming = {
-    id: 'sequenceFlowAttrsInc' + newElement.id,
-    type: "bpmn:SequenceFlow",
-
-  };
+  const newX = (firstElementPosition.x + secondElementPosition.x) / 4;
+  const newY = firstElementPosition.y;
 
   const outgoingFlow = firstElement.outgoing[0];
-  console.log(outgoingFlow)
+  modeling.removeConnection(outgoingFlow);
 
-  modeling.removeConnection(outgoingFlow)
+  const to_shift= newElement.di.bounds.width;
 
-  modeling.moveElements([newElement], {x: newXforElem, y: firstElementPosition.y});
-  modeling.createConnection(firstElement,newElement, newSequenceFlowAttrsIncoming, firstElement.parent);
+  const XYNewElement= {x: newX, y: newY};
 
-  var newSequenceFlowAttrsOutcoming = {
-    id: 'sequenceFlowAttrsOut' + newElement.id,
-    type: "bpmn:SequenceFlow",
-  };
-  modeling.createConnection(newElement,secondElement, newSequenceFlowAttrsOutcoming, secondElement.parent);
+  const getBoundsNew = newElement.di.bounds;
+  const newBoundsNew={
+    x: newX,
+    y:newY,
+    width: getBoundsNew.width,
+    height: getBoundsNew.height
+  }
+  modeling.resizeShape(newElement, newBoundsNew)
+  modeling.updateProperties(newElement,  {x: newX, y: firstElementPosition.y});
+  modeling.moveElements([newElement], XYNewElement);
 
+
+  const BoundsFirst = {
+    x: (firstElementPosition.x - to_shift),
+    y: firstElementPosition.y,
+    width: firstElementPosition.width,
+    height: firstElementPosition.height
+  }
+
+  modeling.updateProperties(firstElement, {x: BoundsFirst.x, y: BoundsFirst.y} );
+  modeling.moveElements([firstElement], {x: BoundsFirst.x, y: BoundsFirst.y});
+  modeling.resizeShape(firstElement,BoundsFirst);
+
+
+  const BoundsSecond={
+    x: (secondElementPosition.x + to_shift),
+    y: secondElementPosition.y,
+    width: secondElementPosition.width,
+    height: secondElementPosition.height,
+  }
   
+  modeling.updateProperties(secondElement, {x: BoundsSecond.x, y: BoundsSecond.y} );
+  modeling.moveElements([secondElement], {x: BoundsSecond.x, y: BoundsSecond.y});
+  modeling.resizeShape(secondElement,BoundsSecond);
 
+
+  const newSequenceFlowAttrsIncoming = {
+    id: 'sequenceFlowAttrsInc' + newElement.id,
+    type: "bpmn:SequenceFlow"
+  };
+  modeling.createConnection(firstElement, newElement, newSequenceFlowAttrsIncoming, firstElement.parent);
+
+  const newSequenceFlowAttrsOutgoing = {
+    id: 'sequenceFlowAttrsOut' + newElement.id,
+    type: "bpmn:SequenceFlow"
+  };
+
+  modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent);
+
+  /*const sequenceFlow=secondElement.outgoing[0];
+  let waypoints = sequenceFlow.waypoints;
+
+  waypoints[0].x = waypoints[0].x + to_shift;
+  
+  modeling.updateWaypoints(sequenceFlow, waypoints);*/
+
+  canvas_ref.zoom('fit-viewport');
+  
+}
+
+//
+
+
+//TODO: Implement
+//function to reorder the diagram
+function reorderDiagram() {
+  elementRegistry = viewer.get("elementRegistry");
+  const modeling = viewer.get("modeling");
+  const allElements = elementRegistry.getAll();
+
+  allElements.sort((a, b) => {
+    const aPositionY = a.di.bounds.y;
+    const bPositionY = b.di.bounds.y;
+    return aPositionY - bPositionY;
+  });
+
+  const deltaY = 100; 
+  let currentY = deltaY; 
+  const newPositions = {};
+
+  allElements.forEach(element => {
+    const elementBounds = element.di.bounds;
+    const newY = currentY + (elementBounds.height / 2); // Centrare verticalmente l'elemento
+    newPositions[element.id] = { x: elementBounds.x, y: newY };
+    currentY += elementBounds.height + deltaY;
+  });
+
+  // Muovere gli elementi nelle nuove posizioni
+  modeling.moveElements(Object.values(newPositions));
 }
 
 //
