@@ -101,7 +101,7 @@ async function loadDiagram(diagram){
                           if (error) {
                               console.log(error);
                           } else {
-                              console.log("exportDiagram",xml);
+                              closeSideBarSurvey();
                               current_diagram = xml;
                               viewer.importXML(consent_to_use_the_data).then(() => {
                                 backArrowSubProcess();
@@ -134,6 +134,7 @@ async function loadDiagram(diagram){
 
 //function create backArrow subProcess
 function backArrowSubProcess(){
+  gdpr_button.disabled=true;
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   svg.setAttribute("width", "50");
@@ -151,7 +152,8 @@ function backArrowSubProcess(){
   var closeBtn = document.createElement('span');
   closeBtn.classList.add('close-btn');
   closeBtn.style.marginBottom="4vh";
-  closeBtn.style.marginRight="55vh";
+  closeBtn.style.marginLeft="4vh";
+  
 
   closeBtn.prepend(svg);
 
@@ -160,6 +162,7 @@ function backArrowSubProcess(){
   closeBtn.addEventListener("click", ()=>{
     loadDiagram(current_diagram);
     over_canvas.removeChild(closeBtn);
+    gdpr_button.disabled = false;
   });
 
 
@@ -564,7 +567,30 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
     subprocess.businessObject.name = content_label;
     modeling.updateProperties(subprocess, { name: content_label });
 
-   
+   /* const startEvent = elementFactory.createShape({
+      type: 'bpmn:StartEvent', 
+    });
+    console.log(startEvent,elementRegistry.get(id),subprocess);
+    modeling.createShape(startEvent, { x: subprocess.x, y: subprocess.y }, elementRegistry.get(id));*/
+
+    var newMod= new BpmnJS();
+    newMod.importXML(consent_to_use_the_data)
+      .then(() => {
+            const list_elements= newMod.get('elementRegistry').getAll();
+            const modeling2= newMod.get('modeling');
+            list_elements.forEach(element => {
+              //const newElement = elementFactory.createShape(element.businessObject);
+            if(element.type != "bpmn:Collaboration" && element.type != "bpmn:Participant"){
+              modeling2.removeElements([element]);
+              subprocess.children.add(element);
+             }
+
+            })
+      })
+      .catch(error => {
+          console.log(error);
+      });
+
     
     //modeling.createShape(consent_to_use_the_data, { x: 0, y: 0 }, subprocess);
     
