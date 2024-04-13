@@ -44,7 +44,6 @@ function DisableModeling(
   eventBus.on("TOGGLE_MODE_EVENT", HIGH_PRIORITY, function (context) {
     self.modelingDisabled = context.exportMode;
 
-    console.log("TOGGLE_MODE_EVENT",context);
     if (self.modelingDisabled) {
       disable();
     } else {

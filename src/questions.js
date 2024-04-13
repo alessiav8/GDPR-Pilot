@@ -6,6 +6,9 @@ import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
 //handle click yes for question A
 async function yesdropDownA() {
+  if(!document.querySelector('#dropDownA')){
+    await createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
+  }
   removeUlFromDropDown("#dropDownA");
   editMetaInfo("A",setJsonData("Yes",false));
   const dropdownB = createDropDown(

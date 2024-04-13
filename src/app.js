@@ -16,7 +16,7 @@ import diagram from '../resources/diagram.bpmn';
 import diagram_two_activities from '../resources/diagram_two_activities.bpmn';
 import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
-import { yesdropDownA, nodropDownA } from './questions.js';
+import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted } from './support.js';
 
 var MetaPackage = require('./metaInfo.json');
@@ -138,7 +138,7 @@ async function loadDiagram(diagram){
                           console.log(error);
                       });
                     default:
-                      console.log(element,eventBus);
+                      console.log(element);
           
                   }
                 //}
@@ -249,8 +249,6 @@ function getProcessElement(){
 }
 //end function to get the element process
 
-
-
 //function to edit MetaInfo
 function editMetaInfo(question,value_to_assign){
 
@@ -277,12 +275,7 @@ function editMetaInfo(question,value_to_assign){
   return;
 
 }
-
 //
-
-
-
-//end statements
 
 //export handler 
 export_button.addEventListener('click', function () {
@@ -453,10 +446,6 @@ gdpr_button.addEventListener('click', () =>{
   const canvasRaw = document.querySelector('#canvas-raw');
   const spaceBetween=document.querySelector('.space-between');
 
-    getMetaInformationResponse().then((response) =>{
-      questions_answers=response;
-    })
-
   if(!document.getElementById("survey_area")){
 
     // Aggiorna le larghezze delle colonne
@@ -508,13 +497,53 @@ gdpr_button.addEventListener('click', () =>{
     areaDropDowns.id="areaDropDowns";
     survey_area.appendChild(areaDropDowns)
 
-    const dropDownA = createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
+    checkQuestion();
+    //const dropDownA = createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
     //end survey area 
 
   }
 
 });
 //end gdpr handler
+
+//function to generete the right questions dropdown
+function checkQuestion(){
+  console.log("inside")
+
+  getMetaInformationResponse()
+  .then((response) => {
+    //const setOfQuestions=["A", "B", "C", "D", "E", "F","G","H", "I", "L"];
+
+    questions_answers = response;
+    if(questions_answers["questionA"] === null){
+      createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
+    }
+    else{
+      if(questions_answers["questionL"] !== null){}
+      else if(questions_answers["questionI"]!== null){}
+      else if(questions_answers["questionH"] !== null){}
+      else if(questions_answers["questionG"] !== null){}
+      else if(questions_answers["questionF"] !== null){}
+      else if(questions_answers["questionE"] !=null){}
+      else if (questions_answers["questionD"]!==null){}      
+      else if (questions_answers["questionC"]!==null){}
+      else if (questions_answers["questionB"]!==null){}
+      else if (questions_answers["questionA"]!==null){
+        const risp = questions_answers["questionA"][0].value;
+      if(risp ==="Yes") { yesdropDownA();}
+        else { nodropDownA();}
+      }
+  }
+  })
+  .catch((error) => {
+    console.error('Error fetching meta information:', error);
+  });
+
+
+
+
+}
+//
 
 //function to get the diagram
 function getDiagram() {

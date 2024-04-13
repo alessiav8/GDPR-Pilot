@@ -183,13 +183,21 @@ export function setGdprButtonCompleted(){
 //function to remove ul from drop down and sign it as passed
 function removeUlFromDropDown(dropDown) {
   const dropDownA = document.querySelector(dropDown);
+
   if (dropDownA) {
     const child = dropDownA.querySelector(".dropdown-menu");
+    console.log("child",child,"of",dropDown);
     if (child) {
-      dropDownA.removeChild(child);
+      while(child.firstChild){
+        child.removeChild(child.firstChild);
+      }
+      //dropDownA.removeChild(child);
+      dropDownA.click();
       const button = dropDownA.querySelector(".btn");
       if (button) {
-        button.className = "btn";
+        button.setAttribute("data-bs-toggle", "");
+
+        if(dropDown=="#dropDownA") button.className = "btn";
         button.style.boxShadow = "0 0 0 2px #2CA912";
         button.style.borderRadius = "1vh";
         button.style.marginTop = "0.3vh";
