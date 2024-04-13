@@ -59,15 +59,15 @@ async function nodropDownB() {
 
 //function to add the path to solve B
 async function addBPath(activities){
-  console.log("query docC",document.querySelector("#dropDownC"));
   if(!document.querySelector("#dropDownC")){
-    createDropDown("#dropDownC",false,"User data access","Do you allow users to access their data?");
+    createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
   }
     try{
         activities.forEach(async function(activity){
             const element = getElement(activity.id);
             const previous = getPreviousElement(element);
             const subprocess = await subProcessGeneration("consent"+activity.id, "Right to be Informed and to Consent",consent_to_use_the_data);
+            console.log("subprocess",subprocess)
             if (subprocess) addActivityBetweenTwoElements(previous, element, subprocess)
       });
 

@@ -6,6 +6,9 @@ import BpmnModdle from 'bpmn-moddle';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { query, classes } from "min-dom";
+
+import disableModeling from "./DisableModeling";
 
 import diagram from '../resources/diagram.bpmn';
 import diagram_two_activities from '../resources/diagram_two_activities.bpmn';
@@ -23,7 +26,9 @@ var viewer = new BpmnJS({
     container: '#canvas',
     moddleExtensions: {
         meta: MetaPackage
-    }
+    },
+    additionalModules: [disableModeling]
+
 });
 
 //statements
@@ -35,11 +40,16 @@ const canvas= document.getElementById('canvas');
 const canvas_col=document.getElementById('canvas_col');
 const survey_col=document.getElementById('survey_col');
 const over_canvas=document.getElementById('over_canvas');
+const edit= document.getElementById("mode");
+
 var elementFactory;
 var modeling;
 var elementRegistry;
 var canvas_ref;
 var eventBus;
+var overlays;
+var search = new URLSearchParams(window.location.search);
+var browserNavigationInProgress;
 
 //gdpr questions
 const YA=document.getElementById('yes_dropDownA');
@@ -67,9 +77,6 @@ function getExtension(element, type) {
 }
 //
 
-
-
-
 //function that loads the first diagram displayed at every load
 document.addEventListener('DOMContentLoaded', async function () {
     await loadDiagram(diagram_two_activities);
@@ -89,9 +96,16 @@ async function loadDiagram(diagram){
               checkMetaInfo();
               canvas_ref = viewer.get('canvas');
               eventBus = viewer.get('eventBus');
+              overlays = viewer.get('overlays');
+             
+            
+              /*canvas_ref.addLayer('root_1', {
+                position: 1 
+              });*/
+          
 
               //function to toggle the subprocess
-              eventBus.on('element.click', function(event) {
+            eventBus.on('element.click', function(event) {
                 const element = event.element;
                 if (element.type === 'bpmn:SubProcess') {
                   switch(element.name){
@@ -114,7 +128,7 @@ async function loadDiagram(diagram){
                           console.log(error);
                       });
                     default:
-                      console.log(element.name);
+                      console.log(element);
           
                   }
                 }
@@ -130,7 +144,6 @@ async function loadDiagram(diagram){
   }
 }
 //end function to load the diagram 
-
 
 //function create backArrow subProcess
 function backArrowSubProcess(){
@@ -168,8 +181,6 @@ function backArrowSubProcess(){
 
 }
 //
-
-
 
 //function to change the ID for the mainProcess
 function changeID(){
@@ -381,10 +392,10 @@ import_button.addEventListener('mouseout', () =>{
 });
 
 import_button.addEventListener('click', () =>{
-var input = document.createElement('input');
-input.type = 'file';
+  var input = document.createElement('input');
+  input.type = 'file';
 
-input.addEventListener('change', function(event) {
+  input.addEventListener('change', function(event) {
   var diagram_imported = event.target.files[0];
   if (diagram_imported) {
       const reader = new FileReader();
@@ -393,16 +404,16 @@ input.addEventListener('change', function(event) {
           loadDiagram(fileXML);
       };
       reader.readAsText(diagram_imported);
-  }
-})
+      }
+    })
 
-input.click();
-try{
-  closeSideBarSurvey();
-}
-catch(e){
-  console.log("Error",e);
-}
+    input.click();
+    try{
+      closeSideBarSurvey();
+    }
+    catch(e){
+      console.log("Error",e);
+    }
 });
 //end import handler 
 
@@ -411,7 +422,11 @@ catch(e){
 gdpr_button.addEventListener('click', () =>{
 
   viewer.get('canvas').zoom('fit-viewport');
-
+  eventBus.fire("TOGGLE_MODE_EVENT", {
+    exportMode: true 
+  });  
+  mode.textContent = "GDPR Mode"
+  window.alert("You are now in GDPR mode, and the editor is disabled. \n If you want to edit again, you must close the GDPR panel.");
 
   const mainColumn = document.querySelector('.main-column');
   const sidebarColumn = document.querySelector('.sidebar-column');
@@ -427,7 +442,7 @@ gdpr_button.addEventListener('click', () =>{
     sidebarColumn.style.marginLeft="0.5%";
 
     sidebarColumn.style.height = canvas.clientHeight + 'px';
-    sidebarColumn.style.marginTop = '2vh';
+    sidebarColumn.style.marginTop = '1vh';
     sidebarColumn.style.borderRadius="4px"
 
     //start survey area handler
@@ -443,6 +458,10 @@ gdpr_button.addEventListener('click', () =>{
 
     close_survey.addEventListener('click', () => {
      closeSideBarSurvey();
+     eventBus.fire("TOGGLE_MODE_EVENT", {
+      exportMode: false 
+    });       
+    edit.textContent = "Edit Mode";
     });
 
     survey_area.appendChild(close_survey);
@@ -555,47 +574,55 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
   try {
     const id = id_passed;
     const elementRegistry = viewer.get('elementRegistry');
-    if(!elementRegistry.get(id_passed)){
-    const subprocess = elementFactory.createShape({
-      type: 'bpmn:SubProcess',
-      id: id,
-      name: content_label,
-      isExpanded: false,
-    });
-    const mainProcess = getMainProcess();
-    modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
-    subprocess.businessObject.name = content_label;
-    modeling.updateProperties(subprocess, { name: content_label });
+    const exists = elementRegistry.get(id_passed) == undefined ;
+    
+    if(exists){
+      const subprocess = elementFactory.createShape({
+        type: 'bpmn:CallActivity',
+        id: id,
+        name: content_label,
+        isExpanded: false,
+      });
+      const mainProcess = getMainProcess();
+      modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
+      subprocess.businessObject.name = content_label;
+      modeling.updateProperties(subprocess, { name: content_label });
 
-   /* const startEvent = elementFactory.createShape({
-      type: 'bpmn:StartEvent', 
-    });
-    console.log(startEvent,elementRegistry.get(id),subprocess);
-    modeling.createShape(startEvent, { x: subprocess.x, y: subprocess.y }, elementRegistry.get(id));*/
+     /* subprocess.businessObject.diagram=diagram_to_import;
+      console.log("sub after proc",subprocess)
+    
 
-    var newMod= new BpmnJS();
-    newMod.importXML(consent_to_use_the_data)
-      .then(() => {
-            const list_elements= newMod.get('elementRegistry').getAll();
-            const modeling2= newMod.get('modeling');
-            list_elements.forEach(element => {
-              //const newElement = elementFactory.createShape(element.businessObject);
-            if(element.type != "bpmn:Collaboration" && element.type != "bpmn:Participant"){
-              modeling2.removeElements([element]);
-              subprocess.children.add(element);
-             }
-
-            })
-      })
-      .catch(error => {
-          console.log(error);
+      modeling.updateProperties(subprocess, {
+        layer: "root_2"
       });
 
-    
-    //modeling.createShape(consent_to_use_the_data, { x: 0, y: 0 }, subprocess);
-    
-
+      var newMod= new BpmnJS();
+      newMod.importXML(consent_to_use_the_data)
+        .then(() => {
+              const list_elements= newMod.get('elementRegistry').getAll();
+              const modeling2= newMod.get('modeling');
+              list_elements.forEach(element => {
+                if (element.type !== "bpmn:Collaboration" && element.type !== "bpmn:Participant") {
+                  modeling2.removeElements([element]);
+                }
+              });
+              
+              list_elements.forEach(element => {
+                if (element.type !== "bpmn:Collaboration" && element.type !== "bpmn:Participant") {
+                  subprocess.children.add(element);
+                }
+              });
+              modeling.updateProperties(subprocess, { children: subprocess.children });
+              console.log("sub at the end",subprocess)
+              
+        })
+        .catch(error => {
+            console.log(error);
+        });  */  
     return subprocess;
+  }
+  else{
+    return false;
   }
 
   } catch (error) {
@@ -640,10 +667,10 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
   const firstElementPosition = firstElement.di.bounds;
   const secondElementPosition = secondElement.di.bounds;
 
-  console.log("first element position", firstElementPosition,"second element position", secondElementPosition);
+  //console.log("first element position", firstElementPosition,"second element position", secondElementPosition);
 
   const newX = (firstElementPosition.x + secondElementPosition.x) / 4;
-  const newY = firstElementPosition.y;
+  const newY = firstElementPosition.y/2.5;
 
   const outgoingFlow = firstElement.outgoing[0];
   modeling.removeConnection(outgoingFlow);

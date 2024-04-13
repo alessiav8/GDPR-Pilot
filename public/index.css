@@ -5,7 +5,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 2vh;
+    margin-top: 1vh;
     margin-left: 3vh;
     margin-right: 3vh;
     border-radius: 4px;
@@ -20,17 +20,20 @@
   height: 100%;
 }
 
-#status_row{
+.status_row{
     height: 3vh;
     font-size: 2vh;
-    text-align: left;
-    margin-left: 2.5vh;
+    margin-left: 3vh;
     margin-right: 3vh;
+    width: 97%  !important;
     background-color: #10ad74;
-    margin-top: 1.2vh;
+    margin-top: 1vh;
     margin-bottom: 0vh;
     border-radius: 0.4vh;
     width: auto;
+    text-align: center;
+    color: white;
+    font-weight: bold;
 }
 
 #status_setting {
@@ -45,7 +48,7 @@
     background-color: #f0f0f0;
     text-align: center;
     text-decoration: none;
-    margin-top: 2vh;
+    margin-top: 1vh;
     margin-left: 3vh;
     margin-right: 3vh;
     display: grid;
@@ -172,4 +175,8 @@
     border-radius: 1vh;
     margin-top: 0.3vh;
     background-color: white;
+  }
+
+  .hidden {
+    display: none !important;
   }
