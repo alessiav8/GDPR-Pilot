@@ -1,13 +1,13 @@
 //-----------------------------QUESTIONS-----------------------------------
 
-import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMetaInformation } from "./support.js";
-import { getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements } from "./app.js";
+import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMetaInformation,getActivitiesID,setJsonData,setGdprButtonCompleted,closeSideBarSurvey } from "./support.js";
+import { getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements,handleSideBar } from "./app.js";
 import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
 //handle click yes for question A
 async function yesdropDownA() {
   removeUlFromDropDown("#dropDownA");
-  editMetaInfo("A","Yes");
+  editMetaInfo("A",setJsonData("Yes",false));
   const dropdownB = createDropDown(
     "dropDownB",
     false,
@@ -18,13 +18,16 @@ async function yesdropDownA() {
 
 //end handle click yes for question A
 
+
 //handle click no for question A
 function nodropDownA() {
-  const gdpr = document.querySelector("#gdpr_compliant_button");
-  gdpr.style.backgroundColor = "#2CA912";
-  gdpr.textContent = "GDPR complient";
+  setGdprButtonCompleted();
   removeUlFromDropDown("#dropDownA");
-  editMetaInfo("A","No");
+
+  handleSideBar(false);
+  closeSideBarSurvey();
+
+  editMetaInfo("A",setJsonData("No",false));
   editMetaInfo("gdpr",true);
   
 }
@@ -39,8 +42,6 @@ function yesdropDownB() {
     "Access data",
     "Do you allow users to access their data?"
   );
-  editMetaInfo("B","Yes");
-
 }
 //
 
@@ -51,7 +52,7 @@ async function nodropDownB() {
     const dropDown = document.querySelector("#dropDownB");
     const button = dropDown.querySelector(".btn");
     button.click();
-    editMetaInfo("B","No");
+    editMetaInfo("B",setJsonData("No",false));
     
 
 }
@@ -59,9 +60,13 @@ async function nodropDownB() {
 
 //function to add the path to solve B
 async function addBPath(activities){
+
+  editMetaInfo("B",setJsonData("Yes",activities));
+
   if(!document.querySelector("#dropDownC")){
     createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
   }
+
     try{
         activities.forEach(async function(activity){
             const element = getElement(activity.id);

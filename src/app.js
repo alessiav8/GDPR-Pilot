@@ -3,6 +3,8 @@ import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css';
 import BpmnModdle from 'bpmn-moddle';
+import {getNewShapePosition} from 'bpmn-js/lib/features/auto-place/BpmnAutoPlaceUtil.js';
+
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
@@ -15,7 +17,7 @@ import diagram_two_activities from '../resources/diagram_two_activities.bpmn';
 import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
 import { yesdropDownA, nodropDownA } from './questions.js';
-import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse } from './support.js';
+import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted } from './support.js';
 
 var MetaPackage = require('./metaInfo.json');
 var current_diagram = diagram_two_activities;
@@ -50,6 +52,7 @@ var eventBus;
 var overlays;
 var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
+var questions_answers;
 
 //gdpr questions
 const YA=document.getElementById('yes_dropDownA');
@@ -98,7 +101,14 @@ async function loadDiagram(diagram){
               eventBus = viewer.get('eventBus');
               overlays = viewer.get('overlays');
              
+              getMetaInformationResponse().then((response)=>{
+                questions_answers = response;
+                if(questions_answers["gdpr_compliant"] == true){
+                  setGdprButtonCompleted();
+                }
+              })
             
+
               /*canvas_ref.addLayer('root_1', {
                 position: 1 
               });*/
@@ -107,7 +117,7 @@ async function loadDiagram(diagram){
               //function to toggle the subprocess
             eventBus.on('element.click', function(event) {
                 const element = event.element;
-                if (element.type === 'bpmn:SubProcess') {
+                //if (element.type === 'bpmn:SubProcess') {
                   switch(element.name){
                     case "Right to be Informed and to Consent":
                       viewer.saveXML({ format: true })
@@ -128,10 +138,10 @@ async function loadDiagram(diagram){
                           console.log(error);
                       });
                     default:
-                      console.log(element);
+                      console.log(element,eventBus);
           
                   }
-                }
+                //}
               });
               //
           })
@@ -278,6 +288,7 @@ function editMetaInfo(question,value_to_assign){
 export_button.addEventListener('click', function () {
   try{
     closeSideBarSurvey();
+    handleSideBar(false);
   }
   catch(e){
     console.log("Error",e);
@@ -402,7 +413,11 @@ import_button.addEventListener('click', () =>{
       reader.onload = function(event) {
           const fileXML = event.target.result;
           loadDiagram(fileXML);
-      };
+          eventBus.fire("TOGGLE_MODE_EVENT", {
+            exportMode: false 
+          });       
+          edit.textContent = "Edit Mode";
+            };
       reader.readAsText(diagram_imported);
       }
     })
@@ -410,6 +425,7 @@ import_button.addEventListener('click', () =>{
     input.click();
     try{
       closeSideBarSurvey();
+      handleSideBar(false);
     }
     catch(e){
       console.log("Error",e);
@@ -422,18 +438,25 @@ import_button.addEventListener('click', () =>{
 gdpr_button.addEventListener('click', () =>{
 
   viewer.get('canvas').zoom('fit-viewport');
+
+  handleSideBar(true);
+  /*hide the panel and inform the user
   eventBus.fire("TOGGLE_MODE_EVENT", {
     exportMode: true 
   });  
   mode.textContent = "GDPR Mode"
   window.alert("You are now in GDPR mode, and the editor is disabled. \n If you want to edit again, you must close the GDPR panel.");
+  */
 
   const mainColumn = document.querySelector('.main-column');
   const sidebarColumn = document.querySelector('.sidebar-column');
   const canvasRaw = document.querySelector('#canvas-raw');
   const spaceBetween=document.querySelector('.space-between');
 
-  const questions = getMetaInformationResponse();
+    getMetaInformationResponse().then((response) =>{
+      questions_answers=response;
+    })
+
   if(!document.getElementById("survey_area")){
 
     // Aggiorna le larghezze delle colonne
@@ -458,10 +481,11 @@ gdpr_button.addEventListener('click', () =>{
 
     close_survey.addEventListener('click', () => {
      closeSideBarSurvey();
-     eventBus.fire("TOGGLE_MODE_EVENT", {
+     handleSideBar(false);
+     /*eventBus.fire("TOGGLE_MODE_EVENT", {
       exportMode: false 
     });       
-    edit.textContent = "Edit Mode";
+    edit.textContent = "Edit Mode";*/
     });
 
     survey_area.appendChild(close_survey);
@@ -469,7 +493,7 @@ gdpr_button.addEventListener('click', () =>{
     const title = "GDPR compliance";
     const textNode = document.createTextNode(title);
 
-    const divTitle= document.createElement("div");
+    const divTitle = document.createElement("div");
     divTitle.className = "container-centered";
     divTitle.style.marginTop="4vh";
     divTitle.style.marginBottom="2vh";
@@ -490,8 +514,6 @@ gdpr_button.addEventListener('click', () =>{
   }
 
 });
-
-
 //end gdpr handler
 
 //function to get the diagram
@@ -542,6 +564,7 @@ function getMainProcess(){
 }
 //
 
+//function to check if the id is unique
 function checkUniqueID(id){
   console.log("checkUniqueID",id);
   try{
@@ -566,6 +589,7 @@ function checkUniqueID(id){
     console.log("Error in checking unique id");
   }
 }
+//
 
 //funtion to create the subprocess for the questions
 //id: id of the subprocess, content_label: the label is visualized in the subprocess,
@@ -669,8 +693,13 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
 
   //console.log("first element position", firstElementPosition,"second element position", secondElementPosition);
 
-  const newX = (firstElementPosition.x + secondElementPosition.x) / 4;
-  const newY = firstElementPosition.y/2.5;
+  const newX = (firstElement.x + newElement.width) /2;
+  const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent")? secondElement.y : firstElement.y;
+
+  //const new_cord = getNewShapePosition(firstElement,newElement);
+  //const newX = new_cord.x;
+  //const newY = new_cord.y;
+
 
   const outgoingFlow = firstElement.outgoing[0];
   modeling.removeConnection(outgoingFlow);
@@ -686,10 +715,11 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
     width: getBoundsNew.width,
     height: getBoundsNew.height
   }
-  modeling.resizeShape(newElement, newBoundsNew)
-  modeling.updateProperties(newElement,  {x: newX, y: firstElementPosition.y});
-  modeling.moveElements([newElement], XYNewElement);
+  modeling.resizeShape(newElement, newBoundsNew);
+  //modeling.updateProperties(newElement,  {x: newX, y: newY});
+ // modeling.moveElements([newElement], XYNewElement);
 
+  console.log(newElement)
 
   const BoundsFirst = {
     x: (firstElementPosition.x - to_shift),
@@ -738,9 +768,7 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
   canvas_ref.zoom('fit-viewport');
   
 }
-
 //
-
 
 //TODO: Implement
 //function to reorder the diagram
@@ -769,7 +797,27 @@ function reorderDiagram() {
   // Muovere gli elementi nelle nuove posizioni
   modeling.moveElements(Object.values(newPositions));
 }
-
 //
+
+
+//function to handle the side bar close/open function
+//open: you want to open the side bar? 
+export function handleSideBar(open){
+  if(open){
+    eventBus.fire("TOGGLE_MODE_EVENT", {
+      exportMode: true 
+    });  
+    mode.textContent = "GDPR Mode"
+    window.alert("You are now in GDPR mode, and the editor is disabled. \n If you want to edit again, you must close the GDPR panel.");
+  }else{
+    eventBus.fire("TOGGLE_MODE_EVENT", {
+      exportMode: false 
+    });       
+    edit.textContent = "Edit Mode";
+  }
+
+}
+//
+
 
 export {getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements}

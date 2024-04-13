@@ -172,6 +172,14 @@ function createDropDown(id, isExpanded, textContent, questionText) {
 }
 //end function create the dropDown
 
+//funtion to set the gdpr button as completed
+export function setGdprButtonCompleted(){
+  const gdpr = document.querySelector("#gdpr_compliant_button");
+  gdpr.style.backgroundColor = "#2CA912";
+  gdpr.textContent = "GDPR complient";
+}
+//
+
 //function to remove ul from drop down and sign it as passed
 function removeUlFromDropDown(dropDown) {
   const dropDownA = document.querySelector(dropDown);
@@ -212,7 +220,6 @@ function questionDone(dD){
       console.error("error in finding the button");
     }
 }
-
 //
 
 //function to create ul and handle activity selection
@@ -387,13 +394,15 @@ async function getMetaInformationResponse() {
         const xml = await getDiagram();
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xml, "application/xml");
-        console.log(xml);
-        const questionElements = xmlDoc.querySelectorAll("Question");
-        const questions = Array.from(questionElements).map((question) => {
-            const textContent = question.textContent; // Contenuto del tag Question
-            return { content: textContent };
-        });
-
+        const questionElements = xmlDoc.querySelectorAll("modelMetaData")[0];
+        const setOfQuestions=["A", "B", "C", "D", "E", "F","G","H", "I", "L"];
+        var questions = new Array();
+        setOfQuestions.forEach(letter=>{
+          const valore = questionElements.getAttribute("question"+letter);
+          const res= JSON.parse(valore);
+          questions["question"+letter]=res;
+        })
+        questions["gdpr_compliant"]=questionElements.getAttribute("gdpr_compliant");
         return questions;
     } catch (error) {
         console.error("An error occurred in getMetaInformationResponse:", error);
@@ -402,6 +411,72 @@ async function getMetaInformationResponse() {
 }
 //
 
+//function to check if is already gdpr compliant
+async function isGdprCompliant(){
+  try {
+    const xml = await getDiagram();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xml, "application/xml");
+    const questionElements = xmlDoc.querySelectorAll("modelMetaData");
+
+    if(questionElements.length> 0){
+      questionElements.forEach((element) => {
+        const compliance = element.getAttribute("gdpr_compliant");
+        if(compliance != null){
+          return (compliance === true) ? true : false;
+        }
+        else {
+          return false;
+        }
+    });
+    }
+    else{
+      return false;
+    }
+
+    } catch (error) {
+        console.error("An error occurred in isGdprCompliant:", error);
+        throw error;
+    }
+}
+//
+
+//function to get the set of activities ids from the set returned by the form submission 
+export function getActivitiesID(activities){
+  var setIds= new Set;
+  activities.forEach((activity) =>{
+    setIds.add(activity.id);
+  });
+  return setIds;
+}
+//
+
+//export checkAlreadyExistent(question){
+
+//}
+
+//TODO: here miss the part were i add the already added activity maybe 
+//function to set the questions answers in json format
+export function setJsonData(response,activities){
+  var setJson = new Set();
+  setJson.add({id: "response", value: response});
+  if(activities){
+    activities.forEach((activity) => {
+      setJson.add({id: activity.id, value: activity.name});
+    });
+  }
+  let arrayOggetti = Array.from(setJson);
+  return JSON.stringify(arrayOggetti);
+}
+//end function
+
+
+
+
+
+
+
+
 export {
   removeUlFromDropDown,
   createDropDown,
@@ -409,4 +484,6 @@ export {
   closeSideBarSurvey,
   addMetaInformation,
   getMetaInformationResponse,
+  isGdprCompliant,
+  
 };

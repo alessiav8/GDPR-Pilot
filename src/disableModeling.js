@@ -10,7 +10,7 @@ function DisableModeling(
   editorActions,
   modeling,
   palette,
-  handTool
+  handTool,
 ) {
   const self = this;
 
@@ -26,7 +26,9 @@ function DisableModeling(
 
     // hiding palette
     //classes(self.canvasParent).add("exportMode");
+   
     classes(self.palette).add("hidden");
+
   }
 
   function enable() {
@@ -42,10 +44,10 @@ function DisableModeling(
   eventBus.on("TOGGLE_MODE_EVENT", HIGH_PRIORITY, function (context) {
     self.modelingDisabled = context.exportMode;
 
+    console.log("TOGGLE_MODE_EVENT",context);
     if (self.modelingDisabled) {
       disable();
     } else {
-      // showing palette again
       enable();
     }
 
