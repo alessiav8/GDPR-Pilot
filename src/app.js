@@ -100,7 +100,8 @@ async function loadDiagram(diagram){
               canvas_ref = viewer.get('canvas');
               eventBus = viewer.get('eventBus');
               overlays = viewer.get('overlays');
-             
+             console.log("Element registry", elementRegistry,"\nordered",getOrderedSub());
+
               getMetaInformationResponse().then((response)=>{
                 questions_answers = response;
                 if(questions_answers["gdpr_compliant"] == true){
@@ -633,19 +634,22 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
   try {
     const id = id_passed;
     const elementRegistry = viewer.get('elementRegistry');
-    const exists = elementRegistry.get(id_passed) == undefined ;
-    
-    if(exists){
+    console.log("Element registry",elementRegistry);
+    const not_exists = elementRegistry.get(id_passed) == undefined ;
+    if(not_exists){
       const subprocess = elementFactory.createShape({
         type: 'bpmn:CallActivity',
         id: id,
         name: content_label,
         isExpanded: false,
       });
+      subprocess.businessObject.id=id_passed;
+      subprocess.di.id=id_passed;
       const mainProcess = getMainProcess();
       modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
       subprocess.businessObject.name = content_label;
       modeling.updateProperties(subprocess, { name: content_label });
+
 
      /* subprocess.businessObject.diagram=diagram_to_import;
       console.log("sub after proc",subprocess)
@@ -704,44 +708,56 @@ function getElement(id){
 }
 //
 
+//
+function orderByXPosition(elementRegistry) {
+  const elementsArray = Array.from(elementRegistry.values());
+  elementsArray.sort((elementA, elementB) => {
+    const xA = elementA.x;
+    const xB = elementB.x;
+    return xA - xB;
+  });
+  return elementsArray;
+}
+//
+
 //function to get the referenc of the previous element of a certain element 
 function getPreviousElement(referenceElement) {
-  const elementRegistry = viewer.get("elementRegistry");
-  const elements = elementRegistry.getAll();
-  const index = elements.findIndex(element => element === referenceElement);
+  elementRegistry = viewer.get("elementRegistry");
+  const incoming=referenceElement.incoming;
+  if(incoming[0]){
+    const previousE = incoming[0].businessObject.sourceRef.id;
+    const res= elementRegistry.get(previousE);
+    return res;}
+  else return false;
+}
+//
 
-  if (index !== -1 && index > 0) {
-    const previousElement = elements[index - 1];
-    return previousElement;
-  } else {
-    return null;
+//function to get the referenc of the successor element of a certain element 
+function getSuccessorElement(referenceElement) {
+  elementRegistry = viewer.get("elementRegistry");
+  const outgoing=referenceElement.outgoing;
+  if(outgoing[0]){
+  const previousE = outgoing[0].businessObject.targetRef.id;
+  const res = elementRegistry.get(previousE);
+  return res;
   }
+  else return false;
 }
 //
 
 //function to add an element between two 
 function addActivityBetweenTwoElements(firstElement, secondElement, newElement) {
+  console.log("firstElement:", firstElement,"secondElement:", secondElement,"newElement:", newElement)
+
   const modeling = viewer.get("modeling");
-
-  const firstElementPosition = firstElement.di.bounds;
-  const secondElementPosition = secondElement.di.bounds;
-
-  //console.log("first element position", firstElementPosition,"second element position", secondElementPosition);
-
-  const newX = (firstElement.x + newElement.width) /2;
+  const newX = (firstElement.x + newElement.width) ;
   const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent")? secondElement.y : firstElement.y;
 
-  //const new_cord = getNewShapePosition(firstElement,newElement);
-  //const newX = new_cord.x;
-  //const newY = new_cord.y;
-
-
   const outgoingFlow = firstElement.outgoing[0];
+
   modeling.removeConnection(outgoingFlow);
 
   const to_shift= newElement.di.bounds.width;
-
-  const XYNewElement= {x: newX, y: newY};
 
   const getBoundsNew = newElement.di.bounds;
   const newBoundsNew={
@@ -751,88 +767,108 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
     height: getBoundsNew.height
   }
   modeling.resizeShape(newElement, newBoundsNew);
-  //modeling.updateProperties(newElement,  {x: newX, y: newY});
- // modeling.moveElements([newElement], XYNewElement);
-
-  console.log(newElement)
-
-  const BoundsFirst = {
-    x: (firstElementPosition.x - to_shift),
-    y: firstElementPosition.y,
-    width: firstElementPosition.width,
-    height: firstElementPosition.height
+  /*const BoundsFirst = {
+    x: (firstElement.x - to_shift/2),
+    y: firstElement.y,
+    width: firstElement.width,
+    height: firstElement.di.bounds.height
   }
-
-  modeling.updateProperties(firstElement, {x: BoundsFirst.x, y: BoundsFirst.y} );
-  modeling.moveElements([firstElement], {x: BoundsFirst.x, y: BoundsFirst.y});
   modeling.resizeShape(firstElement,BoundsFirst);
-
-
   const BoundsSecond={
-    x: (secondElementPosition.x + to_shift),
-    y: secondElementPosition.y,
-    width: secondElementPosition.width,
-    height: secondElementPosition.height,
+    x: (secondElement.x + to_shift/2),
+    y: secondElement.y,
+    width: secondElement.width,
+    height: secondElement.di.bounds.height,
   }
-  
-  modeling.updateProperties(secondElement, {x: BoundsSecond.x, y: BoundsSecond.y} );
-  modeling.moveElements([secondElement], {x: BoundsSecond.x, y: BoundsSecond.y});
-  modeling.resizeShape(secondElement,BoundsSecond);
-
+  modeling.resizeShape(secondElement,BoundsSecond); */
 
   const newSequenceFlowAttrsIncoming = {
     id: 'sequenceFlowAttrsInc' + newElement.id,
     type: "bpmn:SequenceFlow"
   };
   modeling.createConnection(firstElement, newElement, newSequenceFlowAttrsIncoming, firstElement.parent);
-
   const newSequenceFlowAttrsOutgoing = {
     id: 'sequenceFlowAttrsOut' + newElement.id,
     type: "bpmn:SequenceFlow"
   };
-
   modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent);
-
-  /*const sequenceFlow=secondElement.outgoing[0];
-  let waypoints = sequenceFlow.waypoints;
-
-  waypoints[0].x = waypoints[0].x + to_shift;
-  
-  modeling.updateWaypoints(sequenceFlow, waypoints);*/
-
   canvas_ref.zoom('fit-viewport');
   
+  reorderDiagram();
 }
 //
+
+//function to get the set of ordered elements, ordered by their sequence flow 
+function getOrderedSub(){
+  elementRegistry = viewer.get("elementRegistry");
+  const allElements = elementRegistry.getAll();
+
+  const new_set=new Array();
+  const starts = allElements.filter(element => element.incoming.length === 0 && element.type!="bpmn:SequenceFlow" && element.type!="bpmn:Process");
+  while(starts[0]){
+      const start = starts.splice(-1, 1)[0];
+      new_set.push(start);
+      var first = start;
+      while(hasOutgoing(first)){
+        const next = hasOutgoing(first)
+        new_set.push(next);
+        first = next;
+      }
+    
+  }
+  console.log("all elements reordered",new_set);
+  return new_set;
+}
+//
+
+
+function hasOutgoing(element){
+  elementRegistry=viewer.get("elementRegistry");
+  const outgoing=element.outgoing[0];
+  if(outgoing){
+    const target=outgoing.businessObject.targetRef.id;
+    return elementRegistry.get(target)
+  }
+  else return false;
+}
 
 //TODO: Implement
 //function to reorder the diagram
 function reorderDiagram() {
-  elementRegistry = viewer.get("elementRegistry");
-  const modeling = viewer.get("modeling");
-  const allElements = elementRegistry.getAll();
+  const sub=getOrderedSub();
+  sub.forEach(element => {
+    const previousElement = getPreviousElement(element);
+    console.log("element", element.id ,previousElement.id )
+    if(previousElement){
+      const compare = (previousElement.width < 100 ) ? 50 : 150; 
+      const diff = element.x - previousElement.x;
+      const add = compare-diff;
 
-  allElements.sort((a, b) => {
-    const aPositionY = a.di.bounds.y;
-    const bPositionY = b.di.bounds.y;
-    return aPositionY - bPositionY;
+      if(diff < compare){
+        const incomingElement = getIncoming(element);
+        modeling.removeConnection(incomingElement);
+        modeling.resizeShape(element, {x: element.x + add , y: element.y, width: element.width, height:element.di.bounds.height});
+        const newSequenceFlowAttrsIncoming = {
+          type: "bpmn:SequenceFlow"
+        };
+        modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
+      }
+
+    }
+
   });
 
-  const deltaY = 100; 
-  let currentY = deltaY; 
-  const newPositions = {};
-
-  allElements.forEach(element => {
-    const elementBounds = element.di.bounds;
-    const newY = currentY + (elementBounds.height / 2); // Centrare verticalmente l'elemento
-    newPositions[element.id] = { x: elementBounds.x, y: newY };
-    currentY += elementBounds.height + deltaY;
-  });
-
-  // Muovere gli elementi nelle nuove posizioni
-  modeling.moveElements(Object.values(newPositions));
 }
 //
+
+function getIncoming(element){
+  elementRegistry=viewer.get("elementRegistry");
+  const incoming = element.incoming[0];
+  
+    return incoming;
+  
+
+}
 
 
 //function to handle the side bar close/open function

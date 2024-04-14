@@ -79,7 +79,7 @@ async function addBPath(activities,activities_already_selected){
         activities.forEach(async function(activity){
             const element = getElement(activity.id);
             const previous = getPreviousElement(element);
-            const subprocess = await subProcessGeneration("consent"+activity.id, "Right to be Informed and to Consent",consent_to_use_the_data);
+            const subprocess = await subProcessGeneration("consent_"+activity.id,"Right to be Informed and to Consent",consent_to_use_the_data);
             console.log("subprocess",subprocess)
             if (subprocess) addActivityBetweenTwoElements(previous, element, subprocess)
       });
