@@ -17,7 +17,7 @@ import diagram_two_activities from '../resources/diagram_two_activities.bpmn';
 import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
 import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB } from './questions.js';
-import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted } from './support.js';
+import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
 
 var MetaPackage = require('./metaInfo.json');
 var current_diagram = diagram_two_activities;
@@ -114,6 +114,30 @@ async function loadDiagram(diagram){
                 position: 1 
               });*/
           
+              //handle the remotion of a gdpr path
+              viewer.on('shape.removed', function(event) {
+
+                var element = event.element;
+                if(element.type==="bpmn:CallActivity"){
+                  const name=element.businessObject.id;
+                 
+                  getMetaInformationResponse().then((response)=>{
+
+                  if (name.startsWith("consent")){
+                    const questionB = response["questionB"];
+                    var activity_id = name.split("_")[1]+"_"+name.split("_")[2];
+                    const new_meta = questionB.filter(element => element.id!="response" && element.id != activity_id);
+                    console.log("new_meta",new_meta);
+                    editMetaInfo("B",setJsonData("No",new_meta));
+                  }
+                  else if(name.startsWith("")){
+                  }
+                  reorderDiagram();
+                })
+              }
+              });
+              //
+              
 
               //function to toggle the subprocess
             eventBus.on('element.click', function(event) {
@@ -747,8 +771,6 @@ function getSuccessorElement(referenceElement) {
 
 //function to add an element between two 
 function addActivityBetweenTwoElements(firstElement, secondElement, newElement) {
-  console.log("firstElement:", firstElement,"secondElement:", secondElement,"newElement:", newElement)
-
   const modeling = viewer.get("modeling");
   const newX = (firstElement.x + newElement.width) ;
   const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent")? secondElement.y : firstElement.y;
@@ -791,9 +813,7 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
     id: 'sequenceFlowAttrsOut' + newElement.id,
     type: "bpmn:SequenceFlow"
   };
-  modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent);
-  canvas_ref.zoom('fit-viewport');
-  
+  modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent);  
   reorderDiagram();
 }
 //
@@ -816,12 +836,11 @@ function getOrderedSub(){
       }
     
   }
-  console.log("all elements reordered",new_set);
   return new_set;
 }
 //
 
-
+//function to say if an element has a successor and in the case, return it
 function hasOutgoing(element){
   elementRegistry=viewer.get("elementRegistry");
   const outgoing=element.outgoing[0];
@@ -831,8 +850,8 @@ function hasOutgoing(element){
   }
   else return false;
 }
+//
 
-//TODO: Implement
 //function to reorder the diagram
 function reorderDiagram() {
   const sub=getOrderedSub();
@@ -840,9 +859,9 @@ function reorderDiagram() {
     const previousElement = getPreviousElement(element);
     console.log("element", element.id ,previousElement.id )
     if(previousElement){
-      const compare = (previousElement.width < 100 ) ? 50 : 150; 
+      const compare = (previousElement.width < 100 ) ? 70 : 150; 
       const diff = element.x - previousElement.x;
-      const add = compare-diff;
+      const add = compare - diff;
 
       if(diff < compare){
         const incomingElement = getIncoming(element);
@@ -853,22 +872,31 @@ function reorderDiagram() {
         };
         modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
       }
+      else if(diff > compare){
+        const remove = diff - compare;
+        const incomingElement = getIncoming(element);
+        modeling.removeConnection(incomingElement);
+        modeling.resizeShape(element, {x: element.x - remove , y: element.y, width: element.width, height:element.di.bounds.height});
+        const newSequenceFlowAttrsIncoming = {
+          type: "bpmn:SequenceFlow"
+        };
+        modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
+      }
 
     }
 
   });
-
+  viewer.get("canvas").zoom('fit-viewport');
 }
 //
-
+//function to get incoming sequence flow element
 function getIncoming(element){
   elementRegistry=viewer.get("elementRegistry");
   const incoming = element.incoming[0];
-  
     return incoming;
-  
-
 }
+//
+
 
 
 //function to handle the side bar close/open function
