@@ -21,7 +21,7 @@ function DisableModeling(
 
   function disable() {
     //directEditing.cancel();
-    //contextPad.close();
+    contextPad.close();
     //dragging.cancel();
 
     // hiding palette
