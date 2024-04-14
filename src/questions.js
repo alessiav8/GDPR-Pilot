@@ -1,6 +1,6 @@
 //-----------------------------QUESTIONS-----------------------------------
 
-import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMetaInformation,getActivitiesID,setJsonData,setGdprButtonCompleted,closeSideBarSurvey } from "./support.js";
+import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMetaInformation,getActivitiesID,setJsonData,setGdprButtonCompleted,closeSideBarSurvey,questionDone } from "./support.js";
 import { getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements,handleSideBar } from "./app.js";
 import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
@@ -23,13 +23,13 @@ async function yesdropDownA() {
 
 
 //handle click no for question A
-function nodropDownA() {
+async function nodropDownA() {
   setGdprButtonCompleted();
-  removeUlFromDropDown("#dropDownA");
-
-  handleSideBar(false);
   closeSideBarSurvey();
 
+  //removeUlFromDropDown("#dropDownA");
+
+  handleSideBar(false);
   editMetaInfo("A",setJsonData("No",false));
   editMetaInfo("gdpr",true);
   
@@ -38,7 +38,9 @@ function nodropDownA() {
 
 //handle click yes for question B
 function yesdropDownB() {
-    removeUlFromDropDown("#dropDownB");
+  //removeUlFromDropDown("#dropDownB");
+  editMetaInfo("B",setJsonData("Yes",false));
+  questionDone("#dropDownB");
   const dropdownC = createDropDown(
     "dropDownC",
     false,
@@ -49,23 +51,26 @@ function yesdropDownB() {
 //
 
 //handle click no for question B
-async function nodropDownB() {
-    await createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time");
+async function nodropDownB(activities_already_selected) {
+    await createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time",activities_already_selected);
     //do something to add the path 
+    if(activities_already_selected){
+      questionDone("#dropDownB");
+      if(!document.querySelector("#dropDownC")){
+        createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
+      }    
+    }
     const dropDown = document.querySelector("#dropDownB");
+    console.log(dropDown);
     const button = dropDown.querySelector(".btn");
     button.click();
-    editMetaInfo("B",setJsonData("No",false));
-    
-
 }
 //
 
 //function to add the path to solve B
-async function addBPath(activities){
+async function addBPath(activities,activities_already_selected){
 
-  editMetaInfo("B",setJsonData("Yes",activities));
-
+  editMetaInfo("B",setJsonData("No",activities));
   if(!document.querySelector("#dropDownC")){
     createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
   }

@@ -126,7 +126,7 @@ function createDropDown(id, isExpanded, textContent, questionText) {
         nodropDownA();
         break;
       case "dropDownB":
-        nodropDownB();
+        nodropDownB(false);
         break;
       case "dropDownC":
         nodropDownC();
@@ -177,6 +177,7 @@ export function setGdprButtonCompleted(){
   const gdpr = document.querySelector("#gdpr_compliant_button");
   gdpr.style.backgroundColor = "#2CA912";
   gdpr.textContent = "GDPR complient";
+  console.log(gdpr)
 }
 //
 
@@ -215,12 +216,12 @@ function removeUlFromDropDown(dropDown) {
 //end function to remove ul
 
 //function to sign the question as done
-function questionDone(dD){
+export function questionDone(dD){
   const dropDown = document.querySelector(dD);
   const button = dropDown.querySelector(".btn");
   button.click();
     if (button) {
-      button.className = "btn";
+      button.className = "btn dropdown-toggle";
       button.style.boxShadow = "0 0 0 2px #2CA912";
       button.style.borderRadius = "1vh";
       button.style.marginTop = "0.3vh";
@@ -230,8 +231,9 @@ function questionDone(dD){
 }
 //
 
+//TODO: handle delete of activity
 //function to create ul and handle activity selection
-async function createUlandSelectActivities(dropDownID, titleText) {
+async function createUlandSelectActivities(dropDownID, titleText, activities_already_selected) {
   const dropDown = document.querySelector(dropDownID);
   const space = document.querySelector("#areaDropDowns");
 
@@ -284,7 +286,14 @@ async function createUlandSelectActivities(dropDownID, titleText) {
           checkbox.type = "checkbox";
           checkbox.name = "activity";
           checkbox.value = activity.id;
-
+          if(activities_already_selected){
+            if(activities_already_selected.some(item=> item.id === activity.id)) {
+              checkbox.checked = true;
+            }
+            else {
+              checkbox.checked = false;
+            }
+          }
           c1.appendChild(checkbox);
           c2.appendChild(label);
 
@@ -318,7 +327,7 @@ async function createUlandSelectActivities(dropDownID, titleText) {
           );
           submitButton.className = "btn-completed";
           questionDone("#dropDownB")
-          addBPath(selectedActivities);
+          addBPath(selectedActivities,activities_already_selected);
         });
 
         divActivities.appendChild(form);
@@ -329,6 +338,8 @@ async function createUlandSelectActivities(dropDownID, titleText) {
   }
 }
 //end function to create ul and handle activity selection
+
+
 
 //function to extract the set of activities
 async function getActivities() {
@@ -404,13 +415,14 @@ async function getMetaInformationResponse() {
         const xmlDoc = parser.parseFromString(xml, "application/xml");
         const questionElements = xmlDoc.querySelectorAll("modelMetaData")[0];
         const setOfQuestions=["A", "B", "C", "D", "E", "F","G","H", "I", "L"];
-        var questions = new Array();
+        var questions = {};
         setOfQuestions.forEach(letter=>{
           const valore = questionElements.getAttribute("question"+letter);
           const res= JSON.parse(valore);
           questions["question"+letter]=res;
         })
         questions["gdpr_compliant"]=questionElements.getAttribute("gdpr_compliant");
+        console.log("questions",questions)
         return questions;
     } catch (error) {
         console.error("An error occurred in getMetaInformationResponse:", error);

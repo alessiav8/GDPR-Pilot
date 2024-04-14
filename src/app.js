@@ -428,7 +428,7 @@ import_button.addEventListener('click', () =>{
 
 
 // gdpr compliance button
-gdpr_button.addEventListener('click', () =>{
+gdpr_button.addEventListener('click', () => {
 
   viewer.get('canvas').zoom('fit-viewport');
 
@@ -447,7 +447,6 @@ gdpr_button.addEventListener('click', () =>{
   const spaceBetween=document.querySelector('.space-between');
 
   if(!document.getElementById("survey_area")){
-
     // Aggiorna le larghezze delle colonne
     mainColumn.style.width = '74.8%';
     sidebarColumn.style.width = '23.8%';
@@ -498,51 +497,58 @@ gdpr_button.addEventListener('click', () =>{
     survey_area.appendChild(areaDropDowns)
 
     checkQuestion();
-    //const dropDownA = createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
-    //end survey area 
-
   }
 
 });
 //end gdpr handler
 
 //function to generete the right questions dropdown
-function checkQuestion(){
-  console.log("inside")
-
-  getMetaInformationResponse()
-  .then((response) => {
+async function checkQuestion() {
+  try {
+    const response = await getMetaInformationResponse();
     //const setOfQuestions=["A", "B", "C", "D", "E", "F","G","H", "I", "L"];
 
+    console.log("result of questions", response);
     questions_answers = response;
-    if(questions_answers["questionA"] === null){
-      createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
-    }
-    else{
-      if(questions_answers["questionL"] !== null){}
-      else if(questions_answers["questionI"]!== null){}
-      else if(questions_answers["questionH"] !== null){}
-      else if(questions_answers["questionG"] !== null){}
-      else if(questions_answers["questionF"] !== null){}
-      else if(questions_answers["questionE"] !=null){}
-      else if (questions_answers["questionD"]!==null){}      
-      else if (questions_answers["questionC"]!==null){}
-      else if (questions_answers["questionB"]!==null){}
-      else if (questions_answers["questionA"]!==null){
-        const risp = questions_answers["questionA"][0].value;
-      if(risp ==="Yes") { yesdropDownA();}
-        else { nodropDownA();}
+    if (questions_answers["questionA"] === null) {
+      createDropDown("dropDownA", true, "Personal data", "Do you handle personal data in your process?");
+    } else {
+      for (let key in questions_answers) {
+
+        if (key === "questionA") {
+          const risp = questions_answers["questionA"][0].value;
+          if (risp === "Yes") {
+            await yesdropDownA();
+          } else {
+            await nodropDownA();
+          }
+        } 
+        
+        else if (key === "questionB" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionB"][0].value;
+          if (risp === "Yes") {
+            yesdropDownB();
+          } else {
+            var B = questions_answers.questionB;
+            B = B.filter(item => item.value !== 'No');
+            nodropDownB(B);
+          }
+        } else if (key === "questionI" && questions_answers[key] !== null) {
+        } else if (key === "questionH" && questions_answers[key] !== null) {
+        } else if (key === "questionG" && questions_answers[key] !== null) {
+        } else if (key === "questionF" && questions_answers[key] !== null) {
+        } else if (key === "questionE" && questions_answers[key] !== null) {
+        } else if (key === "questionD" && questions_answers[key] !== null) {
+        } else if (key === "questionC" && questions_answers[key] !== null) {
+        } else if (key === "questionL" && questions_answers[key] !== null) {
+        }
       }
-  }
-  })
-  .catch((error) => {
+    }
+  } catch (error) {
     console.error('Error fetching meta information:', error);
-  });
-
-
-
-
+  }
 }
+
 //
 
 //function to get the diagram
