@@ -1,6 +1,6 @@
 //-----------------------------QUESTIONS-----------------------------------
 
-import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMetaInformation,getActivitiesID,setJsonData,setGdprButtonCompleted,closeSideBarSurvey,questionDone } from "./support.js";
+import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMetaInformation,getActivitiesID,setJsonData,setGdprButtonCompleted,closeSideBarSurvey,questionDone,getSettedActivity } from "./support.js";
 import { getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements,handleSideBar } from "./app.js";
 import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
@@ -52,6 +52,7 @@ function yesdropDownB() {
 
 //handle click no for question B
 async function nodropDownB(activities_already_selected) {
+  console.log("Nodrop Down",activities_already_selected)
     await createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time",activities_already_selected);
     //do something to add the path 
     if(activities_already_selected){
@@ -68,9 +69,11 @@ async function nodropDownB(activities_already_selected) {
 //
 
 //function to add the path to solve B
-async function addBPath(activities,activities_already_selected){
+async function addBPath(activities, activities_already_selected){
+  
+    editMetaInfo("B",setJsonData("No",activities));
 
-  editMetaInfo("B",setJsonData("No",activities));
+
   if(!document.querySelector("#dropDownC")){
     createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
   }
@@ -83,11 +86,12 @@ async function addBPath(activities,activities_already_selected){
             console.log("subprocess",subprocess)
             if (subprocess) addActivityBetweenTwoElements(previous, element, subprocess)
       });
-
+    
     }catch(e)
     {
       console.error("Some errorin addBPath",e)
     }
+
 
   //devo cercare ogni attività nel set
   //recuperare il riferimento 

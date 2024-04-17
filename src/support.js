@@ -6,7 +6,7 @@ import {
   nodropDownB,
   addBPath,
 } from "./questions.js";
-import { getDiagram } from "./app.js";
+import { getDiagram,removeConsentFromActivity } from "./app.js";
 
 //close sideBarSurvey
 function closeSideBarSurvey() {
@@ -234,6 +234,7 @@ export function questionDone(dD){
 //TODO: handle delete of activity
 //function to create ul and handle activity selection
 async function createUlandSelectActivities(dropDownID, titleText, activities_already_selected) {
+  console.log("already present in createUlandSelectActivities",activities_already_selected)
   const dropDown = document.querySelector(dropDownID);
   const space = document.querySelector("#areaDropDowns");
 
@@ -327,9 +328,21 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           );
           submitButton.className = "btn-completed";
           questionDone("#dropDownB")
-          addBPath(selectedActivities,activities_already_selected);
+
+          getSettedActivity("questionB").then(response => {
+            const callSelected = response;
+            if(callSelected){
+              callSelected.forEach(element =>{
+                if(!selectedActivities.some(item=>item.id == element.id)){
+                  removeConsentFromActivity(element,"consent_");
+                }
+            })
+          }
+          addBPath(selectedActivities, activities_already_selected);
+          });
         });
 
+          
         divActivities.appendChild(form);
       }
     } catch (e) {
@@ -490,9 +503,25 @@ export function setJsonData(response,activities){
 }
 //end function
 
-
-
-
+//function to get the set activities of a question
+export async function getSettedActivity(question){
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await getMetaInformationResponse();
+      const questions = response;
+      const requested_question = questions[question];
+      var result = new Array();
+      if (requested_question) {
+        result = requested_question.filter(item => item.id != "response");
+      }
+      console.log("result from setted", result);
+      resolve(result);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+//
 
 
 

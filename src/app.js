@@ -2,8 +2,11 @@ import BpmnJS from 'bpmn-js/dist/bpmn-modeler.production.min.js';
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css';
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
+
 import BpmnModdle from 'bpmn-moddle';
 import {getNewShapePosition} from 'bpmn-js/lib/features/auto-place/BpmnAutoPlaceUtil.js';
+import camundaModdle from "camunda-bpmn-moddle/resources/camunda.json";
 
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -22,7 +25,7 @@ import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInform
 var MetaPackage = require('./metaInfo.json');
 var current_diagram = diagram_two_activities;
 
-var moddle = new BpmnModdle();
+var moddle = new BpmnModdle({ camunda: camundaModdle });
 
 var viewer = new BpmnJS({
     container: '#canvas',
@@ -50,9 +53,13 @@ var elementRegistry;
 var canvas_ref;
 var eventBus;
 var overlays;
+var modeler;
 var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
 var questions_answers;
+
+var search = new URLSearchParams(window.location.search);
+var browserNavigationInProgress;
 
 //gdpr questions
 const YA=document.getElementById('yes_dropDownA');
@@ -100,8 +107,7 @@ async function loadDiagram(diagram){
               canvas_ref = viewer.get('canvas');
               eventBus = viewer.get('eventBus');
               overlays = viewer.get('overlays');
-             console.log("Element registry", elementRegistry,"\nordered",getOrderedSub());
-
+            
               getMetaInformationResponse().then((response)=>{
                 questions_answers = response;
                 if(questions_answers["gdpr_compliant"] == true){
@@ -138,37 +144,11 @@ async function loadDiagram(diagram){
               });
               //
               
+              console.log("default layer",canvas_ref.getDefaultLayer());
+              console.log(canvas_ref.getLayer("sub_layer",1));
+              console.log(canvas_ref.getActiveLayer());
 
-              //function to toggle the subprocess
-            eventBus.on('element.click', function(event) {
-                const element = event.element;
-                //if (element.type === 'bpmn:SubProcess') {
-                  switch(element.name){
-                    case "Right to be Informed and to Consent":
-                      viewer.saveXML({ format: true })
-                      .then(({ xml, error }) => {
-                          if (error) {
-                              console.log(error);
-                          } else {
-                              closeSideBarSurvey();
-                              current_diagram = xml;
-                              viewer.importXML(consent_to_use_the_data).then(() => {
-                                backArrowSubProcess();
-                                canvas_ref.zoom('fit-viewport');
-                              })
-                              
-                          }
-                      })
-                      .catch(error => {
-                          console.log(error);
-                      });
-                    default:
-                      console.log(element);
-          
-                  }
-                //}
-              });
-              //
+
           })
           .catch(error => {
               console.error('Errore nell\'importazione dell\'XML:', error);
@@ -658,27 +638,47 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
   try {
     const id = id_passed;
     const elementRegistry = viewer.get('elementRegistry');
-    console.log("Element registry",elementRegistry);
     const not_exists = elementRegistry.get(id_passed) == undefined ;
     if(not_exists){
       const subprocess = elementFactory.createShape({
         type: 'bpmn:CallActivity',
         id: id,
         name: content_label,
-        isExpanded: false,
+        isExpanded: true,
       });
       subprocess.businessObject.id=id_passed;
-      subprocess.di.id=id_passed;
-      const mainProcess = getMainProcess();
+      
+      //subprocess.di.id=id_passed;
+      const mainProcess = canvas_ref.getRootElement();//getMainProcess();
       modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
       subprocess.businessObject.name = content_label;
       modeling.updateProperties(subprocess, { name: content_label });
 
 
-     /* subprocess.businessObject.diagram=diagram_to_import;
-      console.log("sub after proc",subprocess)
-    
 
+     /* const hiddenDiagram = elementFactory.createShape({
+        type: 'bpmn:SubProcess',
+        isExpanded: true, // Expanded subprocess
+        hidden: true // Hidden shape
+      });
+            // Import the BPMN XML into the hidden diagram
+      viewer.importXML(diagram_to_import, { 
+        hidden: true, // Import the diagram as hidden
+        diagram: hiddenDiagram // Specify the diagram to import the XML into
+      }).then(() => {
+        const calledProcessId = hiddenDiagram.id;
+
+
+  
+        // Set the ID of the called process as the calledElement
+        const calledElementId = calledProcess.id;
+        subprocess.businessObject.set('calledElement', calledElementId);
+
+        // Add the Call Activity to the main canvas
+        modeling.createShape(callActivity, { x: 100, y: 100 });
+      });
+
+/*
       modeling.updateProperties(subprocess, {
         layer: "root_2"
       });
@@ -917,6 +917,14 @@ export function handleSideBar(open){
 
 }
 //
+
+
+
+export function removeConsentFromActivity(activity,type){
+  elementRegistry=viewer.get('elementRegistry');
+  const toRemove = elementRegistry.get(type+activity.id);
+  modeling.removeShape(toRemove);
+}
 
 
 export {getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements}
