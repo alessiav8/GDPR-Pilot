@@ -4,6 +4,7 @@ import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMet
 import { getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements,handleSideBar } from "./app.js";
 import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
 
+
 //handle click yes for question A
 async function yesdropDownA() {
   if(!document.querySelector('#dropDownA')){
@@ -52,19 +53,34 @@ function yesdropDownB() {
 
 //handle click no for question B
 async function nodropDownB(activities_already_selected) {
-  console.log("Nodrop Down",activities_already_selected)
+ 
     await createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time",activities_already_selected);
-    //do something to add the path 
+
+   
     if(activities_already_selected){
       questionDone("#dropDownB");
       if(!document.querySelector("#dropDownC")){
         createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
       }    
     }
+
+
     const dropDown = document.querySelector("#dropDownB");
-    console.log(dropDown);
-    const button = dropDown.querySelector(".btn");
-    button.click();
+const button = dropDown.querySelector(".btn");
+$(document).ready(function() {
+// Mostra il menu a tendina
+$(button).dropdown('show');
+
+// Aggiunge la classe "show" al bottone
+button.classList.add("show");
+
+// Imposta l'attributo aria-expanded a true
+button.setAttribute("aria-expanded", "true");
+  });
+
+
+
+    
 }
 //
 

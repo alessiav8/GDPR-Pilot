@@ -5,6 +5,8 @@ import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 
 import BpmnModdle from 'bpmn-moddle';
+import BpmnModeler from 'bpmn-js/lib/Modeler';
+const zeebeModule = require('zeebe-bpmn-moddle/resources/zeebe.json');
 import {getNewShapePosition} from 'bpmn-js/lib/features/auto-place/BpmnAutoPlaceUtil.js';
 import camundaModdle from "camunda-bpmn-moddle/resources/camunda.json";
 
@@ -26,6 +28,12 @@ var MetaPackage = require('./metaInfo.json');
 var current_diagram = diagram_two_activities;
 
 var moddle = new BpmnModdle({ camunda: camundaModdle });
+
+const second_viewer = new BpmnModeler({
+  moddleExtensions: {
+  zeebe: zeebeModule
+  }
+});
 
 var viewer = new BpmnJS({
     container: '#canvas',
@@ -639,6 +647,7 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
     const id = id_passed;
     const elementRegistry = viewer.get('elementRegistry');
     const not_exists = elementRegistry.get(id_passed) == undefined ;
+
     if(not_exists){
       const subprocess = elementFactory.createShape({
         type: 'bpmn:CallActivity',
@@ -649,63 +658,27 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
       subprocess.businessObject.id=id_passed;
       
       //subprocess.di.id=id_passed;
-      const mainProcess = canvas_ref.getRootElement();//getMainProcess();
+      const mainProcess = canvas_ref.getRootElement();
       modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
       subprocess.businessObject.name = content_label;
       modeling.updateProperties(subprocess, { name: content_label });
 
+      /*test
+      second_viewer.importXML(diagram_to_import).then(event=>{
+        const externalProcess = second_viewer.get('canvas').getRootElement();
+        const calledElement = elementFactory.create('zeebe:CalledElement', {
+          type: 'bpmn:Process',
+          processRef: externalProcess
+        });
 
+        subprocess.extensionElements = elementFactory.create('bpmn:ExtensionElements', {
+          values: [calledElement]
+        });
+      })
+      */
 
-     /* const hiddenDiagram = elementFactory.createShape({
-        type: 'bpmn:SubProcess',
-        isExpanded: true, // Expanded subprocess
-        hidden: true // Hidden shape
-      });
-            // Import the BPMN XML into the hidden diagram
-      viewer.importXML(diagram_to_import, { 
-        hidden: true, // Import the diagram as hidden
-        diagram: hiddenDiagram // Specify the diagram to import the XML into
-      }).then(() => {
-        const calledProcessId = hiddenDiagram.id;
+      
 
-
-  
-        // Set the ID of the called process as the calledElement
-        const calledElementId = calledProcess.id;
-        subprocess.businessObject.set('calledElement', calledElementId);
-
-        // Add the Call Activity to the main canvas
-        modeling.createShape(callActivity, { x: 100, y: 100 });
-      });
-
-/*
-      modeling.updateProperties(subprocess, {
-        layer: "root_2"
-      });
-
-      var newMod= new BpmnJS();
-      newMod.importXML(consent_to_use_the_data)
-        .then(() => {
-              const list_elements= newMod.get('elementRegistry').getAll();
-              const modeling2= newMod.get('modeling');
-              list_elements.forEach(element => {
-                if (element.type !== "bpmn:Collaboration" && element.type !== "bpmn:Participant") {
-                  modeling2.removeElements([element]);
-                }
-              });
-              
-              list_elements.forEach(element => {
-                if (element.type !== "bpmn:Collaboration" && element.type !== "bpmn:Participant") {
-                  subprocess.children.add(element);
-                }
-              });
-              modeling.updateProperties(subprocess, { children: subprocess.children });
-              console.log("sub at the end",subprocess)
-              
-        })
-        .catch(error => {
-            console.log(error);
-        });  */  
     return subprocess;
   }
   else{

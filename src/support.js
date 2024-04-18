@@ -234,7 +234,6 @@ export function questionDone(dD){
 //TODO: handle delete of activity
 //function to create ul and handle activity selection
 async function createUlandSelectActivities(dropDownID, titleText, activities_already_selected) {
-  console.log("already present in createUlandSelectActivities",activities_already_selected)
   const dropDown = document.querySelector(dropDownID);
   const space = document.querySelector("#areaDropDowns");
 
@@ -318,6 +317,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
         ulDropDown.appendChild(form);
         ulDropDown.appendChild(subDiv);
 
+
         submitButton.addEventListener("click", (event) => {
           event.preventDefault();
           const selectedActivities = Array.from(
@@ -344,6 +344,15 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
 
           
         divActivities.appendChild(form);
+
+        const button_d = dropDown.querySelector(".btn");
+        console.log("button pre", button_d);
+        button_d.className = "btn btn-secodary dropdown-toggle show";
+        button_d.setAttribute("aria-expanded", "true");
+
+        console.log("button post", button_d);
+    
+        
       }
     } catch (e) {
       console.error("error in getting activities", e);
