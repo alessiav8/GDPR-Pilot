@@ -346,11 +346,9 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
         divActivities.appendChild(form);
 
         const button_d = dropDown.querySelector(".btn");
-        console.log("button pre", button_d);
         button_d.className = "btn btn-secodary dropdown-toggle show";
         button_d.setAttribute("aria-expanded", "true");
 
-        console.log("button post", button_d);
     
         
       }

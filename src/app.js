@@ -6,7 +6,6 @@ import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 
 import BpmnModdle from 'bpmn-moddle';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
-const zeebeModule = require('zeebe-bpmn-moddle/resources/zeebe.json');
 import {getNewShapePosition} from 'bpmn-js/lib/features/auto-place/BpmnAutoPlaceUtil.js';
 import camundaModdle from "camunda-bpmn-moddle/resources/camunda.json";
 
@@ -29,10 +28,12 @@ var current_diagram = diagram_two_activities;
 
 var moddle = new BpmnModdle({ camunda: camundaModdle });
 
+const zeebeModdle = require('zeebe-bpmn-moddle/resources/zeebe.json');
+
+const moddle_2 = new BpmnModdle({ zeebe: zeebeModdle });
+
 const second_viewer = new BpmnModeler({
-  moddleExtensions: {
-  zeebe: zeebeModule
-  }
+  
 });
 
 var viewer = new BpmnJS({
@@ -659,25 +660,33 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
       
       //subprocess.di.id=id_passed;
       const mainProcess = canvas_ref.getRootElement();
-      modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
       subprocess.businessObject.name = content_label;
       modeling.updateProperties(subprocess, { name: content_label });
 
-      /*test
-      second_viewer.importXML(diagram_to_import).then(event=>{
-        const externalProcess = second_viewer.get('canvas').getRootElement();
-        const calledElement = elementFactory.create('zeebe:CalledElement', {
-          type: 'bpmn:Process',
-          processRef: externalProcess
+      //test
+      second_viewer.importXML(diagram_to_import).then(() => {
+        var externalProcess;
+        const elementRegistry2 = second_viewer.get('elementRegistry');
+
+        elementRegistry2.getAll().forEach(element => {
+
+          if(element.type==="bpmn:Participant" && element.businessObject.name=="Data Controller"){
+            const ProcessID = element.businessObject.processRef.id;
+            externalProcess = element;
+           }
         });
 
-        subprocess.extensionElements = elementFactory.create('bpmn:ExtensionElements', {
-          values: [calledElement]
+        const zeebeExtension = moddle_2.create('zeebe:CalledElement', {
+            type: 'bpmn:Process',
+            processRef: element.id,
         });
-      })
-      */
+    
+        const extensionElements = subprocess.businessObject.extensionElements || moddle_2.create('bpmn:ExtensionElements');
+        extensionElements.get('values').push(zeebeExtension);
+        subprocess.businessObject.extensionElements = extensionElements;
+        });
 
-      
+    modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
 
     return subprocess;
   }
