@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@bpmn-io/properties-panel": "^3.18.2",
     "bootstrap": "^5.3.3",
     "bpmn-js": "^17.2.2",
     "bpmn-js-properties-panel": "^5.14.0",

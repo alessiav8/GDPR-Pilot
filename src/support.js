@@ -6,7 +6,7 @@ import {
   nodropDownB,
   addBPath,
 } from "./questions.js";
-import { getDiagram,removeConsentFromActivity } from "./app.js";
+import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram } from "./app.js";
 
 //close sideBarSurvey
 function closeSideBarSurvey() {
@@ -337,6 +337,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
                   removeConsentFromActivity(element,"consent_");
                 }
             })
+            reorderDiagram();
           }
           addBPath(selectedActivities, activities_already_selected);
           });
@@ -360,27 +361,6 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
 //end function to create ul and handle activity selection
 
 
-
-//function to extract the set of activities
-async function getActivities() {
-  try {
-    const xml = await getDiagram();
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xml, "application/xml");
-    const taskElements = xmlDoc.querySelectorAll(`bpmn\\:task, task`);
-    const tasks = Array.from(taskElements).map((task) => {
-      const id = task.getAttribute("id");
-      const name = task.getAttribute("name");
-      return { id, name };
-    });
-
-    return tasks;
-  } catch (error) {
-    console.error("An error occurred in getActivities:", error);
-    throw error;
-  }
-}
-//
 
 //function to mark as completed some question 
 //metainfo structure 

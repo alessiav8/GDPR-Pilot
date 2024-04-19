@@ -19,6 +19,7 @@ import disableModeling from "./DisableModeling";
 import diagram from '../resources/diagram.bpmn';
 import diagram_two_activities from '../resources/diagram_two_activities.bpmn';
 import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
+import DisabledTypeChangeContextPadProvider from './contextPadExtension.js';
 
 import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
@@ -41,7 +42,9 @@ var viewer = new BpmnJS({
     moddleExtensions: {
         meta: MetaPackage
     },
-    additionalModules: [disableModeling]
+    additionalModules: [
+      disableModeling, 
+    ]
 
 });
 
@@ -61,7 +64,7 @@ var modeling;
 var elementRegistry;
 var canvas_ref;
 var eventBus;
-var overlays;
+var contextPad;
 var modeler;
 var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
@@ -75,6 +78,28 @@ const YA=document.getElementById('yes_dropDownA');
 const NA=document.getElementById('no_dropDownA');
 //end gdpr questions
 
+const bpmnActivityTypes = [
+  'bpmn:task',
+  'bpmn:Task',
+  'bpmn:serviceTask',
+  'bpmn:ServiceTask',
+  'bpmn:userTask',
+  'bpmn:UserTask',
+  'bpmn:scriptTask',
+  'bpmn:ScriptTask',
+  'bpmn:businessRuleTask',
+  'bpmn:BusinessRuleTask',
+  'bpmn:sendTask',
+  'bpmn:SendTask',
+  'bpmn:receiveTask',
+  'bpmn:ReceiveTask',
+  'bpmn:manualTask',
+  'bpmn:ManualTask',
+];
+
+const gdprActivityQuestionsPrefix=[
+  "consent",
+]
 //
 
 //questa funzione mi ritorna true se esiste un extended element che ha un tag meta al suo interno
@@ -115,7 +140,20 @@ async function loadDiagram(diagram){
               checkMetaInfo();
               canvas_ref = viewer.get('canvas');
               eventBus = viewer.get('eventBus');
-              overlays = viewer.get('overlays');
+              contextPad = viewer.get('contextPad');
+
+              //removing the edit type option
+              var bpmnReplace = viewer.get('bpmnReplace');
+              var translate = viewer.get('translate');
+              var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
+              //
+
+              //this prevent the modification of the id when someone change the type of something 
+              eventBus.on('element.updateId' ,function(event) {
+                event.preventDefault();              
+                return;
+              });
+              //
             
               getMetaInformationResponse().then((response)=>{
                 questions_answers = response;
@@ -124,11 +162,6 @@ async function loadDiagram(diagram){
                 }
               })
             
-
-              /*canvas_ref.addLayer('root_1', {
-                position: 1 
-              });*/
-          
               //handle the remotion of a gdpr path
               viewer.on('shape.removed', function(event) {
 
@@ -152,10 +185,6 @@ async function loadDiagram(diagram){
               }
               });
               //
-              
-              console.log("default layer",canvas_ref.getDefaultLayer());
-              console.log(canvas_ref.getLayer("sub_layer",1));
-              console.log(canvas_ref.getActiveLayer());
 
 
           })
@@ -520,9 +549,6 @@ gdpr_button.addEventListener('click', () => {
 async function checkQuestion() {
   try {
     const response = await getMetaInformationResponse();
-    //const setOfQuestions=["A", "B", "C", "D", "E", "F","G","H", "I", "L"];
-
-    console.log("result of questions", response);
     questions_answers = response;
     if (questions_answers["questionA"] === null) {
       createDropDown("dropDownA", true, "Personal data", "Do you handle personal data in your process?");
@@ -678,7 +704,7 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
 
         const zeebeExtension = moddle_2.create('zeebe:CalledElement', {
             type: 'bpmn:Process',
-            processRef: element.id,
+            processRef: externalProcess.businessObject.processRef.id,
         });
     
         const extensionElements = subprocess.businessObject.extensionElements || moddle_2.create('bpmn:ExtensionElements');
@@ -687,7 +713,6 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
         });
 
     modeling.createShape(subprocess, { x: 700, y: 100 }, mainProcess);
-
     return subprocess;
   }
   else{
@@ -806,7 +831,7 @@ function getOrderedSub(){
   const allElements = elementRegistry.getAll();
 
   const new_set=new Array();
-  const starts = allElements.filter(element => element.incoming.length === 0 && element.type!="bpmn:SequenceFlow" && element.type!="bpmn:Process");
+  const starts = allElements.filter(element => bpmnActivityTypes.some(item=> item === element.type) || element.type =="bpmn:SubProcess" || element.type==="bpmn:CallActivity"|| element.type =="bpmn:subProcess" || element.type==="bpmn:callActivity");
   while(starts[0]){
       const start = starts.splice(-1, 1)[0];
       new_set.push(start);
@@ -835,11 +860,11 @@ function hasOutgoing(element){
 //
 
 //function to reorder the diagram
-function reorderDiagram() {
+export function reorderDiagram() {
   const sub=getOrderedSub();
+  console.log("reordering",sub);
   sub.forEach(element => {
     const previousElement = getPreviousElement(element);
-    console.log("element", element.id ,previousElement.id )
     if(previousElement){
       const compare = (previousElement.width < 100 ) ? 70 : 150; 
       const diff = element.x - previousElement.x;
@@ -864,9 +889,7 @@ function reorderDiagram() {
         };
         modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
       }
-
     }
-
   });
   viewer.get("canvas").zoom('fit-viewport');
 }
@@ -900,6 +923,29 @@ export function handleSideBar(open){
 }
 //
 
+//function to extract the set of activities available in the diagram
+export async function getActivities() {
+
+    elementRegistry=viewer.get('elementRegistry');
+    const allElements=elementRegistry.getAll();
+
+    var activities = new Array();
+
+    console.log("all considered",allElements);
+
+    if(allElements){
+      allElements.forEach(element=>{
+        if(bpmnActivityTypes.some(item => item == element.type )){
+          const id= element.id;
+          const name= element.businessObject.name;
+          activities.push({id ,name });
+        }
+      })
+      console.log("activities",activities)
+      return activities;
+    }
+}
+//
 
 
 export function removeConsentFromActivity(activity,type){

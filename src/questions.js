@@ -65,7 +65,7 @@ async function nodropDownB(activities_already_selected) {
     }
 
 
-    const dropDown = document.querySelector("#dropDownB");
+const dropDown = document.querySelector("#dropDownB");
 const button = dropDown.querySelector(".btn");
 $(document).ready(function() {
 // Mostra il menu a tendina
@@ -87,7 +87,7 @@ button.setAttribute("aria-expanded", "true");
 //function to add the path to solve B
 async function addBPath(activities, activities_already_selected){
   
-    editMetaInfo("B",setJsonData("No",activities));
+  editMetaInfo("B",setJsonData("No",activities));
 
 
   if(!document.querySelector("#dropDownC")){
