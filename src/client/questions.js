@@ -2,7 +2,7 @@
 
 import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMetaInformation,getActivitiesID,setJsonData,setGdprButtonCompleted,closeSideBarSurvey,questionDone,getSettedActivity } from "./support.js";
 import { getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements,handleSideBar } from "./app.js";
-import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
+import consent_to_use_the_data from '../../resources/consent_to_use_the_data.bpmn';
 
 
 //handle click yes for question A

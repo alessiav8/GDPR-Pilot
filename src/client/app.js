@@ -14,18 +14,18 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { query, classes } from "min-dom";
 
-import disableModeling from "./DisableModeling";
+import disableModeling from "../customizations/DisableModeling.js";
 
-import diagram from '../resources/diagram.bpmn';
-import diagram_two_activities from '../resources/diagram_two_activities.bpmn';
-import consent_to_use_the_data from '../resources/consent_to_use_the_data.bpmn';
-import DisabledTypeChangeContextPadProvider from './contextPadExtension.js';
+import diagram from '../../resources/diagram.bpmn';
+import diagram_two_activities from '../../resources/diagram_two_activities.bpmn';
+import consent_to_use_the_data from '../../resources/consent_to_use_the_data.bpmn';
+import DisabledTypeChangeContextPadProvider from '../customizations/contextPadExtension.js';
 
 import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
 import axios from 'axios';
 
-var MetaPackage = require('./metaInfo.json');
+var MetaPackage = require('../customizations/metaInfo.json');
 var current_diagram = diagram_two_activities;
 
 var moddle = new BpmnModdle({ camunda: camundaModdle });
