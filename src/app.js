@@ -23,7 +23,7 @@ import DisabledTypeChangeContextPadProvider from './contextPadExtension.js';
 
 import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
-//import {callChatGpt} from './chatGptAPI.js';
+import axios from 'axios';
 
 var MetaPackage = require('./metaInfo.json');
 var current_diagram = diagram_two_activities;
@@ -59,6 +59,7 @@ const canvas_col=document.getElementById('canvas_col');
 const survey_col=document.getElementById('survey_col');
 const over_canvas=document.getElementById('over_canvas');
 const edit= document.getElementById("mode");
+const endpoint="http://localhost:3000"
 
 var elementFactory;
 var modeling;
@@ -148,12 +149,24 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 // end function to load the first diagram 
 
+//function to call the AP of chatGPT
+function callChatGpt(){
+  axios.get(endpoint + '/api/sensitive-data')
+  .then(response => {
+    const messageReceived = response.data.message.content;
+    console.log('Response from chatGPT:', messageReceived);
+  })
+  .catch(error => {
+    console.error('Errore durante il recupero delle informazioni sensibili:', error);
+  });
+}
+//
+
 //function to load the diagram through importXML
 async function loadDiagram(diagram){
     try {
       const res = viewer.importXML(diagram)
           .then(async () => {
-            //callChatGpt();
               viewer.get('canvas').zoom('fit-viewport');
               elementFactory = viewer.get('elementFactory');
               modeling = viewer.get('modeling');
