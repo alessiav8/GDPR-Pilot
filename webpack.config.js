@@ -29,4 +29,10 @@ module.exports = {
     ],
   },
   mode: 'development',
+  resolve: {
+    fallback: {
+      vm: require.resolve("vm-browserify"),
+      stream: require.resolve("stream-browserify")
+    }
+  }
 };

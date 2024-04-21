@@ -25,11 +25,13 @@ async function yesdropDownA() {
 
 //handle click no for question A
 async function nodropDownA() {
+  if(!document.querySelector('#dropDownA')){
+    await createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
+  }
   setGdprButtonCompleted();
-  closeSideBarSurvey();
+  //closeSideBarSurvey();
 
-  //removeUlFromDropDown("#dropDownA");
-
+  removeUlFromDropDown("#dropDownA");
   handleSideBar(false);
   editMetaInfo("A",setJsonData("No",false));
   editMetaInfo("gdpr",true);
@@ -53,29 +55,21 @@ function yesdropDownB() {
 
 //handle click no for question B
 async function nodropDownB(activities_already_selected) {
- 
     await createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time",activities_already_selected);
-
-   
     if(activities_already_selected){
       questionDone("#dropDownB");
       if(!document.querySelector("#dropDownC")){
         createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
       }    
     }
-
-
-const dropDown = document.querySelector("#dropDownB");
-const button = dropDown.querySelector(".btn");
-$(document).ready(function() {
-// Mostra il menu a tendina
-$(button).dropdown('show');
-
-// Aggiunge la classe "show" al bottone
-button.classList.add("show");
-
-// Imposta l'attributo aria-expanded a true
-button.setAttribute("aria-expanded", "true");
+    const dropDown = document.querySelector("#dropDownB");
+    const button = dropDown.querySelector(".btn");
+    const sidebarColumn = document.querySelector(".sidebar-column");
+    console.log("width sidebar",sidebarColumn.style.width)
+    $(document).ready(function() {
+      $(button).dropdown('show');
+      button.classList.add("show");
+      button.setAttribute("aria-expanded", "true");
   });
 
 
@@ -98,8 +92,7 @@ async function addBPath(activities, activities_already_selected){
         activities.forEach(async function(activity){
             const element = getElement(activity.id);
             const previous = getPreviousElement(element);
-            const subprocess = await subProcessGeneration("consent_"+activity.id,"Right to be Informed and to Consent",consent_to_use_the_data);
-            console.log("subprocess",subprocess)
+            const subprocess = await subProcessGeneration("consent_"+activity.id,"Right to be Informed and to Consent",consent_to_use_the_data,element);
             if (subprocess) addActivityBetweenTwoElements(previous, element, subprocess)
       });
     

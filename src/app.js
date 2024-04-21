@@ -23,6 +23,7 @@ import DisabledTypeChangeContextPadProvider from './contextPadExtension.js';
 
 import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
+//import {callChatGpt} from './chatGptAPI.js';
 
 var MetaPackage = require('./metaInfo.json');
 var current_diagram = diagram_two_activities;
@@ -97,6 +98,25 @@ const bpmnActivityTypes = [
   'bpmn:ManualTask',
 ];
 
+const allBpmnElements = 
+ 
+bpmnActivityTypes.concat(
+  [
+    "bpmn:Gateway",
+    "bpmn:ExclusiveGateway",
+    "bpmn:SubProcess",
+    "bpmn:ParallelGateway",
+    "bpmn:BoundaryEvent",
+    "bpmn:MessageFlow",
+    "bpmn:gateway",
+    "bpmn:sequenceFlow",
+    "bpmn:exclusiveGateway",
+    "bpmn:subProcess",
+    "bpmn:parallelGateway",
+    "bpmn:boundaryEvent",
+    "bpmn:messageFlow",
+]);
+
 const gdprActivityQuestionsPrefix=[
   "consent",
 ]
@@ -124,6 +144,7 @@ function getExtension(element, type) {
 //function that loads the first diagram displayed at every load
 document.addEventListener('DOMContentLoaded', async function () {
     await loadDiagram(diagram_two_activities);
+    localStorage.setItem("popUpVisualized", false);
 });
 // end function to load the first diagram 
 
@@ -132,6 +153,7 @@ async function loadDiagram(diagram){
     try {
       const res = viewer.importXML(diagram)
           .then(async () => {
+            //callChatGpt();
               viewer.get('canvas').zoom('fit-viewport');
               elementFactory = viewer.get('elementFactory');
               modeling = viewer.get('modeling');
@@ -154,14 +176,7 @@ async function loadDiagram(diagram){
                 return;
               });
               //
-            
-              getMetaInformationResponse().then((response)=>{
-                questions_answers = response;
-                if(questions_answers["gdpr_compliant"] == true){
-                  setGdprButtonCompleted();
-                }
-              })
-            
+
               //handle the remotion of a gdpr path
               viewer.on('shape.removed', function(event) {
 
@@ -185,6 +200,16 @@ async function loadDiagram(diagram){
               }
               });
               //
+
+
+            /*if(elementRegistry.getAll().length > 0) {
+              getMetaInformationResponse().then((response)=>{
+                questions_answers = response;
+                if(questions_answers["gdpr_compliant"] == true){
+                  setGdprButtonCompleted();
+                }
+              })
+          }*/
 
 
           })
@@ -256,7 +281,8 @@ function changeID(){
 function checkMetaInfo(){
   const Mod = viewer._moddle;
   const processElements = getProcessElement();
-  if (processElements.length > 0) {
+
+  if (processElements.length > 0) { 
       var firstProcessElement = processElements[0];
       var processBusinessObject = firstProcessElement.businessObject;
       var processExtension = getExtension(processBusinessObject, 'meta:ModelMetaData');
@@ -284,10 +310,11 @@ function checkMetaInfo(){
 //Function to get the element process without knowing the ID
 function getProcessElement(){
   var allElements = viewer.get('elementRegistry').getAll();
-
   var processElements = allElements.filter(function(element) {
-      return element.type === 'bpmn:Process';
-  });
+      if( element.type === "bpmn:Process" || element.type === 'bpmn:Collaboration' ||element.type === 'bpmn:process' || element.type === 'bpmn:collaboration'){
+        return element;
+      };
+  })
   return processElements;
 }
 //end function to get the element process
@@ -469,26 +496,13 @@ import_button.addEventListener('click', () =>{
 });
 //end import handler 
 
-
-// gdpr compliance button
-gdpr_button.addEventListener('click', () => {
-
+function handleClickOnGdprButton(){
   viewer.get('canvas').zoom('fit-viewport');
-
   handleSideBar(true);
-  /*hide the panel and inform the user
-  eventBus.fire("TOGGLE_MODE_EVENT", {
-    exportMode: true 
-  });  
-  mode.textContent = "GDPR Mode"
-  window.alert("You are now in GDPR mode, and the editor is disabled. \n If you want to edit again, you must close the GDPR panel.");
-  */
-
   const mainColumn = document.querySelector('.main-column');
   const sidebarColumn = document.querySelector('.sidebar-column');
   const canvasRaw = document.querySelector('#canvas-raw');
   const spaceBetween=document.querySelector('.space-between');
-
   if(!document.getElementById("survey_area")){
     // Aggiorna le larghezze delle colonne
     mainColumn.style.width = '74.8%';
@@ -513,10 +527,6 @@ gdpr_button.addEventListener('click', () => {
     close_survey.addEventListener('click', () => {
      closeSideBarSurvey();
      handleSideBar(false);
-     /*eventBus.fire("TOGGLE_MODE_EVENT", {
-      exportMode: false 
-    });       
-    edit.textContent = "Edit Mode";*/
     });
 
     survey_area.appendChild(close_survey);
@@ -537,13 +547,87 @@ gdpr_button.addEventListener('click', () => {
     const areaDropDowns= document.createElement("div");
     areaDropDowns.className = "container";
     areaDropDowns.id="areaDropDowns";
-    survey_area.appendChild(areaDropDowns)
+    survey_area.appendChild(areaDropDowns);
 
+    const undo = document.createElement("div");
+    undo.className = "row";
+    undo.style.position = "absolute";
+    undo.style.bottom = "0";
+    undo.style.marginBottom = "10vh";
+    undo.style.display = "flex";
+    undo.style.alignItems = "center";
+
+    const undo_button = document.createElement("button");
+    undo_button.className = "btn btn-outline-danger";
+    undo_button.textContent = "Undo everything";
+
+       
+    undo.appendChild(undo_button);
+    survey_area.appendChild(undo);
+
+    const areaWidth = survey_area.offsetWidth;
+    console.log("button width",undo_button.offsetWidth, areaWidth);
+    const leftValue = (areaWidth / 2 - (undo_button.offsetWidth/2)) ;
+    undo.style.marginLeft = `${leftValue}px`;
+    console.log(leftValue);
+
+    undo_button.addEventListener("click", handleUndoGdpr);
     checkQuestion();
   }
 
-});
+}
+
+//function to handle the undo of everything we made for the gdpr compliance
+//i have to edit the meta info 
+//to remove every path added
+function handleUndoGdpr(){
+  elementRegistry=viewer.get("elementRegistry");
+  var conferma = confirm("Are you sure?");
+  if(conferma){
+    getMetaInformationResponse().then((response=>{
+      console.log(response);
+      for (let question in response){
+        if (response[question] != null) {
+          switch (question) {
+            case "gdpr_compliant":
+              editMetaInfo("gdpr", false);
+              break;
+            case "questionA":
+              if(response[question][0].value=="No"){
+                setGdprButtonCompleted();
+              }
+              editMetaInfo("A",null);
+            case "questionB":
+              console.log(response[question]);
+              response[question].forEach(element=>{
+                console.log("element: ",element)
+                if(element.id!="response"){
+                  const activity = elementRegistry.get(element.id);
+                  removeConsentFromActivity(activity, "consent_");
+                }
+              })
+              break;
+            
+            default:
+              break;
+          }
+        }
+        console.log("question",question,response[question])
+      }
+      closeSideBarSurvey();
+      handleSideBar(false);
+    }))
+  }
+
+}
+//
+
+// gdpr compliance button
+gdpr_button.addEventListener('click', handleClickOnGdprButton);
 //end gdpr handler
+
+
+
 
 //function to generete the right questions dropdown
 async function checkQuestion() {
@@ -669,7 +753,8 @@ function checkUniqueID(id){
 //funtion to create the subprocess for the questions
 //id: id of the subprocess, content_label: the label is visualized in the subprocess,
 //diagram_to_import: the diagram that will be inserted into the subprocess
-async function subProcessGeneration(id_passed, content_label, diagram_to_import) {
+//element: the element that will be the successor of this so i can get the parent ref
+async function subProcessGeneration(id_passed, content_label, diagram_to_import, element) {
   try {
     const id = id_passed;
     const elementRegistry = viewer.get('elementRegistry');
@@ -685,7 +770,9 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
       subprocess.businessObject.id=id_passed;
       
       //subprocess.di.id=id_passed;
-      const mainProcess = canvas_ref.getRootElement();
+      const mainProcess = element.parent;
+      //const mainProcess = canvas_ref.getRootElement();
+
       subprocess.businessObject.name = content_label;
       modeling.updateProperties(subprocess, { name: content_label });
 
@@ -726,6 +813,8 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import)
 }
 //
 
+
+
 //function to get the reference of an element
 function getElement(id){
     const elementRegistry = viewer.get("elementRegistry");
@@ -739,17 +828,6 @@ function getElement(id){
 }
 //
 
-//
-function orderByXPosition(elementRegistry) {
-  const elementsArray = Array.from(elementRegistry.values());
-  elementsArray.sort((elementA, elementB) => {
-    const xA = elementA.x;
-    const xB = elementB.x;
-    return xA - xB;
-  });
-  return elementsArray;
-}
-//
 
 //function to get the referenc of the previous element of a certain element 
 function getPreviousElement(referenceElement) {
@@ -796,42 +874,31 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
     height: getBoundsNew.height
   }
   modeling.resizeShape(newElement, newBoundsNew);
-  /*const BoundsFirst = {
-    x: (firstElement.x - to_shift/2),
-    y: firstElement.y,
-    width: firstElement.width,
-    height: firstElement.di.bounds.height
-  }
-  modeling.resizeShape(firstElement,BoundsFirst);
-  const BoundsSecond={
-    x: (secondElement.x + to_shift/2),
-    y: secondElement.y,
-    width: secondElement.width,
-    height: secondElement.di.bounds.height,
-  }
-  modeling.resizeShape(secondElement,BoundsSecond); */
 
   const newSequenceFlowAttrsIncoming = {
     id: 'sequenceFlowAttrsInc' + newElement.id,
     type: "bpmn:SequenceFlow"
   };
+
   modeling.createConnection(firstElement, newElement, newSequenceFlowAttrsIncoming, firstElement.parent);
   const newSequenceFlowAttrsOutgoing = {
     id: 'sequenceFlowAttrsOut' + newElement.id,
     type: "bpmn:SequenceFlow"
   };
+
   modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent);  
   reorderDiagram();
 }
 //
 
 //function to get the set of ordered elements, ordered by their sequence flow 
+//all the elements but not the sequence flow or parrtecipant or collaboration
 function getOrderedSub(){
   elementRegistry = viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
 
   const new_set=new Array();
-  const starts = allElements.filter(element => bpmnActivityTypes.some(item=> item === element.type) || element.type =="bpmn:SubProcess" || element.type==="bpmn:CallActivity"|| element.type =="bpmn:subProcess" || element.type==="bpmn:callActivity");
+  const starts = allElements.filter(element => allBpmnElements.some(item=> item === element.type));
   while(starts[0]){
       const start = starts.splice(-1, 1)[0];
       new_set.push(start);
@@ -862,7 +929,6 @@ function hasOutgoing(element){
 //function to reorder the diagram
 export function reorderDiagram() {
   const sub=getOrderedSub();
-  console.log("reordering",sub);
   sub.forEach(element => {
     const previousElement = getPreviousElement(element);
     if(previousElement){
@@ -894,6 +960,7 @@ export function reorderDiagram() {
   viewer.get("canvas").zoom('fit-viewport');
 }
 //
+
 //function to get incoming sequence flow element
 function getIncoming(element){
   elementRegistry=viewer.get("elementRegistry");
@@ -901,8 +968,6 @@ function getIncoming(element){
     return incoming;
 }
 //
-
-
 
 //function to handle the side bar close/open function
 //open: you want to open the side bar? 
@@ -912,7 +977,11 @@ export function handleSideBar(open){
       exportMode: true 
     });  
     mode.textContent = "GDPR Mode"
-    window.alert("You are now in GDPR mode, and the editor is disabled. \n If you want to edit again, you must close the GDPR panel.");
+    const visualized = localStorage.getItem("popUpVisualized") == "true" ? true : false;
+    if(!visualized){
+      window.alert("You are now in GDPR mode, and the editor is disabled. \n If you want to edit again, you must close the GDPR panel.");
+      localStorage.setItem("popUpVisualized", "true");
+    }
   }else{
     eventBus.fire("TOGGLE_MODE_EVENT", {
       exportMode: false 
@@ -931,8 +1000,6 @@ export async function getActivities() {
 
     var activities = new Array();
 
-    console.log("all considered",allElements);
-
     if(allElements){
       allElements.forEach(element=>{
         if(bpmnActivityTypes.some(item => item == element.type )){
@@ -947,12 +1014,19 @@ export async function getActivities() {
 }
 //
 
-
+//if i want to remove the path added for the gdpr compliance
+//activity: the activity after the path so the activity for which i imserted the path
+//type: the type of path i want to remove ex. consent for data
 export function removeConsentFromActivity(activity,type){
   elementRegistry=viewer.get('elementRegistry');
+  try{
   const toRemove = elementRegistry.get(type+activity.id);
   modeling.removeShape(toRemove);
+  }catch(e){
+    console.error("Some problem in removing path gdpr added to activity")
+  }
 }
+//
 
 
 export {getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements}

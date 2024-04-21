@@ -172,14 +172,25 @@ function createDropDown(id, isExpanded, textContent, questionText) {
 }
 //end function create the dropDown
 
-//funtion to set the gdpr button as completed
+//funtion to set the gdpr button as completed or remove the complete button
 export function setGdprButtonCompleted(){
-  const gdpr = document.querySelector("#gdpr_compliant_button");
-  gdpr.style.backgroundColor = "#2CA912";
-  gdpr.textContent = "GDPR complient";
-  console.log(gdpr)
+  const gdpr_button = document.querySelector("#gdpr_compliant_button");
+  console.log("gdpr backGround ",gdpr_button.style.backgroundColor)
+  if(gdpr_button.style.backgroundColor != "rgb(44, 169, 18)" ){
+    gdpr_button.style.backgroundColor = "#2CA912";
+    gdpr_button.textContent = "GDPR complient";
+  }
+  else{
+    gdpr_button.style.border = "0.3vh solid #10ad74";
+    gdpr_button.textContent = "Ensure GDPR complience";
+    gdpr_button.style.backgroundColor ="white";
+
+
+  }
 }
 //
+
+
 
 //function to remove ul from drop down and sign it as passed
 function removeUlFromDropDown(dropDown) {
@@ -402,10 +413,7 @@ async function addMetaInformation(metaInfo) {
     const updatedXmlString = serializer.serializeToString(xmlDoc);
     return updatedXmlString;
 }
-
-
 //
-
 
 //function to get metadata information
 async function getMetaInformationResponse() {
@@ -471,9 +479,6 @@ export function getActivitiesID(activities){
 }
 //
 
-//export checkAlreadyExistent(question){
-
-//}
 
 //TODO: here miss the part were i add the already added activity maybe 
 //function to set the questions answers in json format
