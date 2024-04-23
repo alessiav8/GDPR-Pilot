@@ -4,12 +4,15 @@ import { createDropDown, removeUlFromDropDown,createUlandSelectActivities,addMet
 import { getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements,handleSideBar } from "./app.js";
 import consent_to_use_the_data from '../../resources/consent_to_use_the_data.bpmn';
 
+async function checkDropDownOrdAdd(dropDown,bool,theme,question) {
+  if(!document.querySelector('#'+dropDown)){
+    await createDropDown(dropDown,bool,theme,question);
+  }
+}
 
 //handle click yes for question A
 async function yesdropDownA() {
-  if(!document.querySelector('#dropDownA')){
-    await createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
-  }
+  await checkDropDownOrdAdd("dropDownA",true,"Personal data","Do you handle personal data in your process?");
   removeUlFromDropDown("#dropDownA");
   editMetaInfo("A",setJsonData("Yes",false));
   const dropdownB = createDropDown(
@@ -19,15 +22,12 @@ async function yesdropDownA() {
     "Did you ask for consent before?"
   );
 }
-
 //end handle click yes for question A
 
 
 //handle click no for question A
 async function nodropDownA() {
-  if(!document.querySelector('#dropDownA')){
-    await createDropDown("dropDownA",true,"Personal data","Do you handle personal data in your process?");
-  }
+  await checkDropDownOrdAdd("dropDownA",true,"Personal data","Do you handle personal data in your process?");
   setGdprButtonCompleted();
   //closeSideBarSurvey();
 
@@ -58,9 +58,8 @@ async function nodropDownB(activities_already_selected) {
     await createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time",activities_already_selected);
     if(activities_already_selected){
       questionDone("#dropDownB");
-      if(!document.querySelector("#dropDownC")){
-        createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
-      }    
+      await checkDropDownOrdAdd("dropDownC",false,"User data access","Do you allow users to access their data?");
+       
     }
     const dropDown = document.querySelector("#dropDownB");
     const button = dropDown.querySelector(".btn");
@@ -82,23 +81,27 @@ async function nodropDownB(activities_already_selected) {
 async function addBPath(activities, activities_already_selected){
   
   editMetaInfo("B",setJsonData("No",activities));
-
-
-  if(!document.querySelector("#dropDownC")){
-    createDropDown("dropDownC",false,"User data access","Do you allow users to access their data?");
-  }
-
-    try{
+  await checkDropDownOrdAdd("dropDownC",false,"User data access","Do you allow users to access their data?");
+  try{
         activities.forEach(async function(activity){
             const element = getElement(activity.id);
-            const previous = getPreviousElement(element);
-            const subprocess = await subProcessGeneration("consent_"+activity.id,"Right to be Informed and to Consent",consent_to_use_the_data,element);
-            if (subprocess) addActivityBetweenTwoElements(previous, element, subprocess)
-      });
+            const previousSet = getPreviousElement(element);
+            if(previousSet){
+              var i = 0;
+              for (var i=0; i < previousSet.length; i++){
+                const name= "consent_" + activity.id + "_" + i;
+                await addSubProcess(name, "Right to be informed and to Consent", consent_to_use_the_data,element,previousSet[i]);
+              }
+            }
+            else{
+              const name= "consent_" + activity.id + "_0";
+               await addSubProcess(name, "Right to be informed and to Consent", consent_to_use_the_data,element,null);
+            }
+    });
     
     }catch(e)
     {
-      console.error("Some errorin addBPath",e)
+      console.error("Some error in addBPath",e)
     }
 
 
@@ -108,6 +111,11 @@ async function addBPath(activities, activities_already_selected){
 }
 //
 
-
+async function addSubProcess(name,title,diagram,element,previous){
+  const subprocess = await subProcessGeneration(name,title,diagram,element);
+   if (subprocess) {
+      addActivityBetweenTwoElements(previous, element, subprocess);
+  }
+}
 
 export { yesdropDownA, nodropDownA,yesdropDownB, nodropDownB,addBPath };
