@@ -32,9 +32,9 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function(e
 
   return function(entries) {
     if (gdprActivityQuestionsPrefix.some(item=> item==element.id.split('_')[0]) ) {
-      delete entries['replace'];
+      delete entries['replace'];      
+      delete entries['connect'];
     }
-
     return entries;
   };
 };

@@ -291,7 +291,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           c2.className = "col-8";
 
           const label = document.createElement("label");
-          label.textContent = activity.name;
+          label.textContent = (activity.name != null && activity.name!= undefined && activity.name!= "") ? activity.name : activity.id;
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";

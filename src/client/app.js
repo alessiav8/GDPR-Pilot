@@ -167,6 +167,7 @@ async function loadDiagram(diagram){
     try {
       const res = viewer.importXML(diagram)
           .then(async () => {
+
               viewer.get('canvas').zoom('fit-viewport');
               elementFactory = viewer.get('elementFactory');
               modeling = viewer.get('modeling');
@@ -213,6 +214,25 @@ async function loadDiagram(diagram){
               }
               });
               //
+
+              console.log("eventBusy",eventBus)
+              eventBus.on('connect.end', function(event) {
+                var context = event.context,
+                    source = context.source,
+                    hover = context.hover;
+
+                    console.log("hover",hover,"context",context,"eventBus",event)
+                    if (context && context.connection) {
+                      var connection = context.connection;
+                      if( (source.type=="bpmn:callActivity" || source.type=="bpmn:CallActivity" && gdprActivityQuestionsPrefix.some(item=> item== source.id.split('_')[0]) )
+                        || (hover.type=="bpmn:callActivity" || hover.type=="bpmn:CallActivity" && gdprActivityQuestionsPrefix.some(item=> item== hover.id.split('_')[0])) ){
+                          modeling.removeConnection(connection);
+                          window.alert("Cannot connect a gdpr activity");
+                      }
+                    } else {
+                      console.log('Connessione non disponibile');
+                    }
+              });
 
 
             /*if(elementRegistry.getAll().length > 0) {
