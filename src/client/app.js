@@ -129,7 +129,7 @@ const gdprActivityQuestionsPrefix=[
 ]
 //
 
-//questa funzione mi ritorna true se esiste un extended element che ha un tag meta al suo interno
+//this function returns true to me if there is an extended element that has a meta tag in it
 function getExtension(element, type) {
   if (!element.extensionElements) {
     return null;
@@ -218,39 +218,22 @@ async function loadDiagram(diagram){
                   reorderDiagram();
                 })
               }
+             /* to FINISH else {
+                const activity_connected = element.id;
+                console.log(element)
+                //const hover = element.
+                gdprActivityQuestionsPrefix.forEach(prefix =>{
+                  const activity_prefix_name = prefix+"_"+activity_connected+"_0";
+                  console.log("activity_connected",activity_prefix_name,elementRegistry.getAll())
+                  const element_connected = elementRegistry.get(activity_prefix_name);
+                  if(element_connected){
+                    modeling.removeShape(element_connected);
+                  }
+
+                });
+              }*/
               });
-              //
-
-              console.log("eventBusy",eventBus)
-              eventBus.on('connect.end', function(event) {
-                var context = event.context,
-                    source = context.source,
-                    hover = context.hover;
-
-                    console.log("hover",hover,"context",context,"eventBus",event)
-                    if (context && context.connection) {
-                      var connection = context.connection;
-                      if( (source.type=="bpmn:callActivity" || source.type=="bpmn:CallActivity" && gdprActivityQuestionsPrefix.some(item=> item== source.id.split('_')[0]) )
-                        || (hover.type=="bpmn:callActivity" || hover.type=="bpmn:CallActivity" && gdprActivityQuestionsPrefix.some(item=> item== hover.id.split('_')[0])) ){
-                          modeling.removeConnection(connection);
-                          window.alert("Cannot connect a gdpr activity");
-                      }
-                    } else {
-                      console.log('Connessione non disponibile');
-                    }
-              });
-
-
-            /*if(elementRegistry.getAll().length > 0) {
-              getMetaInformationResponse().then((response)=>{
-                questions_answers = response;
-                if(questions_answers["gdpr_compliant"] == true){
-                  setGdprButtonCompleted();
-                }
-              })
-          }*/
-
-
+              //c
           })
           .catch(error => {
               console.error('Errore nell\'importazione dell\'XML:', error);

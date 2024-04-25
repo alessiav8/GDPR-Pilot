@@ -30,11 +30,24 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function(e
       elementRegistry = this._elementRegistry,
       translate = this._translate;
 
-  return function(entries) {
-    if (gdprActivityQuestionsPrefix.some(item=> item==element.id.split('_')[0]) ) {
-      delete entries['replace'];      
-      delete entries['connect'];
-    }
-    return entries;
-  };
+      return function(entries) {
+        if (gdprActivityQuestionsPrefix.some(item => item == element.id.split('_')[0])) {
+          entries['replace'].action = function(event, element) {
+            var confirmed = window.confirm("If you edit this component, this will impact the GDPR compliance. \n Do you want to proceed?");
+            if (!confirmed) {
+              event.preventDefault(); 
+              event.stopPropagation();
+            }
+            else{
+              var fakeEvent = {
+                preventDefault: function() {}, 
+                stopPropagation: function() {}
+              };
+              entries['replace'].action(fakeEvent, element);
+            }
+          };
+        }
+        return entries;
+      };
+      
 };

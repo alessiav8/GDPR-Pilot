@@ -337,7 +337,8 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           ).map((checkbox) =>
             activities.find((activity) => activity.id === checkbox.value)
           );
-          submitButton.className = "btn-completed";
+          //submitButton.className = "btn-completed";
+          submitButton.style.border = "1px solid #10ad74";
           questionDone("#dropDownB")
 
           getSettedActivity("questionB").then(response => {
