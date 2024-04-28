@@ -55,6 +55,7 @@ function yesdropDownB() {
 
 //handle click no for question B
 async function nodropDownB(activities_already_selected) {
+
     await createUlandSelectActivities("#dropDownB","Select the activities where you request personal data for the first time",activities_already_selected);
     if(activities_already_selected){
       questionDone("#dropDownB");
@@ -64,13 +65,13 @@ async function nodropDownB(activities_already_selected) {
     }
     const dropDown = document.querySelector("#dropDownB");
     const button = dropDown.querySelector(".btn");
-    const sidebarColumn = document.querySelector(".sidebar-column");
-    console.log("width sidebar",sidebarColumn.style.width)
+    button.setAttribute("aria-expanded", "true");
+   /* const sidebarColumn = document.querySelector(".sidebar-column");
     $(document).ready(function() {
       $(button).dropdown('show');
       button.classList.add("show");
       button.setAttribute("aria-expanded", "true");
-  });
+  });*/
 
 
 
@@ -108,6 +109,13 @@ async function addBPath(activities, activities_already_selected){
 }
 //
 
+
+export function yesdropDownC(){
+
+}
+
+export function nodropDownC(){
+}
 
 
 export { yesdropDownA, nodropDownA,yesdropDownB, nodropDownB,addBPath };

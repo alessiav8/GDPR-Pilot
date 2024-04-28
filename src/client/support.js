@@ -39,18 +39,27 @@ function createDropDown(id, isExpanded, textContent, questionText) {
   dropDown.id = id;
 
   const button = document.createElement("button");
-  button.className = "btn btn-secodary dropdown-toggle";
+  button.className = "btn";
+  button.style.border = "0.002vh solid";
   button.setAttribute("type", "button");
-  button.setAttribute("data-bs-toggle", "dropdown");
+  button.setAttribute("data-bs-toggle", "collapse");
+  button.setAttribute("href","#ulCollapse"+id);
   button.style.width = "100%";
 
   button.setAttribute("ariaExpanded", isExpanded);
   button.textContent = textContent;
   dropDown.appendChild(button);
 
-  const ul = document.createElement("ul");
-  ul.style.width = "94%";
-  ul.className = "dropdown-menu";
+  const ulContainer = document.createElement("div");
+  ulContainer.id="ulCollapse"+id;
+  ulContainer.style.width = "100%";
+  ulContainer.className = "collapse";
+
+  const ul = document.createElement("div");
+  ul.style.width = "100%";
+  ul.className = "card card-body";
+
+  ulContainer.appendChild(ul);
 
   const divQuestion = document.createElement("div");
   divQuestion.className = "container-centered";
@@ -164,7 +173,7 @@ function createDropDown(id, isExpanded, textContent, questionText) {
   ul.appendChild(divQuestion);
   ul.appendChild(divButtons);
 
-  dropDown.appendChild(ul);
+  dropDown.appendChild(ulContainer);
 
   row.appendChild(dropDown); //add the dropDown in the raw
   space.appendChild(row); //add the raw in the container
@@ -197,8 +206,7 @@ function removeUlFromDropDown(dropDown) {
   const dropDownA = document.querySelector(dropDown);
 
   if (dropDownA) {
-    const child = dropDownA.querySelector(".dropdown-menu");
-    console.log("child",child,"of",dropDown);
+    const child = dropDownA.querySelector(".collapse");
     if (child) {
       while(child.firstChild){
         child.removeChild(child.firstChild);
@@ -210,7 +218,7 @@ function removeUlFromDropDown(dropDown) {
         button.setAttribute("data-bs-toggle", "");
 
         if(dropDown=="#dropDownA") button.className = "btn";
-        button.style.boxShadow = "0 0 0 2px #2CA912";
+        button.style.border = '0.2vh solid #2CA912';
         button.style.borderRadius = "1vh";
         button.style.marginTop = "0.3vh";
       } else {
@@ -232,10 +240,9 @@ export function questionDone(dD){
   const button = dropDown.querySelector(".btn");
   button.click();
     if (button) {
-      button.className = "btn dropdown-toggle";
-      button.style.boxShadow = "0 0 0 2px #2CA912";
+      button.style.border = " 0.2vh solid #2CA912";
       button.style.borderRadius = "1vh";
-      button.style.marginTop = "0.3vh";
+      button.style.marginTop = "0.0200002vh";
     } else {
       console.error("error in finding the button");
     }
@@ -248,16 +255,19 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
   const dropDown = document.querySelector(dropDownID);
   const space = document.querySelector("#areaDropDowns");
 
-  const ulDropDown = dropDown.querySelector(".dropdown-menu");
-  if (ulDropDown) {
-    while (ulDropDown.firstChild) {
-      ulDropDown.removeChild(ulDropDown.firstChild);
+  const collapse = dropDown.querySelector(".collapse");
+  if (collapse) {
+    while (collapse.firstChild) {
+      collapse.removeChild(collapse.firstChild);
     }
+
+    const ulDropDown= document.createElement("div");
+    ulDropDown.className = "card card-body";
+    collapse.appendChild(ulDropDown);
 
     const Title = document.createTextNode(titleText);
     const divTitle = document.createElement("div");
     divTitle.className = "container-centered";
-    divTitle.style.marginLeft = "1vh";
     divTitle.appendChild(Title);
 
     const divActivities = document.createElement("div");
@@ -337,7 +347,8 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           ).map((checkbox) =>
             activities.find((activity) => activity.id === checkbox.value)
           );
-          submitButton.className = "btn-completed";
+          submitButton.style.border = "2px solid #2CA912"
+          submitButton.style.backgroundColor="white"
           questionDone("#dropDownB")
 
           getSettedActivity("questionB").then(response => {
@@ -355,14 +366,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
         });
 
           
-        divActivities.appendChild(form);
-
-        const button_d = dropDown.querySelector(".btn");
-        button_d.className = "btn btn-secodary dropdown-toggle show";
-        button_d.setAttribute("aria-expanded", "true");
-
-    
-        
+        divActivities.appendChild(form);      
       }
     } catch (e) {
       console.error("error in getting activities", e);

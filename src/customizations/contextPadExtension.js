@@ -12,6 +12,7 @@ export default function DisabledTypeChangeContextPadProvider(contextPad, bpmnRep
   this._bpmnReplace = bpmnReplace;
   this._elementRegistry = elementRegistry;
   this._translate = translate;
+  this._contextPad = contextPad;
 }
 
 DisabledTypeChangeContextPadProvider.$inject = [
@@ -24,17 +25,11 @@ DisabledTypeChangeContextPadProvider.$inject = [
 const gdprActivityQuestionsPrefix=[
   "consent",
 ]
+DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function(element, contextPad) {
 
-DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function(element) {
   var bpmnReplace = this._bpmnReplace,
       elementRegistry = this._elementRegistry,
-      translate = this._translate;
+      translate = this._translate,
+      contextP= this._contextPad;
 
-  return function(entries) {
-    if (gdprActivityQuestionsPrefix.some(item=> item==element.id.split('_')[0]) ) {
-      delete entries['replace'];      
-      delete entries['connect'];
-    }
-    return entries;
-  };
 };

@@ -178,6 +178,7 @@ async function loadDiagram(diagram){
               eventBus = viewer.get('eventBus');
               contextPad = viewer.get('contextPad');
 
+              console.log(contextPad);
               //removing the edit type option
               var bpmnReplace = viewer.get('bpmnReplace');
               var translate = viewer.get('translate');
@@ -215,24 +216,56 @@ async function loadDiagram(diagram){
               });
               //
 
-              console.log("eventBusy",eventBus)
+              const priority = 10000;
+
+              eventBus.on('shape.replace.start', priority, function(event) {
+                console.log("replacedElement",event);
+              });
+           
               eventBus.on('connect.end', function(event) {
                 var context = event.context,
                     source = context.source,
                     hover = context.hover;
 
-                    console.log("hover",hover,"context",context,"eventBus",event)
                     if (context && context.connection) {
                       var connection = context.connection;
                       if( (source.type=="bpmn:callActivity" || source.type=="bpmn:CallActivity" && gdprActivityQuestionsPrefix.some(item=> item== source.id.split('_')[0]) )
                         || (hover.type=="bpmn:callActivity" || hover.type=="bpmn:CallActivity" && gdprActivityQuestionsPrefix.some(item=> item== hover.id.split('_')[0])) ){
-                          modeling.removeConnection(connection);
-                          window.alert("Cannot connect a gdpr activity");
+                          const compromise= confirm("In this way you are compromising the gdpr compliance. \n Are you sure you want to proceed? ");
+                          if(!compromise){
+                            modeling.removeConnection(connection);
+                          }
                       }
                     } else {
                       console.log('Connessione non disponibile');
                     }
               });
+              console.log("event",eventBus)
+
+              eventBus.on("commandStack.shape.replace.preExecute", function(event){
+                const context = event.context;
+                const oldShape = context.oldShape;
+                const newShape = context.newShape;
+
+                const id_prefix=oldShape.id.split('_')[0];
+                if(gdprActivityQuestionsPrefix.some(item=>item == id_prefix)){
+                  const goOn=confirm("Are you sure you want to proceed?,this will impact the gdpr compliance level!");
+                  if (!goOn){
+                    event.stopPropagation();
+                    event.preventDefault();
+
+                    var oldElement = elementRegistry.get(oldShape.id);
+                    var newElement = elementRegistry.get(newShape.id);
+
+                    if (oldElement && newElement) {
+                      modeling.replaceElement(oldElement, newElement);
+                    } else {
+                      console.error('Failed to replace element: Element not found.');
+                    }
+                  }
+
+                }
+              })
 
 
             /*if(elementRegistry.getAll().length > 0) {
