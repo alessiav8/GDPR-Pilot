@@ -116,6 +116,12 @@ bpmnActivityTypes.concat(
     "bpmn:parallelGateway",
     "bpmn:boundaryEvent",
     "bpmn:messageFlow",
+    "bpmn:endEvent",
+    "bpmn:EndEvent",
+    "bpmn:startEvent",
+    "bpmn:StartEvent",
+    "bpmn:callActivity",
+    "bpmn:CallActivity",
 ]);
 
 const gdprActivityQuestionsPrefix=[
@@ -123,7 +129,7 @@ const gdprActivityQuestionsPrefix=[
 ]
 //
 
-//questa funzione mi ritorna true se esiste un extended element che ha un tag meta al suo interno
+//this function returns true to me if there is an extended element that has a meta tag in it
 function getExtension(element, type) {
   if (!element.extensionElements) {
     return null;
@@ -213,6 +219,20 @@ async function loadDiagram(diagram){
                   reorderDiagram();
                 })
               }
+             /* to FINISH else {
+                const activity_connected = element.id;
+                console.log(element)
+                //const hover = element.
+                gdprActivityQuestionsPrefix.forEach(prefix =>{
+                  const activity_prefix_name = prefix+"_"+activity_connected+"_0";
+                  console.log("activity_connected",activity_prefix_name,elementRegistry.getAll())
+                  const element_connected = elementRegistry.get(activity_prefix_name);
+                  if(element_connected){
+                    modeling.removeShape(element_connected);
+                  }
+
+                });
+              }*/
               });
               //
 
@@ -826,6 +846,7 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import,
     const elementRegistry = viewer.get('elementRegistry');
     const not_exists = elementRegistry.get(id_passed) == undefined ;
 
+    console.log("id passed: ",id_passed);
     if(not_exists){
       const subprocess = elementFactory.createShape({
         type: 'bpmn:CallActivity',
@@ -833,11 +854,9 @@ async function subProcessGeneration(id_passed, content_label, diagram_to_import,
         name: content_label,
         isExpanded: true,
       });
+
       subprocess.businessObject.id=id_passed;
-      
-      //subprocess.di.id=id_passed;
       const mainProcess = element.parent;
-      //const mainProcess = canvas_ref.getRootElement();
 
       subprocess.businessObject.name = content_label;
       modeling.updateProperties(subprocess, { name: content_label });
@@ -895,19 +914,23 @@ function getElement(id){
 //
 
 
-//function to get the referenc of the previous element of a certain element 
+//function to get the reference of the previous element of a certain element 
 function getPreviousElement(referenceElement) {
   elementRegistry = viewer.get("elementRegistry");
   const incoming=referenceElement.incoming;
+  var res= new Array();
   if(incoming[0]){
-    const previousE = incoming[0].businessObject.sourceRef.id;
-    const res= elementRegistry.get(previousE);
-    return res;}
+    incoming.forEach(element =>{
+      const previousE = element.businessObject.sourceRef.id;
+      res.push(elementRegistry.get(previousE));
+    });
+    return res;
+  }
   else return false;
 }
 //
 
-//function to get the referenc of the successor element of a certain element 
+//function to get the reference of the successor element of a certain element 
 function getSuccessorElement(referenceElement) {
   elementRegistry = viewer.get("elementRegistry");
   const outgoing=referenceElement.outgoing;
@@ -922,40 +945,55 @@ function getSuccessorElement(referenceElement) {
 
 //function to add an element between two 
 function addActivityBetweenTwoElements(firstElement, secondElement, newElement) {
+  console.log("addActivityBetweenTwoElements",firstElement,secondElement,newElement);
   const modeling = viewer.get("modeling");
-  const newX = (firstElement.x + newElement.width) ;
-  const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent")? secondElement.y : firstElement.y;
-
-  const outgoingFlow = firstElement.outgoing[0];
-
-  modeling.removeConnection(outgoingFlow);
-
-  const to_shift= newElement.di.bounds.width;
-
   const getBoundsNew = newElement.di.bounds;
-  const newBoundsNew={
-    x: newX,
-    y:newY,
-    width: getBoundsNew.width,
-    height: getBoundsNew.height
+
+  if(firstElement==null){
+    const newBoundsNew={
+      x: secondElement.x - 1.5*newElement.width,
+      y:secondElement.y,
+      width: getBoundsNew.width,
+      height: getBoundsNew.height
+    }
+    modeling.resizeShape(newElement, newBoundsNew);
+
+    const newSequenceFlowAttrsOutgoing = {
+      type: "bpmn:SequenceFlow"
+    };
+    modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent); 
   }
-  modeling.resizeShape(newElement, newBoundsNew);
+  else{
+    const newX = (firstElement.x + newElement.width) ;
+    const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent") ? secondElement.y : firstElement.y;
 
-  const newSequenceFlowAttrsIncoming = {
-    id: 'sequenceFlowAttrsInc' + newElement.id,
-    type: "bpmn:SequenceFlow"
-  };
+    const outgoingFlow = firstElement.outgoing[0];
+    modeling.removeConnection(outgoingFlow);
 
-  modeling.createConnection(firstElement, newElement, newSequenceFlowAttrsIncoming, firstElement.parent);
-  const newSequenceFlowAttrsOutgoing = {
-    id: 'sequenceFlowAttrsOut' + newElement.id,
-    type: "bpmn:SequenceFlow"
-  };
+    const to_shift= newElement.di.bounds.width;
+    const newBoundsNew={
+      x: newX,
+      y:newY,
+      width: getBoundsNew.width,
+      height: getBoundsNew.height
+    }
+    modeling.resizeShape(newElement, newBoundsNew);
 
-  modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent);  
+    const newSequenceFlowAttrsIncoming = {
+      type: "bpmn:SequenceFlow"
+    };
+    modeling.createConnection(firstElement, newElement, newSequenceFlowAttrsIncoming, firstElement.parent);
+    
+
+    const newSequenceFlowAttrsOutgoing = {
+      type: "bpmn:SequenceFlow"
+    };
+    modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent);  
+  }
   reorderDiagram();
 }
 //
+
 
 //function to get the set of ordered elements, ordered by their sequence flow 
 //all the elements but not the sequence flow or parrtecipant or collaboration
@@ -964,18 +1002,33 @@ function getOrderedSub(){
   const allElements = elementRegistry.getAll();
 
   const new_set=new Array();
-  const starts = allElements.filter(element => allBpmnElements.some(item=> item === element.type));
+  var starts = allElements.filter(element => allBpmnElements.some(item=> item === element.type));
   while(starts[0]){
-      const start = starts.splice(-1, 1)[0];
-      new_set.push(start);
+      const exist = starts.filter(element=> element.type=="bpmn:startEvent" || element.type=="bpmn:StartEvent")[0];
+      if(exist) starts = starts - exist;
+      const start = exist ? exist : starts.splice(-1, 1)[0];
+      if(!new_set.some(item=> item == start)) {
+        new_set.push(start);
+      }
       var first = start;
       while(hasOutgoing(first)){
         const next = hasOutgoing(first)
-        new_set.push(next);
+        if(!new_set.some(item=> item == next)) {
+          new_set.push(next);
+        }
         first = next;
       }
     
   }
+  //to add the non connected ones
+  var last = allElements.filter(element => allBpmnElements.some(item=> item == element.type));
+  last.forEach(element => {
+    if (!new_set.some(item => item == element)){
+      new_set.push(element);
+    }
+  })
+  //
+
   return new_set;
 }
 //
@@ -996,31 +1049,58 @@ function hasOutgoing(element){
 export function reorderDiagram() {
   const sub=getOrderedSub();
   sub.forEach(element => {
-    const previousElement = getPreviousElement(element);
-    if(previousElement){
-      const compare = (previousElement.width < 100 ) ? 70 : 150; 
-      const diff = element.x - previousElement.x;
-      const add = compare - diff;
+    const previousElementSet = getPreviousElement(element);
+    if(previousElementSet){
+      previousElementSet.forEach(previousElement => {
+        const compare = (previousElement.width < 100 ) ? 70 : 150; 
+        const diff = element.x - previousElement.x;
+        const add = compare - diff;
 
-      if(diff < compare){
-        const incomingElement = getIncoming(element);
-        modeling.removeConnection(incomingElement);
-        modeling.resizeShape(element, {x: element.x + add , y: element.y, width: element.width, height:element.di.bounds.height});
-        const newSequenceFlowAttrsIncoming = {
-          type: "bpmn:SequenceFlow"
-        };
-        modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
-      }
-      else if(diff > compare){
-        const remove = diff - compare;
-        const incomingElement = getIncoming(element);
-        modeling.removeConnection(incomingElement);
-        modeling.resizeShape(element, {x: element.x - remove , y: element.y, width: element.width, height:element.di.bounds.height});
-        const newSequenceFlowAttrsIncoming = {
-          type: "bpmn:SequenceFlow"
-        };
-        modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
-      }
+        console.log("element",element.businessObject.name,"\nprevious",previousElement.businessObject.name,"id: ",previousElement.id,"\ncompare: ",compare,"\ndiff: ",diff,"\nadd: ",add)
+
+        if(diff < compare){
+          const incomingElementSet = element.incoming;
+          console.log("incoming set",incomingElementSet)
+          if(incomingElementSet.length > 0){
+            for(var i=0; i< incomingElementSet.length; i++){
+              var incomingElement=incomingElementSet[i];
+              console.log("incoming inside ",incomingElement.businessObject)
+              if(incomingElement.businessObject.sourceRef.id == previousElement.id){
+
+                modeling.removeConnection(incomingElement);
+                modeling.resizeShape(element, {x: element.x + add , y: element.y, width: element.width, height:element.di.bounds.height});
+                const newSequenceFlowAttrsIncoming = {
+                  type: "bpmn:SequenceFlow"
+                };
+                modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
+             }
+
+            };
+        }
+        }
+
+        else if(diff > compare){
+          const remove = diff - compare;
+          const incomingElementSet = element.incoming;
+          console.log("incoming set 2",incomingElementSet)
+
+          if(incomingElementSet.length > 0){
+            incomingElementSet.forEach(incomingElement => {
+              console.log("incoming 2 inside ",incomingElement,incomingElement.businessObject.sourceRef,previousElement,incomingElement.businessObject.sourceRef.id == previousElement.id)
+
+              if(incomingElement.businessObject.sourceRef.id == previousElement.id){
+
+            modeling.removeConnection(incomingElement);
+            modeling.resizeShape(element, {x: element.x - remove , y: element.y, width: element.width, height:element.di.bounds.height});
+            const newSequenceFlowAttrsIncoming = {
+              type: "bpmn:SequenceFlow"
+            };
+            modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
+              }
+          });
+        }
+        }    
+    });
     }
   });
   viewer.get("canvas").zoom('fit-viewport');
@@ -1086,8 +1166,16 @@ export async function getActivities() {
 export function removeConsentFromActivity(activity,type){
   elementRegistry=viewer.get('elementRegistry');
   try{
-  const toRemove = elementRegistry.get(type+activity.id);
-  modeling.removeShape(toRemove);
+    var i=0;
+    var name=type+activity.id+"_"+i;
+    var toRemove = elementRegistry.get(name);
+    while(toRemove){
+      modeling.removeShape(toRemove);
+      i++;
+      var name=type+activity.id+"_"+i;
+      toRemove = elementRegistry.get(name);
+    }
+    reorderDiagram();
   }catch(e){
     console.error("Some problem in removing path gdpr added to activity")
   }
