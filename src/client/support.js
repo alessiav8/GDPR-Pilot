@@ -1,9 +1,26 @@
 //-----------------------------SUPPORTS FUNCTIONS-----------------------------------
 import {
   yesdropDownA,
-  nodropDownA,
   yesdropDownB,
+  yesdropDownC,
+  yesdropDownD,
+  yesdropDownE,
+  yesdropDownF,
+  yesdropDownG,
+  yesdropDownH,
+  yesdropDownI,
+  yesdropDownL,
+
+  nodropDownA,
   nodropDownB,
+  nodropDownC,
+  nodropDownD,
+  nodropDownE,
+  nodropDownF,
+  nodropDownG,
+  nodropDownH,
+  nodropDownI,
+  nodropDownL,
   addBPath,
 } from "./questions.js";
 import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram } from "./app.js";
@@ -218,9 +235,9 @@ function removeUlFromDropDown(dropDown) {
         button.setAttribute("data-bs-toggle", "");
 
         if(dropDown=="#dropDownA") button.className = "btn";
-        button.style.border = '0.2vh solid #2CA912';
-        button.style.borderRadius = "1vh";
-        button.style.marginTop = "0.3vh";
+        button.style.border = '0.0002vh solid #2CA912';
+        //button.style.borderRadius = "1vh";
+        //button.style.marginTop = "0.3vh";
       } else {
         console.error("error in finding the button");
       }
@@ -240,9 +257,9 @@ export function questionDone(dD){
   const button = dropDown.querySelector(".btn");
   button.click();
     if (button) {
-      button.style.border = " 0.2vh solid #2CA912";
-      button.style.borderRadius = "1vh";
-      button.style.marginTop = "0.0200002vh";
+      button.style.border = " 0.0002vh solid #2CA912";
+      //button.style.borderRadius = "1vh";
+      //button.style.marginTop = "0.0200002vh";
     } else {
       console.error("error in finding the button");
     }
