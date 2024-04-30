@@ -19,7 +19,7 @@ import disableModeling from "../customizations/DisableModeling.js";
 import diagram from '../../resources/diagram.bpmn';
 import diagram_two_activities from '../../resources/diagram_two_activities.bpmn';
 import consent_to_use_the_data from '../../resources/consent_to_use_the_data.bpmn';
-import DisabledTypeChangeContextPadProvider from '../customizations/contextPadExtension.js';
+import confirmForGDPRPath from '../customizations/confirm';
 
 import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB,createWithOnlyQuestionXExpandable,getLastAnswered } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
@@ -45,6 +45,7 @@ var viewer = new BpmnJS({
     },
     additionalModules: [
       disableModeling, 
+      confirmForGDPRPath,
     ]
 
 });
@@ -188,7 +189,7 @@ async function loadDiagram(diagram){
               //removing the edit type option
               var bpmnReplace = viewer.get('bpmnReplace');
               var translate = viewer.get('translate');
-              var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
+              //var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
               //
 
               //this prevent the modification of the id when someone change the type of something 
