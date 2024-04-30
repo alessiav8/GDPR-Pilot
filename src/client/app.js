@@ -21,7 +21,7 @@ import diagram_two_activities from '../../resources/diagram_two_activities.bpmn'
 import consent_to_use_the_data from '../../resources/consent_to_use_the_data.bpmn';
 import DisabledTypeChangeContextPadProvider from '../customizations/contextPadExtension.js';
 
-import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB } from './questions.js';
+import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB,createWithOnlyQuestionXExpandable,getLastAnswered } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
 import axios from 'axios';
 
@@ -235,12 +235,6 @@ async function loadDiagram(diagram){
               }*/
               });
               //
-
-              const priority = 10000;
-
-              eventBus.on('shape.replace.start', priority, function(event) {
-                console.log("replacedElement",event);
-              });
            
               eventBus.on('connect.end', function(event) {
                 var context = event.context,
@@ -721,10 +715,11 @@ async function checkQuestion() {
     const response = await getMetaInformationResponse();
     questions_answers = response;
     if (questions_answers["questionA"] === null) {
-      createDropDown("dropDownA", true, "Personal data", "Do you handle personal data in your process?");
+      createWithOnlyQuestionXExpandable("A")
     } else {
+      const lastLetter = getLastAnswered(questions_answers);
+      createWithOnlyQuestionXExpandable(lastLetter);
       for (let key in questions_answers) {
-
         if (key === "questionA") {
           const risp = questions_answers["questionA"][0].value;
           if (risp === "Yes") {

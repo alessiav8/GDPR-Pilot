@@ -43,13 +43,12 @@ function closeSideBarSurvey() {
 //
 
 //function to create a drop down
-function createDropDown(id, isExpanded, textContent, questionText) {
+function createDropDown(id, isExpanded, textContent, questionText, isDisabled) {
   //the row that will contain the drop down
   const space = document.querySelector("#areaDropDowns");
   const row = document.createElement("div");
   row.className = "row";
   //
-
   const dropDown = document.createElement("div");
   dropDown.className = "dropdown";
   dropDown.style.width = "100%";
@@ -57,10 +56,18 @@ function createDropDown(id, isExpanded, textContent, questionText) {
 
   const button = document.createElement("button");
   button.className = "btn";
-  button.style.border = "0.002vh solid";
   button.setAttribute("type", "button");
   button.setAttribute("data-bs-toggle", "collapse");
+  if(!isDisabled){
+    button.style.border = "0.00002vh solid";
+    button.style.backgroundColor="white";
+  }
+  else{
+    button.removeAttribute("data-bs-toggle");
+    button.style.border = "0.00002vh solid gray";
+  }
   button.setAttribute("href","#ulCollapse"+id);
+
   button.style.width = "100%";
 
   button.setAttribute("ariaExpanded", isExpanded);
