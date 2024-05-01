@@ -260,8 +260,6 @@ async function loadDiagram(diagram){
               console.log("event",eventBus)
 
               
-
-
             /*if(elementRegistry.getAll().length > 0) {
               getMetaInformationResponse().then((response)=>{
                 questions_answers = response;
@@ -697,8 +695,10 @@ async function checkQuestion() {
     if (questions_answers["questionA"] === null) {
       createWithOnlyQuestionXExpandable("A")
     } else {
+      
       const lastLetter = getLastAnswered(questions_answers);
       createWithOnlyQuestionXExpandable(lastLetter);
+
       for (let key in questions_answers) {
         if (key === "questionA") {
           const risp = questions_answers["questionA"][0].value;
@@ -716,7 +716,8 @@ async function checkQuestion() {
           } else {
             var B = questions_answers.questionB;
             B = B.filter(item => item.value !== 'No');
-            nodropDownB(B);
+            const isLast = (lastLetter === "B") ? true : false;
+            nodropDownB(B,isLast);
           }
         } else if (key === "questionI" && questions_answers[key] !== null) {
         } else if (key === "questionH" && questions_answers[key] !== null) {
@@ -725,6 +726,12 @@ async function checkQuestion() {
         } else if (key === "questionE" && questions_answers[key] !== null) {
         } else if (key === "questionD" && questions_answers[key] !== null) {
         } else if (key === "questionC" && questions_answers[key] !== null) {
+          if (risp === "Yes") {
+            yesdropDownC();
+          } else {
+            nodropDownC();
+          }
+
         } else if (key === "questionL" && questions_answers[key] !== null) {
         }
       }

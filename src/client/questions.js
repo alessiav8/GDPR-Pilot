@@ -139,7 +139,7 @@ async function nodropDownA() {
 //end handle click no for question A
 
 //handle click no for question B
-async function nodropDownB(activities_already_selected) {
+async function nodropDownB(activities_already_selected,isLast) {
   await createUlandSelectActivities(
     "#dropDownB",
     "Select the activities where you request personal data for the first time",
@@ -154,15 +154,7 @@ async function nodropDownB(activities_already_selected) {
       "Do you allow users to access their data?"
     );
   }
-  const dropDown = document.querySelector("#dropDownB");
-  const button = dropDown.querySelector(".btn");
-  button.setAttribute("aria-expanded", "true");
-  /* const sidebarColumn = document.querySelector(".sidebar-column");
-  $(document).ready(function() {
-    $(button).dropdown('show');
-    button.classList.add("show");
-    button.setAttribute("aria-expanded", "true");
-});*/
+  if (isLast) openDropDown("dropDownB");
 }
 //
 
@@ -239,6 +231,8 @@ async function addBPath(activities, activities_already_selected) {
 }
 //
 
+//function to handle the creation of all the dropdown elements
+//letter: the last question replied
 export function createWithOnlyQuestionXExpandable(letter){
   const letters=["B","C","D","E","F","G","H","I","L"];
   var disabled = true;
@@ -251,6 +245,9 @@ export function createWithOnlyQuestionXExpandable(letter){
   for (let i=0; i<letters.length; i++){
     if(letters[i]==letter){
       disabled = false;
+    }
+    else{
+      disabled = true;
     }
     switch(letters[i]){
       case "B":
@@ -348,16 +345,24 @@ export function createWithOnlyQuestionXExpandable(letter){
     
   }
 }
+//
 
+//function to get the last answer that the user has done
 export function getLastAnswered(setOfQuestions) {
   var last = "A";
-  for (let i=0;i<setOfQuestions.length;i++) {
-    while(setOfQuestions[i]){
-      console.log("set",setOfQuestions,setOfQuestions[i])
+  const set= ["A", "B", "C", "D", "E", "F", "G","H","I","L"]
+  for (let i=0; i < set.length; i++) {
+    console.log("set of questions of i ",setOfQuestions["question"+set[i]]);
+
+   if(setOfQuestions["question"+set[i]]!=null){
+      last = set[i];
     }
   }
+  return last;
 }
+//
 
+//function to enable again a dropdown 
 function allowOpenNextQuestion(nextQuestion){
   const dropDown= document.querySelector("#dropDown"+nextQuestion);
   const button = dropDown.querySelector(".btn");
@@ -365,5 +370,16 @@ function allowOpenNextQuestion(nextQuestion){
   button.style.border = "0.00002vh solid";
   button.style.backgroundColor="white";
 }
+//
+
+//function to open a specific @dropdown
+//dropdown: id of the dropdown to open
+function openDropDown(dropdown){
+  const dropDown = document.querySelector("#"+dropdown);
+  const button = dropDown.querySelector(".btn");
+  button.setAttribute("aria-expanded", "true");
+}
+//
+
 
 export { yesdropDownA, nodropDownA, yesdropDownB, nodropDownB, addBPath };
