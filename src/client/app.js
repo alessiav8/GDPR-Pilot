@@ -24,6 +24,8 @@ import confirmForGDPRPath from '../customizations/confirm';
 import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB,createWithOnlyQuestionXExpandable,getLastAnswered } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
 import axios from 'axios';
+import zeebeModdleDescriptor from 'zeebe-bpmn-moddle/resources/zeebe';
+
 
 var MetaPackage = require('../customizations/metaInfo.json');
 var current_diagram = diagram_two_activities;
@@ -41,7 +43,9 @@ const second_viewer = new BpmnModeler({
 var viewer = new BpmnJS({
     container: '#canvas',
     moddleExtensions: {
-        meta: MetaPackage
+        meta: MetaPackage,
+        zeebe: zeebeModdleDescriptor
+        
     },
     additionalModules: [
       disableModeling, 
@@ -186,10 +190,8 @@ async function loadDiagram(diagram){
               contextPad = viewer.get('contextPad');
 
               console.log(contextPad);
-              //removing the edit type option
               var bpmnReplace = viewer.get('bpmnReplace');
               var translate = viewer.get('translate');
-              //var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
               //
 
               //this prevent the modification of the id when someone change the type of something 
@@ -257,30 +259,7 @@ async function loadDiagram(diagram){
               });
               console.log("event",eventBus)
 
-              eventBus.on("commandStack.shape.replace.preExecute", function(event){
-                const context = event.context;
-                const oldShape = context.oldShape;
-                const newShape = context.newShape;
-
-                const id_prefix=oldShape.id.split('_')[0];
-                if(gdprActivityQuestionsPrefix.some(item=>item == id_prefix)){
-                  const goOn=confirm("Are you sure you want to proceed?,this will impact the gdpr compliance level!");
-                  if (!goOn){
-                    event.stopPropagation();
-                    event.preventDefault();
-
-                    var oldElement = elementRegistry.get(oldShape.id);
-                    var newElement = elementRegistry.get(newShape.id);
-
-                    if (oldElement && newElement) {
-                      modeling.replaceElement(oldElement, newElement);
-                    } else {
-                      console.error('Failed to replace element: Element not found.');
-                    }
-                  }
-
-                }
-              })
+              
 
 
             /*if(elementRegistry.getAll().length > 0) {
