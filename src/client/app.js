@@ -1136,7 +1136,6 @@ export async function getActivities() {
           activities.push({id ,name });
         }
       })
-      console.log("activities",activities)
       return activities;
     }
 }
@@ -1161,6 +1160,64 @@ export function removeConsentFromActivity(activity,type){
   }catch(e){
     console.error("Some problem in removing path gdpr added to activity")
   }
+}
+//
+
+//
+function getStartFirst(){
+  elementRegistry=viewer.get('elementRegistry');
+  const allElements= elementRegistry.getAll();
+  allElements.forEach(element => {
+    if(element.type=="bpmn:StartEvent" || element.type=="bpmn:startEvent" && element.id== "StartEvent_1"){
+      return element;
+    }
+  });
+  return null; 
+}
+//
+
+
+//function to add the group where i'm going to insert the path for gdpr compliance
+export function createAGroup(){
+
+  modeling = viewer.get('modeling'); 
+  canvas_ref = viewer.get('canvas');
+  const parentRoot = canvas_ref.getRootElement();
+
+  const start = getStartFirst();
+  var x = 0;
+  var y = 0;
+  
+  if(start!=null){
+    x = (start.x - 150000);
+    y = (start.y); 
+  }
+  const groupShape = elementFactory.createShape({
+    type: "bpmn:Group",
+    width: 500, 
+    height: 350, 
+    id: "GdprGroup"
+  });
+
+  groupShape.id = "GdprGroup"; 
+
+  modeling.createShape(groupShape, { x: 0, y: 0 }, parentRoot);
+  modeling.resizeShape(groupShape, {x: x - 500 , y: y - 25, width: 500, height: 350});
+  viewer.get("canvas").zoom('fit-viewport');
+}
+//
+
+//function
+export function existGdprGroup(){
+  elementRegistry=viewer.get("elementRegistry");
+  const allElements = elementRegistry.getAll();
+  var result = false;
+  allElements.forEach(element => {
+    if(element.id=="GdprGroup"){
+      result = true;
+    }
+  });
+  return result;
 }
 //
 

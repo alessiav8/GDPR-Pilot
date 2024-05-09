@@ -21,6 +21,8 @@ import {
   getPreviousElement,
   addActivityBetweenTwoElements,
   handleSideBar,
+  createAGroup,
+  existGdprGroup
 } from "./app.js";
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
 
@@ -155,12 +157,20 @@ async function nodropDownB(activities_already_selected,isLast) {
     );
   }
   if (isLast) openDropDown("dropDownB");
+
+  allowOpenNextQuestion("C");
+
 }
 //
 
-export function nodropDownC() {}
+export function nodropDownC() {
+  checkGroupOrCreate();  
+}
 
-export function nodropDownD() {}
+export async function nodropDownD() {
+  await checkGroupOrCreate();
+ 
+}
 
 export function nodropDownE() {}
 
@@ -380,6 +390,16 @@ function openDropDown(dropdown){
   button.setAttribute("aria-expanded", "true");
 }
 //
+
+async function checkGroupOrCreate(){
+  const exist_gdpr = existGdprGroup();
+  if(exist_gdpr == false ){
+    createAGroup();
+  }
+  else{
+    return;
+  }
+}
 
 
 export { yesdropDownA, nodropDownA, yesdropDownB, nodropDownB, addBPath };
