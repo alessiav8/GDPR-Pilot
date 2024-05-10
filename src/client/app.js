@@ -1229,14 +1229,14 @@ export function createAGroup(){
   const groupShape = elementFactory.createShape({
     type: "bpmn:Group",
     width: 200, 
-    height: 350, 
+    height: 50, 
     id: "GdprGroup"
   });
 
   groupShape.id = "GdprGroup"; 
 
   modeling.createShape(groupShape, { x: 0, y: 0 }, parentRoot);
-  modeling.resizeShape(groupShape, {x: x - 500 , y: y - 25, width: 500, height: 350});
+  modeling.resizeShape(groupShape, {x: x - 500 , y: y - 25, width: 420, height: 50});
 
  /* const titleLabel = modeling.createLabel(groupShape, { x: 0, y: -20 });
   modeling.updateLabel(titleLabel, {
@@ -1264,7 +1264,7 @@ export function existGdprGroup(){
 //
 
 //function to find a free space in the group
-async function findFreeY(y_ex){
+async function findFreeY(y_ex,max_height) {
   const questions= checkMetaInfo().values[0];
   elementRegistry=viewer.get("elementRegistry");
   var elem;
@@ -1302,6 +1302,12 @@ async function findFreeY(y_ex){
     if(elem){
       y = elem.y + 80;
     }
+    if(max_height < y + 100){
+      const group = elementRegistry.get("GdprGroup");
+      modeling.resizeShape(group, {x: group.x , y: group.y , width: group.width, height: group.height+300});
+
+      modeling.updateProperties(group, {height: max_height + 300});
+    }
     return y; 
 }
 //
@@ -1316,7 +1322,7 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
   elementRegistry=viewer.get("elementRegistry");
   const gdpr = elementRegistry.get("GdprGroup");
   const parent = gdpr.parent;
-  const y= await findFreeY(gdpr.y);
+  const y= await findFreeY(gdpr.y,gdpr.height);
 
   const start_event = elementFactory.createShape({
     type: "bpmn:StartEvent",
@@ -1339,7 +1345,6 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
     height: 36,
   });
 
-
   end_event.businessObject.id="end_"+ path_name;
   end_event.businessObject.name= end_event_title;
 
@@ -1359,10 +1364,6 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
   const subprocess = await subProcessGeneration(path_name, title, diagram, end_event);
 
   await addActivityBetweenTwoElements(start_event, end_event, subprocess);
-
-  
-
-
 }
 //
 
