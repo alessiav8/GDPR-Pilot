@@ -924,8 +924,10 @@ function getSuccessorElement(referenceElement) {
 //
 
 //function to add an element between two 
+//first element: the first element of the sequence 
+//second element: the last element of the sequence
+//new element: the element that will be added between the first and the second
 function addActivityBetweenTwoElements(firstElement, secondElement, newElement) {
-  //console.log("addActivityBetweenTwoElements",firstElement,secondElement,newElement);
   const modeling = viewer.get("modeling");
   const getBoundsNew = newElement.di.bounds;
 
@@ -945,7 +947,7 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
   }
   else{
     const newX = (firstElement.x + newElement.width) ;
-    const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent") ? secondElement.y : firstElement.y;
+    const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent") ? firstElement.y - 22  : firstElement.y;
 
     const outgoingFlow = firstElement.outgoing[0];
     if(outgoingFlow) modeling.removeConnection(outgoingFlow);
@@ -1028,6 +1030,7 @@ function hasOutgoing(element){
 //function to reorder the diagram
 export function reorderDiagram() {
   const sub=getOrderedSub();
+  console.log("sub to reorder diagram",sub)
   sub.forEach(element => {
     const previousElementSet = getPreviousElement(element);
     //console.log("previous element set ",previousElementSet);
@@ -1070,13 +1073,12 @@ export function reorderDiagram() {
               //console.log("incoming 2 inside ",incomingElement,incomingElement.businessObject.sourceRef,previousElement,incomingElement.businessObject.sourceRef.id == previousElement.id)
 
               if(incomingElement.businessObject.sourceRef.id == previousElement.id){
-
-            modeling.removeConnection(incomingElement);
-            modeling.resizeShape(element, {x: element.x - remove , y: element.y, width: element.width, height:element.di.bounds.height});
-            const newSequenceFlowAttrsIncoming = {
-              type: "bpmn:SequenceFlow"
-            };
-            modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
+                modeling.removeConnection(incomingElement);
+                modeling.resizeShape(element, {x: element.x - remove , y: element.y, width: element.width, height:element.di.bounds.height});
+                  const newSequenceFlowAttrsIncoming = {
+                    type: "bpmn:SequenceFlow"
+                  };
+                modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
               }
           });
         }
@@ -1193,7 +1195,7 @@ export function createAGroup(){
   }
   const groupShape = elementFactory.createShape({
     type: "bpmn:Group",
-    width: 500, 
+    width: 200, 
     height: 350, 
     id: "GdprGroup"
   });
@@ -1229,6 +1231,10 @@ export function existGdprGroup(){
 //
 
 //function to add a path in the group 
+//diagram: the diagram that will be inserted into the call activity 
+//start event title: the label under the start event 
+//end event title: the label under the end event 
+//path name: the macro title of the question ex: right to access
 export async function addSubEvent(diagram, start_event_title, end_event_title, path_name){
   elementRegistry=viewer.get("elementRegistry");
   const gdpr = elementRegistry.get("GdprGroup");
@@ -1238,24 +1244,30 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
   const start_event = elementFactory.createShape({
     type: "bpmn:StartEvent",
     id: "start_"+ path_name,
-    width: 36,  
-    eventDefinitionType: 'bpmn:MessageEventDefinition'
+    width: 36, 
+    height:36, 
+    eventDefinitionType: 'bpmn:MessageEventDefinition',
   });
 
+  start_event.businessObject.name = start_event_title;
+  start_event.businessObject.id="start_"+path_name;
+
   modeling.createShape(start_event, {x:0 , y:0}, parent);
-  modeling.resizeShape(start_event, {x: gdpr.x + 20 , y: gdpr.y +60, width: start_event.width, height: start_event.height});
+  modeling.resizeShape(start_event, {x: gdpr.x + 70 , y: gdpr.y +60, width: start_event.width, height: start_event.height});
 
   const end_event = elementFactory.createShape({
     type: "bpmn:EndEvent",
     id: "end_"+ path_name,  
     width: 36,  
+    height: 36,
   });
 
+
   end_event.businessObject.id="end_"+ path_name;
-  start_event.businessObject.id="start_"+path_name;
+  end_event.businessObject.name= end_event_title;
 
   modeling.createShape(end_event, {x:0 , y:0}, parent);
-  modeling.resizeShape(end_event, {x: gdpr.x + 300 , y: gdpr.y +60, width: end_event.width, height: end_event.height});
+  modeling.resizeShape(end_event, {x: gdpr.x + 350 , y: gdpr.y +60, width: end_event.width, height: end_event.height});
 
   const title_splitted = path_name.split("_");
   var title="";
@@ -1267,9 +1279,12 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
     title = (new_part=="") ? title + part + " ": title + new_part + " ";
   });
 
-  const subprocess = await subProcessGeneration(path_name,title, diagram, end_event);
+  const subprocess = await subProcessGeneration(path_name, title, diagram, end_event);
 
-  addActivityBetweenTwoElements(start_event, end_event, subprocess)
+  await addActivityBetweenTwoElements(start_event, end_event, subprocess);
+
+  
+
 
 }
 //
