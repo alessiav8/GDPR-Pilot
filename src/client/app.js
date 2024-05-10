@@ -727,11 +727,11 @@ async function checkQuestion() {
     const response = await getMetaInformationResponse();
     questions_answers = response;
     if (questions_answers["questionA"] === null) {
-      createWithOnlyQuestionXExpandable("A")
+      createWithOnlyQuestionXExpandable("A",questions_answers)
     } else {
       
       const lastLetter = getLastAnswered(questions_answers);
-      createWithOnlyQuestionXExpandable(lastLetter);
+      createWithOnlyQuestionXExpandable(lastLetter,questions_answers);
 
       for (let key in questions_answers) {
         if (key === "questionA") {
@@ -1223,7 +1223,7 @@ export function createAGroup(){
   var y = 0;
   
   if(start!=null){
-    x = (start.x - 150000);
+    x = (start.x - 15000);
     y = (start.y); 
   }
   const groupShape = elementFactory.createShape({
@@ -1236,14 +1236,7 @@ export function createAGroup(){
   groupShape.id = "GdprGroup"; 
 
   modeling.createShape(groupShape, { x: 0, y: 0 }, parentRoot);
-  modeling.resizeShape(groupShape, {x: x - 500 , y: y - 25, width: 420, height: 50});
-
- /* const titleLabel = modeling.createLabel(groupShape, { x: 0, y: -20 });
-  modeling.updateLabel(titleLabel, {
-    label: "Group Title",
-    font: { size: 12, family: "Arial" },
-    style: { fill: "#000000" },
-  });*/
+  modeling.resizeShape(groupShape, {x: x - 300 , y: y - 25, width: 420, height: 50});
 
   viewer.get("canvas").zoom('fit-viewport');
 }

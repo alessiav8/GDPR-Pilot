@@ -43,7 +43,7 @@ function closeSideBarSurvey() {
 //
 
 //function to create a drop down
-function createDropDown(id, isExpanded, textContent, questionText, isDisabled) {
+function createDropDown(id, isExpanded, textContent, questionText, isDisabled, valueButton) {
   //the row that will contain the drop down
   const space = document.querySelector("#areaDropDowns");
   const row = document.createElement("div");
@@ -106,14 +106,23 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled) {
   divButtons.appendChild(nocol);
 
   const YesButton = document.createElement("button");
-  YesButton.className = "btn btn-primary";
+  YesButton.className = "btn btn-light";
+  YesButton.style.border = "0.01vh solid black";
   YesButton.textContent = "Yes";
   YesButton.id = "yes_" + id;
 
   const NoButton = document.createElement("button");
-  NoButton.className = "btn btn-primary";
+  NoButton.className = "btn btn-light";
+  NoButton.style.border = "0.01vh solid black";
   NoButton.textContent = "No";
   NoButton.id = "no_" + id;
+
+  if(valueButton == "Yes"){
+    YesButton.style.border = "0.3 solid #10ad74";
+  }
+  else if(valueButton == "No"){
+    NoButton.style.border ="0.3 solid #10ad74";
+  }
 
   YesButton.addEventListener("click", (event) => {
     switch (id) {
