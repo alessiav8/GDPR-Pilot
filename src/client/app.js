@@ -388,9 +388,43 @@ function editMetaInfo(question,value_to_assign){
           case 'A':
             value.questionA=value_to_assign;
             break;
+
           case 'B':
             value.questionB=value_to_assign;
             break;
+
+          case 'C':
+            value.questionC=value_to_assign;
+            break;
+
+          case 'D':
+            value.questionD=value_to_assign;
+            break;
+          
+          case 'E':
+            value.questionE=value_to_assign;
+            break;
+
+          case 'F':
+            value.questionF=value_to_assign;
+            break;
+
+          case 'G':
+            value.questionG=value_to_assign;
+            break;
+
+          case 'H':
+            value.questionH=value_to_assign;
+            break;
+
+          case 'I':
+            value.questionI=value_to_assign;
+            break;
+
+          case 'L':
+            value.questionL=value_to_assign;
+            break;
+
           case "gdpr":
             value.gdpr_compliant=value_to_assign;
           default:
@@ -731,7 +765,6 @@ async function checkQuestion() {
           } else {
             nodropDownC();
           }
-
         } else if (key === "questionL" && questions_answers[key] !== null) {
         }
       }
@@ -1230,30 +1263,74 @@ export function existGdprGroup(){
 }
 //
 
+//function to find a free space in the group
+async function findFreeY(y_ex){
+  const questions= checkMetaInfo().values[0];
+  elementRegistry=viewer.get("elementRegistry");
+  var elem;
+  var y = y_ex + 60;
+  const lastObject = getLastAnswered(questions);
+  switch(lastObject){
+    case "B":
+      break;
+    case "C":
+      elem = elementRegistry.get("right_to_access");
+      break;
+    case "D":
+      elem=elementRegistry.get("right_to_portability");
+      break;
+    case "E":
+      elem =elementRegistry.get("right_to_rectify");
+      break;
+    case "F":
+      elem= elementRegistry.get("right_to_object");
+      break;
+    case "G":
+      elem= elementRegistry.get("right_to_object_to_automated_processing");
+      break;
+    case "H":
+      elem= elementRegistry.get("right_to_restrict_processing");
+      break;  
+    case "I":
+      elem= elementRegistry.get("right_to_be_forgotten");
+      break;
+    case "L":
+      elem= elementRegistry.get("right_to_be_notified_of_data_breaches");
+      break;
+    }
+  
+    if(elem){
+      y = elem.y + 80;
+    }
+    return y; 
+}
+//
+
 //function to add a path in the group 
 //diagram: the diagram that will be inserted into the call activity 
 //start event title: the label under the start event 
 //end event title: the label under the end event 
 //path name: the macro title of the question ex: right to access
-export async function addSubEvent(diagram, start_event_title, end_event_title, path_name){
+//start type: the type of the start event signal/message
+export async function addSubEvent(diagram, start_event_title, end_event_title, path_name,start_type){
   elementRegistry=viewer.get("elementRegistry");
   const gdpr = elementRegistry.get("GdprGroup");
   const parent = gdpr.parent;
-  //const y=findFreeY();
+  const y= await findFreeY(gdpr.y);
 
   const start_event = elementFactory.createShape({
     type: "bpmn:StartEvent",
     id: "start_"+ path_name,
     width: 36, 
     height:36, 
-    eventDefinitionType: 'bpmn:MessageEventDefinition',
+    eventDefinitionType: start_type,
   });
 
   start_event.businessObject.name = start_event_title;
   start_event.businessObject.id="start_"+path_name;
 
   modeling.createShape(start_event, {x:0 , y:0}, parent);
-  modeling.resizeShape(start_event, {x: gdpr.x + 70 , y: gdpr.y +60, width: start_event.width, height: start_event.height});
+  modeling.resizeShape(start_event, {x: gdpr.x + 70 , y: y, width: start_event.width, height: start_event.height});
 
   const end_event = elementFactory.createShape({
     type: "bpmn:EndEvent",
@@ -1267,7 +1344,7 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
   end_event.businessObject.name= end_event_title;
 
   modeling.createShape(end_event, {x:0 , y:0}, parent);
-  modeling.resizeShape(end_event, {x: gdpr.x + 350 , y: gdpr.y +60, width: end_event.width, height: end_event.height});
+  modeling.resizeShape(end_event, {x: gdpr.x + 350 , y: y, width: end_event.width, height: end_event.height});
 
   const title_splitted = path_name.split("_");
   var title="";

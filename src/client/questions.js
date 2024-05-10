@@ -179,7 +179,7 @@ async function nodropDownB(activities_already_selected,isLast) {
 
 export function nodropDownC() {
   checkGroupOrCreate();
-  addSubEvent(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access");  
+  addSubEvent(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access",'bpmn:MessageEventDefinition');  
 }
 
 export async function nodropDownD() {
@@ -377,8 +377,6 @@ export function getLastAnswered(setOfQuestions) {
   var last = "A";
   const set= ["A", "B", "C", "D", "E", "F", "G","H","I","L"]
   for (let i=0; i < set.length; i++) {
-    console.log("set of questions of i ",setOfQuestions["question"+set[i]]);
-
    if(setOfQuestions["question"+set[i]]!=null){
       last = set[i];
     }
