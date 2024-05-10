@@ -22,15 +22,13 @@ import {
   addActivityBetweenTwoElements,
   handleSideBar,
   createAGroup,
-  existGdprGroup
+  existGdprGroup,
+  addSubEvent,
 } from "./app.js";
-import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
 
-async function checkDropDownOrdAdd(dropDown, bool, theme, question, isDisabled) {
-  if (!document.querySelector("#" + dropDown)) {
-    await createDropDown(dropDown, bool, theme, question,isDisabled);
-  }
-}
+import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
+import right_to_access from "../../resources/right_to_be_consent.bpmn";
+
 
 //----------------------------START YES HANDLER------------------------------------
 //handle click yes for question A
@@ -58,12 +56,16 @@ function yesdropDownB() {
 }
 //
 
+//function to handle yes of question C
 export function yesdropDownC() {
   editMetaInfo("C", setJsonData("Yes", false));
   questionDone("#dropDownC");
   allowOpenNextQuestion("D");
 
 }
+//
+
+//function to handle yes of question D
 export function yesdropDownD() {
   editMetaInfo("D", setJsonData("Yes", false));
   questionDone("#dropDownD");
@@ -71,7 +73,9 @@ export function yesdropDownD() {
 
   
 }
+//
 
+//function to handle yes of question E
 export function yesdropDownE() {
   editMetaInfo("E", setJsonData("Yes", false));
   questionDone("#dropDownE");
@@ -79,7 +83,9 @@ export function yesdropDownE() {
 
   
 }
+//
 
+//function to handle yes of question F
 export function yesdropDownF() {
   editMetaInfo("F", setJsonData("Yes", false));
   questionDone("#dropDownF");
@@ -87,6 +93,9 @@ export function yesdropDownF() {
 
   
 }
+//
+
+//function to handle yes of question G
 export function yesdropDownG() {
   editMetaInfo("G", setJsonData("Yes", false));
   questionDone("#dropDownG");
@@ -94,22 +103,26 @@ export function yesdropDownG() {
 
 
 }
+//
 
+//function to handle yes of question H
 export function yesdropDownH() {
   editMetaInfo("H", setJsonData("Yes", false));
   questionDone("#dropDownH");
   allowOpenNextQuestion("I");
-
-  
 }
+//
 
+//function to handle yes of question I
 export function yesdropDownI() {
   editMetaInfo("I", setJsonData("Yes", false));
   questionDone("#dropDownI");  
   allowOpenNextQuestion("L");
 
 }
+//
 
+//function to handle yes of question L
 export function yesdropDownL() {
   editMetaInfo("L", setJsonData("Yes", false));
   questionDone("#dropDownL");
@@ -117,6 +130,7 @@ export function yesdropDownL() {
   handleSideBar(false);
   editMetaInfo("gdpr", true);
 }
+//
 
 //----------------------------END YES HANDLER------------------------------------
 
@@ -164,7 +178,8 @@ async function nodropDownB(activities_already_selected,isLast) {
 //
 
 export function nodropDownC() {
-  checkGroupOrCreate();  
+  checkGroupOrCreate();
+  addSubEvent(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access");  
 }
 
 export async function nodropDownD() {
@@ -391,6 +406,7 @@ function openDropDown(dropdown){
 }
 //
 
+//function to check if a group exists or to create it
 async function checkGroupOrCreate(){
   const exist_gdpr = existGdprGroup();
   if(exist_gdpr == false ){
@@ -400,6 +416,16 @@ async function checkGroupOrCreate(){
     return;
   }
 }
+//
+
+//function to check if exists the drop of a question, in the negative case it create a new one
+async function checkDropDownOrdAdd(dropDown, bool, theme, question, isDisabled) {
+  if (!document.querySelector("#" + dropDown)) {
+    await createDropDown(dropDown, bool, theme, question,isDisabled);
+  }
+}
+//
+
 
 
 export { yesdropDownA, nodropDownA, yesdropDownB, nodropDownB, addBPath };
