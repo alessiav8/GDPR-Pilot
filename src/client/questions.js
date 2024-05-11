@@ -178,7 +178,6 @@ async function nodropDownB(activities_already_selected,isLast) {
     );
   }
   allowOpenNextQuestion("C");
-
 }
 //
 
@@ -186,8 +185,6 @@ export function nodropDownC() {
   checkGroupOrCreate();
   if(!existsGdprPath("right_to_access")) {
     addSubEvent(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access",'bpmn:MessageEventDefinition');  
-  }else{
-    window.alert("Already inserted");
   }
   editYesNoButton("#no_dropDownC");
   editMetaInfo("C", setJsonData("No", false));

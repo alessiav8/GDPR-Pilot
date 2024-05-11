@@ -706,10 +706,15 @@ function handleUndoGdpr(){
               break;
           }
         }
-        console.log("question",question,response[question])
+      }
+      const group= elementRegistry.get("GdprGroup");
+      if(group){
+        modeling.removeShape(group);
       }
       closeSideBarSurvey();
       handleSideBar(false);
+      viewer.get('canvas').zoom('fit-viewport');
+
     }))
   }
 
@@ -1452,11 +1457,16 @@ function deleteGdprPath(id){
   elementRegistry=viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
   try{
-    allElements.forEach(element=>{
+    allElements.forEach(item => {
+      const element= item.id;
       let lastIndex = element.lastIndexOf('_'); 
       let result = element.substring(0, lastIndex);
-      console.log("res",result);
+      console.log("result",result);
 
+      if(result == id || element == id){
+        console.log("To delete",item);
+        modeling.removeShape(item);
+      }
     })
   }catch(e) {
       console.error("Error in delete Gdpr path: " + e.message);

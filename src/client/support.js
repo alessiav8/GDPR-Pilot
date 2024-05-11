@@ -234,13 +234,12 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
       default:
         break;
     }
-    if(valueButton == null  && id != "dropDownB") {
+  if(valueButton == null  && id != "dropDownB") {
       openDrop(id,"no",true);
   }
-  else{
+  else if( id != "dropDownB"){
     openDrop(id,"no",false);
   }
-
   });
 
   yescol.appendChild(YesButton);
@@ -437,6 +436,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           }
           addBPath(selectedActivities, activities_already_selected);
           });
+          openDrop("dropDownB","yes",true);
         });
 
           
