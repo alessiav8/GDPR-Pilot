@@ -16,7 +16,7 @@ export default class ConfirmForGDPRPath {
 
   getPopupMenuEntries(element) {
     const self = this;
-    const gdprPrefix=["consent"];
+    const gdprPrefix=["consent","right","GdprGroup"];
     const prefixId = element.id.split("_")[0]; 
     const isPrefixGdpr = gdprPrefix.includes(prefixId);
     var confirmEntries;

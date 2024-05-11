@@ -11,6 +11,7 @@ import {
   closeSideBarSurvey,
   questionDone,
   getSettedActivity,
+  openDrop
 } from "./support.js";
 import {
   getDiagram,
@@ -24,6 +25,7 @@ import {
   createAGroup,
   existGdprGroup,
   addSubEvent,
+  
 } from "./app.js";
 
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
@@ -178,8 +180,6 @@ async function nodropDownB(activities_already_selected,isLast) {
       "Do you allow users to access their data?"
     );
   }
-  if (isLast) openDropDown("dropDownB");
-
   allowOpenNextQuestion("C");
 
 }
@@ -189,7 +189,6 @@ export function nodropDownC() {
   checkGroupOrCreate();
   addSubEvent(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access",'bpmn:MessageEventDefinition');  
   editYesNoButton("#no_dropDownC");
-
 }
 
 export async function nodropDownD() {
@@ -291,7 +290,6 @@ export function createWithOnlyQuestionXExpandable(letter,questions){
   const letters=["B","C","D","E","F","G","H","I","L"];
   var disabled = true;
   var value = (questions["questionA"]==null)?  null : questions["questionA"][0].value;
-  console.log("value",value,questions)
   if (letter=="A"){
     createDropDown( "dropDownA",true,"Personal data","Do you handle personal data in your process?",false,value);
   }

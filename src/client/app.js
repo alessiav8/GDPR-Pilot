@@ -21,7 +21,7 @@ import diagram_two_activities from '../../resources/diagram_two_activities.bpmn'
 import consent_to_use_the_data from '../../resources/consent_to_use_the_data.bpmn';
 import confirmForGDPRPath from '../customizations/confirm';
 
-import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB,createWithOnlyQuestionXExpandable,getLastAnswered } from './questions.js';
+import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB,yesdropDownC,nodropDownC,yesdropDownD,nodropDownD,yesdropDownE,nodropDownE,yesdropDownF,nodropDownF,yesdropDownG,nodropDownG,yesdropDownH,nodropDownH,yesdropDownI,nodropDownI,yesdropDownL,nodropDownL,createWithOnlyQuestionXExpandable,getLastAnswered } from './questions.js';
 import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
 import axios from 'axios';
 import zeebeModdleDescriptor from 'zeebe-bpmn-moddle/resources/zeebe';
@@ -588,6 +588,7 @@ import_button.addEventListener('click', () =>{
 });
 //end import handler 
 
+//function to handle the click of the gdpr button ---> open side bar 
 function handleClickOnGdprButton(){
   viewer.get('canvas').zoom('fit-viewport');
   handleSideBar(true);
@@ -639,6 +640,8 @@ function handleClickOnGdprButton(){
     const areaDropDowns= document.createElement("div");
     areaDropDowns.className = "container";
     areaDropDowns.id="areaDropDowns";
+    areaDropDowns.style.overflow = "auto";
+    areaDropDowns.style.maxHeight = "65vh";
     survey_area.appendChild(areaDropDowns);
 
     const undo = document.createElement("div");
@@ -658,16 +661,13 @@ function handleClickOnGdprButton(){
     survey_area.appendChild(undo);
 
     const areaWidth = survey_area.offsetWidth;
-    console.log("button width",undo_button.offsetWidth, areaWidth);
     const leftValue = (areaWidth / 2 - (undo_button.offsetWidth/2)) ;
     undo.style.marginLeft = `${leftValue}px`;
-    console.log(leftValue);
-
     undo_button.addEventListener("click", handleUndoGdpr);
     checkQuestion();
   }
-
 }
+//
 
 //function to handle the undo of everything we made for the gdpr compliance
 //i have to edit the meta info 
@@ -726,6 +726,7 @@ async function checkQuestion() {
   try {
     const response = await getMetaInformationResponse();
     questions_answers = response;
+    console.log("answer",questions_answers)
     if (questions_answers["questionA"] === null) {
       createWithOnlyQuestionXExpandable("A",questions_answers)
     } else {
@@ -754,18 +755,62 @@ async function checkQuestion() {
             nodropDownB(B,isLast);
           }
         } else if (key === "questionI" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionI"][0].value;
+          if (risp === "Yes") {
+            yesdropDownI();
+          } else {
+            nodropDownI();
+          }
+
         } else if (key === "questionH" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionH"][0].value;
+          if (risp === "Yes") {
+            yesdropDownH();
+          } else {
+            nodropDownH();
+          }
         } else if (key === "questionG" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionG"][0].value;
+          if (risp === "Yes") {
+            yesdropDownG();
+          } else {
+            nodropDownG();
+          }
         } else if (key === "questionF" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionF"][0].value;
+          if (risp === "Yes") {
+            yesdropDownF();
+          } else {
+            nodropDownF();
+          }
         } else if (key === "questionE" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionE"][0].value;
+          if (risp === "Yes") {
+            yesdropDownE();
+          } else {
+            nodropDownE();
+          }
         } else if (key === "questionD" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionD"][0].value;
+          if (risp === "Yes") {
+            yesdropDownD();
+          } else {
+            nodropDownD();
+          }
         } else if (key === "questionC" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionC"][0].value;
           if (risp === "Yes") {
             yesdropDownC();
           } else {
             nodropDownC();
           }
         } else if (key === "questionL" && questions_answers[key] !== null) {
+          const risp = questions_answers["questionL"][0].value;
+          if (risp === "Yes") {
+            yesdropDownL();
+          } else {
+            nodropDownL();
+          }
         }
       }
     }
@@ -1319,26 +1364,26 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
 
   const start_event = elementFactory.createShape({
     type: "bpmn:StartEvent",
-    id: "start_"+ path_name,
+    id: path_name+"_start",
     width: 36, 
     height:36, 
     eventDefinitionType: start_type,
   });
 
   start_event.businessObject.name = start_event_title;
-  start_event.businessObject.id="start_"+path_name;
+  start_event.businessObject.id=path_name+"_start";
 
   modeling.createShape(start_event, {x:0 , y:0}, parent);
   modeling.resizeShape(start_event, {x: gdpr.x + 70 , y: y, width: start_event.width, height: start_event.height});
 
   const end_event = elementFactory.createShape({
     type: "bpmn:EndEvent",
-    id: "end_"+ path_name,  
+    id: path_name+"_end" ,  
     width: 36,  
     height: 36,
   });
 
-  end_event.businessObject.id="end_"+ path_name;
+  end_event.businessObject.id=path_name+"_end";
   end_event.businessObject.name= end_event_title;
 
   modeling.createShape(end_event, {x:0 , y:0}, parent);

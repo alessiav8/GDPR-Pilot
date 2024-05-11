@@ -43,10 +43,9 @@ function closeSideBarSurvey() {
 //
 
 //function to open and close drop down 
-//drop letter of the question to open 
-//open: if true will open it if false will close it 
-function openDrop(drop,type){
-  console.log("openDrop",drop,type);
+//drop: id of the current question
+//type: button clicked yes/no 
+export function openDrop(drop,type){
   const letters=["A", "B", "C", "D", "E","F", "G","H","I","L"];
   const letter=drop.split("dropDown")[1];
   const dropDownCurrent = "#ulCollapsedropDown"+letter; 
@@ -58,7 +57,6 @@ function openDrop(drop,type){
     const NextLetterButton= document.querySelector(dropDownNext);
     NextLetterButton.className="collapse show";
     CurrentLetterButton.className="collapse";
-    console.log("openDrop next",nextLetter, NextLetterButton, CurrentLetterButton);
   }
 }
 //
@@ -180,7 +178,10 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
       default:
         break;
     }
-    openDrop(id,"yes");
+    if(valueButton==null){
+      console.log("value button ",valueButton,id)
+      openDrop(id,"yes");
+    }
 
   });
 
@@ -219,7 +220,10 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
       default:
         break;
     }
-    openDrop(id,"no");
+    if(valueButton == null) {
+      console.log("value button ",valueButton,id);
+      openDrop(id,"no");
+  }
 
   });
 
@@ -297,8 +301,6 @@ export function questionDone(dD){
   button.click();
     if (button) {
       button.style.border = " 0.0002vh solid #2CA912";
-      //button.style.borderRadius = "1vh";
-      //button.style.marginTop = "0.0200002vh";
     } else {
       console.error("error in finding the button");
     }
