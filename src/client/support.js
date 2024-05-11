@@ -22,6 +22,7 @@ import {
   nodropDownI,
   nodropDownL,
   addBPath,
+  openDropDown,
 } from "./questions.js";
 import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram } from "./app.js";
 
@@ -39,7 +40,27 @@ function closeSideBarSurvey() {
   sidebarColumn.style.height = "0%";
   sidebarColumn.style.marginTop = "0vh";
 }
+//
 
+//function to open and close drop down 
+//drop letter of the question to open 
+//open: if true will open it if false will close it 
+function openDrop(drop,type){
+  console.log("openDrop",drop,type);
+  const letters=["A", "B", "C", "D", "E","F", "G","H","I","L"];
+  const letter=drop.split("dropDown")[1];
+  const dropDownCurrent = "#ulCollapsedropDown"+letter; 
+  const index=letters.indexOf(letter);
+  if(letter!="L" && letter!= "B" || (letter=="B" && type=="yes")){
+    const nextLetter=letters[index+1];
+    const dropDownNext = "#ulCollapsedropDown"+nextLetter; 
+    const CurrentLetterButton = document.querySelector(dropDownCurrent);
+    const NextLetterButton= document.querySelector(dropDownNext);
+    NextLetterButton.className="collapse show";
+    CurrentLetterButton.className="collapse";
+    console.log("openDrop next",nextLetter, NextLetterButton, CurrentLetterButton);
+  }
+}
 //
 
 //function to create a drop down
@@ -157,9 +178,10 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
         yesdropDownL();
         break;
       default:
-        event.stopPropagation();
         break;
     }
+    openDrop(id,"yes");
+
   });
 
   NoButton.addEventListener("click", (event) => {
@@ -195,9 +217,10 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
         nodropDownL();
         break;
       default:
-        event.stopPropagation();
         break;
     }
+    openDrop(id,"no");
+
   });
 
   yescol.appendChild(YesButton);

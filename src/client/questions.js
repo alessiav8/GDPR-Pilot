@@ -445,7 +445,7 @@ function allowOpenNextQuestion(nextQuestion){
 
 //function to open a specific @dropdown
 //dropdown: id of the dropdown to open
-function openDropDown(dropdown){
+export function openDropDown(dropdown){
   const dropDown = document.querySelector("#"+dropdown);
   const button = dropDown.querySelector(".btn");
   button.setAttribute("aria-expanded", "true");
