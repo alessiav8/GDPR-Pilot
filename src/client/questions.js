@@ -25,7 +25,7 @@ import {
   createAGroup,
   existGdprGroup,
   addSubEvent,
-  
+  existsGdprPath
 } from "./app.js";
 
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
@@ -105,8 +105,6 @@ export function yesdropDownG() {
   questionDone("#dropDownG");
   allowOpenNextQuestion("H");
   editYesNoButton("#yes_dropDownG");
-
-
 }
 //
 
@@ -126,7 +124,6 @@ export function yesdropDownI() {
   questionDone("#dropDownI");  
   allowOpenNextQuestion("L");
   editYesNoButton("#yes_dropDownI");
-
 }
 //
 
@@ -187,43 +184,68 @@ async function nodropDownB(activities_already_selected,isLast) {
 
 export function nodropDownC() {
   checkGroupOrCreate();
-  addSubEvent(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access",'bpmn:MessageEventDefinition');  
+  if(!existsGdprPath("right_to_access")) {
+    addSubEvent(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access",'bpmn:MessageEventDefinition');  
+  }else{
+    window.alert("Already inserted");
+  }
   editYesNoButton("#no_dropDownC");
+  editMetaInfo("C", setJsonData("No", false));
+  allowOpenNextQuestion("D");
+  questionDone("#dropDownC");
 }
 
 export async function nodropDownD() {
-  await checkGroupOrCreate();
+  editMetaInfo("D", setJsonData("No", false));
+  questionDone("#dropDownD");
+  allowOpenNextQuestion("E");
   editYesNoButton("#no_dropDownD");
+  await checkGroupOrCreate();
 
 }
 
 export function nodropDownE() {
   editYesNoButton("#no_dropDownE");
+  questionDone("#dropDownE");
+  allowOpenNextQuestion("F");
+  editMetaInfo("E", setJsonData("No", false));
 
 }
 
 export function nodropDownF() {
   editYesNoButton("#no_dropDownF");
-
+  questionDone("#dropDownF");
+  allowOpenNextQuestion("G");
+  editMetaInfo("F", setJsonData("No", false));
 }
 
 export function nodropDownG() {
   editYesNoButton("#no_dropDownG");
-
+  questionDone("#dropDownG");
+  allowOpenNextQuestion("H");
+  editMetaInfo("G", setJsonData("No", false));
 }
 
 export function nodropDownH() {
   editYesNoButton("#no_dropDownH");
+  questionDone("#dropDownH");
+  allowOpenNextQuestion("I");
+  editMetaInfo("H", setJsonData("No", false));
 
 }
 
 export function nodropDownI() {
   editYesNoButton("#no_dropDownI");
+  questionDone("#dropDownI");
+  allowOpenNextQuestion("L");
+  editMetaInfo("I", setJsonData("No", false));
 
 }
 
 export function nodropDownL() {
   editYesNoButton("#no_dropDownL");
+  questionDone("#dropDownL");
+  editMetaInfo("L", setJsonData("No", false));
 
 }
 
@@ -471,6 +493,8 @@ async function checkDropDownOrdAdd(dropDown, bool, theme, question, isDisabled) 
 //
 
 //function to edit the color of the button
+//idButton the id of the yes/no button i have to edit
+//if id: yes then yes will have the green border and no the black one
 function editYesNoButton(idButton){
   const button = document.querySelector(idButton);
   button.style.border = "0.3vh solid #10ad74";

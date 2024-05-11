@@ -57,7 +57,6 @@ function DisableModeling(
     ["OPEN_CODE_EDITOR", "OPEN_WYSIWYG_EDITOR"],
     HIGH_PRIORITY,
     function () {
-      console.log("OPENING EDITOR");
       self.editorOpened = true;
       self.modelingDisabled = true;
       disable();
@@ -69,7 +68,6 @@ function DisableModeling(
     ["SAVE_CODE_EDITOR", "SAVE_WYSIWYG_EDITOR"],
     HIGH_PRIORITY,
     function () {
-      console.log("CLOSING EDITOR");
       self.editorOpened = false;
       self.modelingDisabled = false;
       enable();

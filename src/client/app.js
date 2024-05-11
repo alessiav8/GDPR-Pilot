@@ -677,7 +677,6 @@ function handleUndoGdpr(){
   var conferma = confirm("Are you sure?");
   if(conferma){
     getMetaInformationResponse().then((response=>{
-      console.log(response);
       for (let question in response){
         if (response[question] != null) {
           switch (question) {
@@ -690,7 +689,6 @@ function handleUndoGdpr(){
               }
               editMetaInfo("A",null);
             case "questionB":
-              console.log(response[question]);
               response[question].forEach(element=>{
                 console.log("element: ",element)
                 if(element.id!="response"){
@@ -699,6 +697,10 @@ function handleUndoGdpr(){
                 }
               })
               break;
+            
+            case "questionC" || "questionD" || "questionE" || "questionF" || "questionG" || "questionH" || "questionI" || "questionL":
+              const id=questionToId(question);
+              deleteGdprPath(id);
             
             default:
               break;
@@ -711,6 +713,47 @@ function handleUndoGdpr(){
     }))
   }
 
+}
+//
+
+//function to get the id from the question
+function questionToId(question){
+  var result= "";
+  switch(question){
+    case "questionA":
+      result=""
+      break;
+    case "questionB":
+      result="";
+      break;
+    case "questionC":
+      result="right_to_access"
+      break;
+    case "questionD":
+      result="right_to_portability";
+      break;
+    case "questionE":
+      result="right_to_rectify"
+      break;
+    case "questionF":
+      result="right_to_object"
+      break;
+    case "questionG":
+      result="right_to_object_to_automated_processing";
+      break;
+    case "questionH":
+      result="right_to_restrict_processing"
+      break;
+    case "questionI":
+      result="right_to_be_forgotten";
+      break;
+    case "questionL":
+      result="right_to_be_informed_od_data_breaches"
+      break;
+    default:
+      break;
+  }
+  return result;
 }
 //
 
@@ -1402,6 +1445,29 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
   const subprocess = await subProcessGeneration(path_name, title, diagram, end_event);
 
   await addActivityBetweenTwoElements(start_event, end_event, subprocess);
+}
+//
+
+function deleteGdprPath(id){
+  elementRegistry=viewer.get("elementRegistry");
+  const allElements = elementRegistry.getAll();
+  try{
+    allElements.forEach(element=>{
+      let lastIndex = element.lastIndexOf('_'); 
+      let result = element.substring(0, lastIndex);
+      console.log("res",result);
+
+    })
+  }catch(e) {
+      console.error("Error in delete Gdpr path: " + e.message);
+  }
+}
+
+//function to check if a gdpr group exists
+export function existsGdprPath(id){
+  elementRegistry=viewer.get("elementRegistry");
+  const exists = elementRegistry.get(id) ? true : false;
+  return exists;
 }
 //
 

@@ -45,24 +45,36 @@ function closeSideBarSurvey() {
 //function to open and close drop down 
 //drop: id of the current question
 //type: button clicked yes/no 
-export function openDrop(drop,type){
+export async function openDrop(drop,type,open){
   const letters=["A", "B", "C", "D", "E","F", "G","H","I","L"];
   const letter=drop.split("dropDown")[1];
   const dropDownCurrent = "#ulCollapsedropDown"+letter; 
+  const CurrentLetterButton = document.querySelector(dropDownCurrent);
+  CurrentLetterButton.setAttribute("class", "collapse");
+  console.log("close drop down",letter)
   const index=letters.indexOf(letter);
-  if(letter!="L" && letter!= "B" || (letter=="B" && type=="yes")){
-    const nextLetter=letters[index+1];
-    const dropDownNext = "#ulCollapsedropDown"+nextLetter; 
-    const CurrentLetterButton = document.querySelector(dropDownCurrent);
-    const NextLetterButton= document.querySelector(dropDownNext);
-    NextLetterButton.className="collapse show";
-    CurrentLetterButton.className="collapse";
+  if(open){
+    if(letter!="L" && letter!= "B" && letter!="A" || (letter=="A" && type=="yes") || (letter=="B" && type=="yes")){
+      const nextLetter=letters[index+1];
+      const dropDownNext = "#ulCollapsedropDown"+nextLetter; 
+      const NextLetterButton= document.querySelector(dropDownNext);
+      NextLetterButton.setAttribute("class","collapse show");
+      console.log("open drop down",nextLetter)
+
+    }
   }
 }
 //
 
 //function to create a drop down
+//id:id to use for the dropdown
+//isExpanded: whether the dropdown must be expanded
+//text Content: the macro title of the drop down 
+//questionText: the question itself
+//isDisabled: is disabled or can me clicked?
+//
 function createDropDown(id, isExpanded, textContent, questionText, isDisabled, valueButton) {
+  console.log("value of "+ valueButton);
   //the row that will contain the drop down
   const space = document.querySelector("#areaDropDowns");
   const row = document.createElement("div");
@@ -178,11 +190,13 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
       default:
         break;
     }
-    if(valueButton==null){
-      console.log("value button ",valueButton,id)
-      openDrop(id,"yes");
-    }
 
+    if(valueButton == null){
+      openDrop(id,"yes",true);
+    }
+    else{
+      openDrop(id,"yes",false);
+    }
   });
 
   NoButton.addEventListener("click", (event) => {
@@ -220,9 +234,11 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
       default:
         break;
     }
-    if(valueButton == null) {
-      console.log("value button ",valueButton,id);
-      openDrop(id,"no");
+    if(valueButton == null  && id != "dropDownB") {
+      openDrop(id,"no",true);
+  }
+  else{
+    openDrop(id,"no",false);
   }
 
   });
@@ -235,8 +251,8 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
 
   dropDown.appendChild(ulContainer);
 
-  row.appendChild(dropDown); //add the dropDown in the raw
-  space.appendChild(row); //add the raw in the container
+  row.appendChild(dropDown); 
+  space.appendChild(row); 
   return dropDown;
 }
 //end function create the dropDown
