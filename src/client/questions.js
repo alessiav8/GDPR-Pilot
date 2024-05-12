@@ -30,6 +30,9 @@ import {
 
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
 import right_to_access from "../../resources/right_to_be_consent.bpmn";
+import right_to_portability from "../../resources/right_of_portability.bpmn";
+import right_to_rectify from "../../resources/right_to_rectify.bpmn";
+import right_to_object from "../../resources/right_to_object.bpmn";
 
 
 
@@ -143,6 +146,16 @@ export function yesdropDownL() {
 
 //----------------------------START NO HANDLER------------------------------------
 
+function handleNoClick(diagram, start_label, end_label, id, start_type,current_letter,next_letter) {
+  checkGroupOrCreate();
+  if(!existsGdprPath(id)) {
+    addSubEvent(diagram,start_label,end_label,id,start_type);  
+  }
+  editYesNoButton("#no_dropDown"+current_letter);
+  editMetaInfo(current_letter, setJsonData("No", false));
+  allowOpenNextQuestion(next_letter);
+  questionDone("#dropDown"+current_letter);
+}
 //handle click no for question A
 async function nodropDownA() {
   await checkDropDownOrdAdd(
@@ -182,38 +195,19 @@ async function nodropDownB(activities_already_selected,isLast) {
 //
 
 export function nodropDownC() {
-  checkGroupOrCreate();
-  if(!existsGdprPath("right_to_access")) {
-    addSubEvent(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access",'bpmn:MessageEventDefinition');  
-  }
-  editYesNoButton("#no_dropDownC");
-  editMetaInfo("C", setJsonData("No", false));
-  allowOpenNextQuestion("D");
-  questionDone("#dropDownC");
+  handleNoClick(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access",'bpmn:MessageEventDefinition',"C","D");  
 }
 
 export async function nodropDownD() {
-  editMetaInfo("D", setJsonData("No", false));
-  questionDone("#dropDownD");
-  allowOpenNextQuestion("E");
-  editYesNoButton("#no_dropDownD");
-  await checkGroupOrCreate();
-
+  handleNoClick(right_to_portability,"Portability Request Received","Portability Request fulfilled","right_to_portability",'bpmn:MessageEventDefinition',"D","E");  
 }
 
 export function nodropDownE() {
-  editYesNoButton("#no_dropDownE");
-  questionDone("#dropDownE");
-  allowOpenNextQuestion("F");
-  editMetaInfo("E", setJsonData("No", false));
-
+  handleNoClick(right_to_rectify,"Rectification Request Received","Rectification Request fulfilled","right_to_rectify",'bpmn:MessageEventDefinition',"E","F");  
 }
 
 export function nodropDownF() {
-  editYesNoButton("#no_dropDownF");
-  questionDone("#dropDownF");
-  allowOpenNextQuestion("G");
-  editMetaInfo("F", setJsonData("No", false));
+  handleNoClick(right_to_object,"Objection Request Received","Objection Request fulfilled","right_to_object",'bpmn:MessageEventDefinition',"F","G");  
 }
 
 export function nodropDownG() {

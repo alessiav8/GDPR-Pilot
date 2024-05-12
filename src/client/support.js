@@ -584,7 +584,6 @@ export async function getSettedActivity(question){
       if (requested_question) {
         result = requested_question.filter(item => item.id != "response");
       }
-      console.log("result from setted", result);
       resolve(result);
     } catch (error) {
       reject(error);

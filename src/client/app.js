@@ -690,7 +690,6 @@ function handleUndoGdpr(){
               editMetaInfo("A",null);
             case "questionB":
               response[question].forEach(element=>{
-                console.log("element: ",element)
                 if(element.id!="response"){
                   const activity = elementRegistry.get(element.id);
                   removeConsentFromActivity(activity, "consent_");
@@ -698,10 +697,17 @@ function handleUndoGdpr(){
               })
               break;
             
-            case "questionC" || "questionD" || "questionE" || "questionF" || "questionG" || "questionH" || "questionI" || "questionL":
-              const id=questionToId(question);
+            case "questionC":
+            case "questionD":
+            case "questionE":
+            case "questionF":
+            case "questionG":
+            case "questionH":
+            case "questionI":
+            case "questionL":
+              const id = questionToId(question);
               deleteGdprPath(id);
-            
+              break;
             default:
               break;
           }
@@ -714,7 +720,6 @@ function handleUndoGdpr(){
       closeSideBarSurvey();
       handleSideBar(false);
       viewer.get('canvas').zoom('fit-viewport');
-
     }))
   }
 
@@ -1386,7 +1391,7 @@ async function findFreeY(y_ex,max_height) {
     }
   
     if(elem){
-      y = elem.y + 80;
+      y = elem.y + 120;
     }
     if(max_height < y + 100){
       const group = elementRegistry.get("GdprGroup");
@@ -1454,6 +1459,7 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
 //
 
 function deleteGdprPath(id){
+  console.log("start delete",id);
   elementRegistry=viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
   try{
@@ -1461,8 +1467,6 @@ function deleteGdprPath(id){
       const element= item.id;
       let lastIndex = element.lastIndexOf('_'); 
       let result = element.substring(0, lastIndex);
-      console.log("result",result);
-
       if(result == id || element == id){
         console.log("To delete",item);
         modeling.removeShape(item);
