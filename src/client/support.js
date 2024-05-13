@@ -257,10 +257,9 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
 //end function create the dropDown
 
 //funtion to set the gdpr button as completed or remove the complete button
-export function setGdprButtonCompleted(){
+export function setGdprButtonCompleted(isCompleted){
   const gdpr_button = document.querySelector("#gdpr_compliant_button");
-  console.log("gdpr backGround ",gdpr_button.style.backgroundColor)
-  if(gdpr_button.style.backgroundColor != "rgb(44, 169, 18)" ){
+  if(gdpr_button.style.backgroundColor != "rgb(44, 169, 18)" && isCompleted ){
     gdpr_button.style.backgroundColor = "#2CA912";
     gdpr_button.textContent = "GDPR complient";
   }
@@ -268,8 +267,6 @@ export function setGdprButtonCompleted(){
     gdpr_button.style.border = "0.3vh solid #10ad74";
     gdpr_button.textContent = "Ensure GDPR complience";
     gdpr_button.style.backgroundColor ="white";
-
-
   }
 }
 //

@@ -127,6 +127,7 @@ bpmnActivityTypes.concat(
     "bpmn:StartEvent",
     "bpmn:callActivity",
     "bpmn:CallActivity",
+    "bpmn:ErrorEventDefinition"
 ]);
 
 const gdprActivityQuestionsPrefix=[
@@ -684,9 +685,6 @@ function handleUndoGdpr(){
               editMetaInfo("gdpr", false);
               break;
             case "questionA":
-              if(response[question][0].value=="No"){
-                setGdprButtonCompleted();
-              }
               editMetaInfo("A",null);
             case "questionB":
               response[question].forEach(element=>{
@@ -722,6 +720,7 @@ function handleUndoGdpr(){
       viewer.get('canvas').zoom('fit-viewport');
     }))
   }
+  setGdprButtonCompleted(false);
 
 }
 //
@@ -730,12 +729,6 @@ function handleUndoGdpr(){
 function questionToId(question){
   var result= "";
   switch(question){
-    case "questionA":
-      result=""
-      break;
-    case "questionB":
-      result="";
-      break;
     case "questionC":
       result="right_to_access"
       break;
@@ -758,7 +751,7 @@ function questionToId(question){
       result="right_to_be_forgotten";
       break;
     case "questionL":
-      result="right_to_be_informed_od_data_breaches"
+      result="right_to_be_informed_of_data_breaches"
       break;
     default:
       break;
@@ -1334,7 +1327,7 @@ export function createAGroup(){
   groupShape.id = "GdprGroup"; 
 
   modeling.createShape(groupShape, { x: 0, y: 0 }, parentRoot);
-  modeling.resizeShape(groupShape, {x: x - 300 , y: y - 25, width: 420, height: 50});
+  modeling.resizeShape(groupShape, {x: x - 300 , y: y - 25, width: 420, height: 150});
 
   viewer.get("canvas").zoom('fit-viewport');
 }
@@ -1391,13 +1384,12 @@ async function findFreeY(y_ex,max_height) {
     }
   
     if(elem){
-      y = elem.y + 120;
+      y = elem.y + 140;
     }
-    if(max_height < y + 100){
+    if(max_height < y + 90){
       const group = elementRegistry.get("GdprGroup");
       modeling.resizeShape(group, {x: group.x , y: group.y , width: group.width, height: group.height+300});
-
-      modeling.updateProperties(group, {height: max_height + 300});
+      modeling.updateProperties(group, {height: max_height + 90});
     }
     return y; 
 }
@@ -1455,20 +1447,22 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
   const subprocess = await subProcessGeneration(path_name, title, diagram, end_event);
 
   await addActivityBetweenTwoElements(start_event, end_event, subprocess);
+
+  reorderDiagram();
 }
 //
 
 function deleteGdprPath(id){
-  console.log("start delete",id);
   elementRegistry=viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
+  console.log("id i need to delete",id);
   try{
     allElements.forEach(item => {
       const element= item.id;
       let lastIndex = element.lastIndexOf('_'); 
       let result = element.substring(0, lastIndex);
+      console.log("my item",element,"\n my result",result,result == id, element == id);
       if(result == id || element == id){
-        console.log("To delete",item);
         modeling.removeShape(item);
       }
     })

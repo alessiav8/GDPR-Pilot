@@ -37,7 +37,7 @@ import right_to_object from "../../resources/right_to_object.bpmn";
 import right_to_object_to_automated_processing from "../../resources/right_to_object_to_automated_processing.bpmn";
 import right_to_restrict_processing from "../../resources/right_to_restrict_processing.bpmn";
 import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
-import right_to_be_informed_od_data_breaches from "../../resources/data_breach.bpmn";
+import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
 
 
 
@@ -139,7 +139,7 @@ export function yesdropDownI() {
 export function yesdropDownL() {
   editMetaInfo("L", setJsonData("Yes", false));
   questionDone("#dropDownL");
-  setGdprButtonCompleted();
+  setGdprButtonCompleted(true);
   handleSideBar(false);
   editMetaInfo("gdpr", true);
   editYesNoButton("#yes_dropDownL");
@@ -151,16 +151,7 @@ export function yesdropDownL() {
 
 //----------------------------START NO HANDLER------------------------------------
 
-function handleNoClick(diagram, start_label, end_label, id, start_type,current_letter,next_letter) {
-  checkGroupOrCreate();
-  if(!existsGdprPath(id)) {
-    addSubEvent(diagram,start_label,end_label,id,start_type);  
-  }
-  editYesNoButton("#no_dropDown"+current_letter);
-  editMetaInfo(current_letter, setJsonData("No", false));
-  allowOpenNextQuestion(next_letter);
-  questionDone("#dropDown"+current_letter);
-}
+
 //handle click no for question A
 async function nodropDownA() {
   await checkDropDownOrdAdd(
@@ -169,7 +160,7 @@ async function nodropDownA() {
     "Personal data",
     "Do you handle personal data in your process?"
   );
-  setGdprButtonCompleted();
+  setGdprButtonCompleted(true);
   //closeSideBarSurvey();
 
   removeUlFromDropDown("#dropDownA");
@@ -216,33 +207,20 @@ export function nodropDownF() {
 }
 
 export function nodropDownG() {
-  editYesNoButton("#no_dropDownG");
-  questionDone("#dropDownG");
-  allowOpenNextQuestion("H");
-  editMetaInfo("G", setJsonData("No", false));
+  handleNoClick(right_to_object_to_automated_processing,"Objection to Automated Processing Request Received","Objection to Automated Processing Request fulfilled","right_to_object_to_automated_processing",'bpmn:MessageEventDefinition',"G","H");  
 }
 
 export function nodropDownH() {
-  editYesNoButton("#no_dropDownH");
-  questionDone("#dropDownH");
-  allowOpenNextQuestion("I");
-  editMetaInfo("H", setJsonData("No", false));
-
+  handleNoClick(right_to_restrict_processing,"Processing Restriction Request Received","Processing Restrict Request fulfilled","right_to_restrict_processing",'bpmn:MessageEventDefinition',"H","I");  
 }
 
 export function nodropDownI() {
-  editYesNoButton("#no_dropDownI");
-  questionDone("#dropDownI");
-  allowOpenNextQuestion("L");
-  editMetaInfo("I", setJsonData("No", false));
-
+  handleNoClick(right_to_be_forgotten,"Request to be Forgotten Received","Request to be Forgotten fulfilled","right_to_be_forgotten",'bpmn:MessageEventDefinition',"I","L");  
 }
 
 export function nodropDownL() {
-  editYesNoButton("#no_dropDownL");
-  questionDone("#dropDownL");
-  editMetaInfo("L", setJsonData("No", false));
-
+  handleNoClick(right_to_be_informed_of_data_breaches,"Data Breach occurred","Data Breach Managed","right_to_be_informed_of_data_breaches",'bpmn:ErrorEventDefinition',"L","L");  
+  setGdprButtonCompleted(true);
 }
 
 //----------------------------END NO HANDLER------------------------------------
@@ -506,5 +484,17 @@ function editYesNoButton(idButton){
 }
 //
 
+//function to handle the click on the No button
+function handleNoClick(diagram, start_label, end_label, id, start_type,current_letter,next_letter) {
+  checkGroupOrCreate();
+  if(!existsGdprPath(id)) {
+    addSubEvent(diagram,start_label,end_label,id,start_type);  
+  }
+  editYesNoButton("#no_dropDown"+current_letter);
+  editMetaInfo(current_letter, setJsonData("No", false));
+  allowOpenNextQuestion(next_letter);
+  questionDone("#dropDown"+current_letter);
+}
+//
 
 export { yesdropDownA, nodropDownA, yesdropDownB, nodropDownB, addBPath };
