@@ -29,10 +29,15 @@ import {
 } from "./app.js";
 
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
+
 import right_to_access from "../../resources/right_to_be_consent.bpmn";
 import right_to_portability from "../../resources/right_of_portability.bpmn";
 import right_to_rectify from "../../resources/right_to_rectify.bpmn";
 import right_to_object from "../../resources/right_to_object.bpmn";
+import right_to_object_to_automated_processing from "../../resources/right_to_object_to_automated_processing.bpmn";
+import right_to_restrict_processing from "../../resources/right_to_restrict_processing.bpmn";
+import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
+import right_to_be_informed_od_data_breaches from "../../resources/data_breach.bpmn";
 
 
 
