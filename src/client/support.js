@@ -51,7 +51,6 @@ export async function openDrop(drop,type,open){
   const dropDownCurrent = "#ulCollapsedropDown"+letter; 
   const CurrentLetterButton = document.querySelector(dropDownCurrent);
   CurrentLetterButton.setAttribute("class", "collapse");
-  console.log("close drop down",letter)
   const index=letters.indexOf(letter);
   if(open){
     if(letter!="L" && letter!= "B" && letter!="A" || (letter=="A" && type=="yes") || (letter=="B" && type=="yes")){
@@ -59,7 +58,6 @@ export async function openDrop(drop,type,open){
       const dropDownNext = "#ulCollapsedropDown"+nextLetter; 
       const NextLetterButton= document.querySelector(dropDownNext);
       NextLetterButton.setAttribute("class","collapse show");
-      console.log("open drop down",nextLetter)
 
     }
   }
@@ -319,7 +317,6 @@ export function questionDone(dD){
 }
 //
 
-//TODO: handle delete of activity
 //function to create ul and handle activity selection
 async function createUlandSelectActivities(dropDownID, titleText, activities_already_selected) {
   const dropDown = document.querySelector(dropDownID);

@@ -25,7 +25,8 @@ import {
   createAGroup,
   existGdprGroup,
   addSubEvent,
-  existsGdprPath
+  existsGdprPath,
+  getAnswerQuestionX,
 } from "./app.js";
 
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
@@ -236,40 +237,25 @@ async function addSubProcess(name, title, diagram, element, previous) {
 
 //function to add the path to solve B
 async function addBPath(activities, activities_already_selected) {
+  const answers_done = await getAnswerQuestionX("questionB");
   editMetaInfo("B", setJsonData("No", activities));
-  await checkDropDownOrdAdd(
-    "dropDownC",
-    false,
-    "User data access",
-    "Do you allow users to access their data?"
-  );
+  await checkDropDownOrdAdd("dropDownC",false, "User data access", "Do you allow users to access their data?");
+  
   try {
     activities.forEach(async function (activity) {
-      const element = getElement(activity.id);
-      const previousSet = getPreviousElement(element);
-      if (previousSet) {
-        var i = 0;
-        for (var i = 0; i < previousSet.length; i++) {
-          const name = "consent_" + activity.id + "_" + i;
-          await addSubProcess(
-            name,
-            "Right to be informed and to Consent",
-            consent_to_use_the_data,
-            element,
-            previousSet[i]
-          );
-        }
-      } else {
-        const name = "consent_" + activity.id + "_0";
-        await addSubProcess(
-          name,
-          "Right to be informed and to Consent",
-          consent_to_use_the_data,
-          element,
-          null
-        );
-      }
+        const element = getElement(activity.id);
+        if( answers_done == null || !answers_done.some(item => item.id === activity.id) ){
+          const previousSet = getPreviousElement(element);
+          if (previousSet.length > 0) {
+            var i = 0;
+            for (var i = 0; i < previousSet.length; i++) {
+              const name = "consent_" + activity.id + "_" + i;
+              await addSubProcess(name,"Right to be informed and to Consent",consent_to_use_the_data,element,previousSet[i]);
+            }
+          }
+    }
     });
+  
   } catch (e) {
     console.error("Some error in addBPath", e);
   }

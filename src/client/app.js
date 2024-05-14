@@ -84,7 +84,7 @@ var browserNavigationInProgress;
 const YA=document.getElementById('yes_dropDownA');
 const NA=document.getElementById('no_dropDownA');
 //end gdpr questions
-
+const questionLetters=["A", "B", "C", "D", "E", "F","G","H","I","L"];
 const bpmnActivityTypes = [
   'bpmn:task',
   'bpmn:Task',
@@ -128,7 +128,6 @@ bpmnActivityTypes.concat(
     "bpmn:callActivity",
     "bpmn:CallActivity",
     "bpmn:ErrorEventDefinition",
-    "bpmn:BPMNShape",
 ]);
 
 const gdprActivityQuestionsPrefix=[
@@ -191,7 +190,6 @@ async function loadDiagram(diagram){
               eventBus = viewer.get('eventBus');
               contextPad = viewer.get('contextPad');
 
-              console.log(contextPad);
               var bpmnReplace = viewer.get('bpmnReplace');
               var translate = viewer.get('translate');
               //
@@ -1080,8 +1078,7 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
 
   else{
     const newX = (firstElement.x + newElement.width) ;
-    const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent") ? firstElement.y - 22  : firstElement.y;
-
+    var newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent" || firstElement.type=="bpmn:startEvent" || firstElement.type=="bpmn:endEvent") ? firstElement.y - 22  : (firstElement.type=="bpmn:ExclusiveGateway" || firstElement.type=="bpmn:ParallelGateway" || firstElement.type=="bpmn:Gateway") ? secondElement.y : firstElement.y;
     const outgoingFlow = firstElement.outgoing;
     if(outgoingFlow.length > 0) {
       outgoingFlow.forEach(outgoingElem=>{
@@ -1121,7 +1118,6 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
 function getOrderedSub(){
   elementRegistry = viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
-
   const new_set=new Array();
   var starts = allElements.filter(element => allBpmnElements.some(item=> item === element.type));
   while(starts[0]){
@@ -1132,11 +1128,14 @@ function getOrderedSub(){
         new_set.push(start);
       }
       var first = start;
+
       while(hasOutgoing(first)){
-        const next = hasOutgoing(first)
-        if(!new_set.some(item=> item == next)) {
+        const next_to_add = hasOutgoing(first);
+        const next = elementRegistry.get(next_to_add.businessObject.targetRef.id);
+        if(!new_set.some(item => item == next)) {
           new_set.push(next);
         }
+
         first = next;
       }
     
@@ -1150,17 +1149,37 @@ function getOrderedSub(){
   })
   //
 
+  console.log("Ordered sub",new_set);
   return new_set;
 }
 //
 
+function compareByX(c, d) {
+  elementRegistry=viewer.get("elementRegistry");
+  const a = elementRegistry.get(c.businessObject.targetRef.id);
+  const b = elementRegistry.get(d.businessObject.targetRef.id);
+  if (a.x !== b.x) {
+      return a.x - b.x;
+  } else {
+      return b.y - a.y;
+  }
+}
+
 //function to say if an element has a successor and in the case, return it
 function hasOutgoing(element){
   elementRegistry=viewer.get("elementRegistry");
-  const outgoing=element.outgoing[0];
-  if(outgoing){
-    const target=outgoing.businessObject.targetRef.id;
-    return elementRegistry.get(target)
+  const outgoingSet=element.outgoing;
+  //console.log("\nOutgoing of element",element.id,"\n",outgoingSet);
+  const set= new Array();
+  if(outgoingSet.length > 0){
+    outgoingSet.forEach(outgoing => {
+      const target=outgoing.businessObject.targetRef.id;
+      const targetRef = elementRegistry.get(target);
+      set.push(targetRef);
+    })
+
+   outgoingSet.sort(compareByX);
+   return outgoingSet[0];
   }
   else return false;
 }
@@ -1182,7 +1201,7 @@ export function reorderDiagram() {
       previousElementSet.forEach(previousElement => {
         //console.log("Is in range?",element.y,previousElement.y,isInRange(previousElement.y,element.y,20) ,isInRange(element.y,previousElement.y,20))
         if( isInRange(previousElement.y, element.y) || isInRange(element.y, previousElement.y) ){
-        const compare = (previousElement.width == 36 ) ? 70 : (previousElement.width==50) ? 120 : 150; 
+        const compare = (previousElement.width == 36 ) ? 80 : (previousElement.width==50) ? 120 : 150; 
 
         const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
         const add = compare - diff;
@@ -1190,12 +1209,11 @@ export function reorderDiagram() {
         //console.log("element",element.businessObject.name,"\nprevious",previousElement.businessObject.name,"id: ",previousElement.id,"\ncompare: ",compare,"\ndiff: ",diff,"\nadd: ",add)
 
           const incomingElementSet = element.incoming;
-          var newXelement= element.x;
-          console.log("Element",element.id,"\n incoming set",incomingElementSet)
-    
+          var newXelement= element.x;    
           if(incomingElementSet.length > 0){
             for(var i=0; i< incomingElementSet.length; i++){
               var incomingElement=incomingElementSet[i]; //freccia entrante corrente
+               //console.log("Element ",element.id," element name ",element.businessObject.name,"\n flow considered",incomingElementSet[i],"\n compare",compare," diff: ",diff," add: ",add)
               if(incomingElement.businessObject.sourceRef.id == previousElement.id){
                 const setToDelete = element.incoming;
                 var toAddAgain= new Array();
@@ -1206,12 +1224,34 @@ export function reorderDiagram() {
                   modeling.removeConnection(item);
                 });
 
-                console.log("considering ",element.id,"\nsource to readd",toAddAgain);
+                //console.log("\nconsidering ",element,"i move it");
 
-                modeling.resizeShape(element, {x: element.x + add , y: element.y, width: element.width, height:element.di.bounds.height});
+                const oldX= element.x;
+                const newXAdd= oldX +add;
+                //modeling.resizeShape(element, {x: element.x + add , y: element.y, width: element.width, height:element.di.bounds.height});
+                modeling.moveShape(element, { x: add, y: 0});
+                if(element.x != newXAdd){
+                  //console.log("Need to delete and readd",element);
+                  const t=element.type;
+                  const y= element.y;
+                  const parent=element.parent;
+                  modeling.removeShape(element);
+
+                  const new_elem=modeling.elementFactory({
+                    type:t,
+                    y: y,
+                    x: oldX+add,
+                  });
+                  modeling.createShape(element, {x: oldX+add+100, y: y}, parent);
+                }
+                else{
+                  //console.log("Positioned correctly ",element.id," old ", oldX, " new ",newXAdd, " add ",add);
+                }
+  
                 const newSequenceFlowAttrsIncoming = {
                   type: "bpmn:SequenceFlow",
                 };
+                //console.log("\nNew position ",element,"\n");
 
                 toAddAgain.forEach(item=>{
                   modeling.createConnection(item, element, newSequenceFlowAttrsIncoming, element.parent);
@@ -1366,48 +1406,20 @@ export function existGdprGroup(){
 //
 
 //function to find a free space in the group
-async function findFreeY(y_ex,max_height) {
-  const questions= checkMetaInfo().values[0];
+async function findFreeY(y_ex, max_height) {
   elementRegistry=viewer.get("elementRegistry");
   var elem;
   var y = y_ex + 60;
-  const lastObject = getLastAnswered(questions);
-  switch(lastObject){
-    case "B":
-      break;
-    case "C":
-      elem = elementRegistry.get("right_to_access");
-      break;
-    case "D":
-      elem=elementRegistry.get("right_to_portability");
-      break;
-    case "E":
-      elem =elementRegistry.get("right_to_rectify");
-      break;
-    case "F":
-      elem= elementRegistry.get("right_to_object");
-      break;
-    case "G":
-      elem= elementRegistry.get("right_to_object_to_automated_processing");
-      break;
-    case "H":
-      elem= elementRegistry.get("right_to_restrict_processing");
-      break;  
-    case "I":
-      elem= elementRegistry.get("right_to_be_forgotten");
-      break;
-    case "L":
-      elem= elementRegistry.get("right_to_be_notified_of_data_breaches");
-      break;
-    }
-  
-    if(elem){
-      y = elem.y + 140;
-    }
-    if(max_height < y + 90){
+  const rights=["right_to_access","right_to_portability","right_to_rectify","right_to_object","right_to_object_to_automated_processing","right_to_restrict_processing","right_to_be_forgotten","right_to_be_informed_of_data_breaches"];
+  rights.forEach(right => {
+      if(elementRegistry.get(right)){
+        y = y + 120; 
+      }
+    });
+    if(max_height < y + 120){
       const group = elementRegistry.get("GdprGroup");
       modeling.resizeShape(group, {x: group.x , y: group.y , width: group.width, height: group.height+300});
-      modeling.updateProperties(group, {height: max_height + 90});
+      modeling.updateProperties(group, {height: max_height + 120});
     }
     return y; 
 }
@@ -1419,17 +1431,17 @@ async function findFreeY(y_ex,max_height) {
 //end event title: the label under the end event 
 //path name: the macro title of the question ex: right to access
 //start type: the type of the start event signal/message
-export async function addSubEvent(diagram, start_event_title, end_event_title, path_name,start_type){
+export async function addSubEvent(diagram, start_event_title, end_event_title, path_name, start_type){
   elementRegistry=viewer.get("elementRegistry");
   const gdpr = elementRegistry.get("GdprGroup");
   const parent = gdpr.parent;
-  const y= await findFreeY(gdpr.y,gdpr.height);
+  const y = await findFreeY(gdpr.y,gdpr.height);
 
   const start_event = elementFactory.createShape({
     type: "bpmn:StartEvent",
     id: path_name+"_start",
     width: 36, 
-    height:36, 
+    height: 36, 
     eventDefinitionType: start_type,
   });
 
@@ -1447,7 +1459,8 @@ export async function addSubEvent(diagram, start_event_title, end_event_title, p
   });
 
   end_event.businessObject.id=path_name+"_end";
-  end_event.businessObject.name= end_event_title;
+
+  end_event.businessObject.name = end_event_title;
 
   modeling.createShape(end_event, {x:0 , y:0}, parent);
   modeling.resizeShape(end_event, {x: gdpr.x + 350 , y: y, width: end_event.width, height: end_event.height});
@@ -1497,5 +1510,23 @@ export function existsGdprPath(id){
 }
 //
 
+//function to get the answer to a certain question "question"
+export async function getAnswerQuestionX(question){
+  try{
+      const response= await getMetaInformationResponse();
+      var result = response[question]; 
+      if(result!=null){
+        result = result.filter(item => item.id != "response");
+      }else{
+        result=null;
+      }
+      console.log("result",result);
+      return result;
+  }catch(e){
+    console.error("error in getting a certain answer");
+    return null;
+  }
+}
+//
 
 export {getDiagram,pushDiagram,editMetaInfo,subProcessGeneration,getElement,getPreviousElement,addActivityBetweenTwoElements}
