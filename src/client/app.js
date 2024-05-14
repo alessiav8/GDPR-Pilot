@@ -127,7 +127,8 @@ bpmnActivityTypes.concat(
     "bpmn:StartEvent",
     "bpmn:callActivity",
     "bpmn:CallActivity",
-    "bpmn:ErrorEventDefinition"
+    "bpmn:ErrorEventDefinition",
+    "bpmn:BPMNShape",
 ]);
 
 const gdprActivityQuestionsPrefix=[
@@ -204,7 +205,7 @@ async function loadDiagram(diagram){
 
               //handle the remotion of a gdpr path
               viewer.on('shape.removed', function(event) {
-
+                try{
                 var element = event.element;
                 if(element.type==="bpmn:CallActivity"){
                   const name=element.businessObject.id;
@@ -213,10 +214,11 @@ async function loadDiagram(diagram){
 
                   if (name.startsWith("consent")){
                     const questionB = response["questionB"];
-                    var activity_id = name.split("_")[1]+"_"+name.split("_")[2];
-                    const new_meta = questionB.filter(element => element.id!="response" && element.id != activity_id);
-                    console.log("new_meta",new_meta);
-                    editMetaInfo("B",setJsonData("No",new_meta));
+                    if(questionB!=null){
+                      var activity_id = name.split("_")[1]+"_"+name.split("_")[2];
+                      const new_meta = questionB.filter(element => element.id!="response" && element.id != activity_id);
+                      editMetaInfo("B",setJsonData("No",new_meta));
+                    }
                   }
                   else if(name.startsWith("")){
                   }
@@ -237,6 +239,10 @@ async function loadDiagram(diagram){
 
                 });
               }*/
+            }
+            catch(e){
+              console.error("error in shape.removed");
+            }
               });
               //
            
@@ -1056,6 +1062,7 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
   const getBoundsNew = newElement.di.bounds;
 
   if(firstElement==null){
+
     const newBoundsNew={
       x: secondElement.x - 1.5 * newElement.width,
       y:secondElement.y,
@@ -1068,13 +1075,21 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
       type: "bpmn:SequenceFlow"
     };
     modeling.createConnection(newElement, secondElement, newSequenceFlowAttrsOutgoing, secondElement.parent); 
+ 
   }
+
   else{
     const newX = (firstElement.x + newElement.width) ;
     const newY = (firstElement.type=="bpmn:StartEvent" || firstElement.type=="bpmn:EndEvent") ? firstElement.y - 22  : firstElement.y;
 
-    const outgoingFlow = firstElement.outgoing[0];
-    if(outgoingFlow) modeling.removeConnection(outgoingFlow);
+    const outgoingFlow = firstElement.outgoing;
+    if(outgoingFlow.length > 0) {
+      outgoingFlow.forEach(outgoingElem=>{
+        if(outgoingElem.businessObject.targetRef.id === secondElement.id){
+          modeling.removeConnection(outgoingElem);
+        }
+      })
+    };
 
     const to_shift= newElement.di.bounds.width;
     const newBoundsNew={
@@ -1102,7 +1117,7 @@ function addActivityBetweenTwoElements(firstElement, secondElement, newElement) 
 
 
 //function to get the set of ordered elements, ordered by their sequence flow 
-//all the elements but not the sequence flow or parrtecipant or collaboration
+//all the elements but not the sequence flow or partecipant or collaboration
 function getOrderedSub(){
   elementRegistry = viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
@@ -1151,64 +1166,65 @@ function hasOutgoing(element){
 }
 //
 
+function isInRange(number, min) {
+  const max = min + 70;
+  return number >= min && number <= max;
+}
+
 //function to reorder the diagram
 export function reorderDiagram() {
   const sub=getOrderedSub();
-  console.log("sub to reorder diagram",sub)
+  //console.log("sub to reorder diagram",sub)
   sub.forEach(element => {
     const previousElementSet = getPreviousElement(element);
-    //console.log("previous element set ",previousElementSet);
-    if(previousElementSet){
+    //console.log("previous element set ",previousElementSet," of ",element.id);
+    if(previousElementSet.length > 0){
       previousElementSet.forEach(previousElement => {
-        const compare = (previousElement.width < 100 ) ? 70 : 150; 
-        const diff = element.x - previousElement.x;
+        //console.log("Is in range?",element.y,previousElement.y,isInRange(previousElement.y,element.y,20) ,isInRange(element.y,previousElement.y,20))
+        if( isInRange(previousElement.y, element.y) || isInRange(element.y, previousElement.y) ){
+        const compare = (previousElement.width == 36 ) ? 70 : (previousElement.width==50) ? 120 : 150; 
+
+        const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
         const add = compare - diff;
 
         //console.log("element",element.businessObject.name,"\nprevious",previousElement.businessObject.name,"id: ",previousElement.id,"\ncompare: ",compare,"\ndiff: ",diff,"\nadd: ",add)
 
-        if(diff < compare){
           const incomingElementSet = element.incoming;
-          //console.log("incoming set",incomingElementSet)
+          var newXelement= element.x;
+          console.log("Element",element.id,"\n incoming set",incomingElementSet)
+    
           if(incomingElementSet.length > 0){
             for(var i=0; i< incomingElementSet.length; i++){
-              var incomingElement=incomingElementSet[i];
-              //console.log("incoming inside ",incomingElement.businessObject)
+              var incomingElement=incomingElementSet[i]; //freccia entrante corrente
               if(incomingElement.businessObject.sourceRef.id == previousElement.id){
+                const setToDelete = element.incoming;
+                var toAddAgain= new Array();
 
-                modeling.removeConnection(incomingElement);
+                setToDelete.forEach(item=>{
+                  const source = elementRegistry.get(item.businessObject.sourceRef.id);
+                  toAddAgain.push(source);
+                  modeling.removeConnection(item);
+                });
+
+                console.log("considering ",element.id,"\nsource to readd",toAddAgain);
+
                 modeling.resizeShape(element, {x: element.x + add , y: element.y, width: element.width, height:element.di.bounds.height});
                 const newSequenceFlowAttrsIncoming = {
-                  type: "bpmn:SequenceFlow"
+                  type: "bpmn:SequenceFlow",
                 };
-                modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
+
+                toAddAgain.forEach(item=>{
+                  modeling.createConnection(item, element, newSequenceFlowAttrsIncoming, element.parent);
+                });
              }
 
             };
         }
-        }
-
-        else if(diff > compare){
-          const remove = diff - compare;
-          const incomingElementSet = element.incoming;
-          //console.log("incoming set 2",incomingElementSet)
-
-          if(incomingElementSet.length > 0){
-            incomingElementSet.forEach(incomingElement => {
-              //console.log("incoming 2 inside ",incomingElement,incomingElement.businessObject.sourceRef,previousElement,incomingElement.businessObject.sourceRef.id == previousElement.id)
-
-              if(incomingElement.businessObject.sourceRef.id == previousElement.id){
-                modeling.removeConnection(incomingElement);
-                modeling.resizeShape(element, {x: element.x - remove , y: element.y, width: element.width, height:element.di.bounds.height});
-                  const newSequenceFlowAttrsIncoming = {
-                    type: "bpmn:SequenceFlow"
-                  };
-                modeling.createConnection(previousElement, element, newSequenceFlowAttrsIncoming, element.parent);
-              }
-          });
-        }
-        }    
+        
+      }
     });
     }
+  
   });
   viewer.get("canvas").zoom('fit-viewport');
 }
@@ -1325,6 +1341,8 @@ export function createAGroup(){
   });
 
   groupShape.id = "GdprGroup"; 
+  groupShape.businessObject.id="GdprGroup";
+  groupShape.businessObject.name="Achieve Gdpr Compliance";
 
   modeling.createShape(groupShape, { x: 0, y: 0 }, parentRoot);
   modeling.resizeShape(groupShape, {x: x - 300 , y: y - 25, width: 420, height: 150});
