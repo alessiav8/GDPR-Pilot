@@ -225,7 +225,7 @@ async function loadDiagram(diagram){
                       case "right_to_access":
                         const questionC= response["questionC"];
                         if(questionC!=null){
-                          editMetaInfo("C",setJsonData("Yes",false));
+                          editMetaInfo("C",null);
                           removeStartEnd(name);
                         }
                         break;
@@ -233,73 +233,67 @@ async function loadDiagram(diagram){
                       case "right_to_portability":
                         const questionD= response["questionD"];
                         if(questionD!=null){
-                        editMetaInfo("D",setJsonData("Yes",false));
+                        editMetaInfo("D",null);
                         removeStartEnd(name);
 
                         }
                         break;
 
-                        case "right_to_rectify":
+                      case "right_to_rectify":
                           const questionE= response["questionE"];
                           if(questionE!=null){
-                            editMetaInfo("E",setJsonData("Yes",false));
+                            editMetaInfo("E",null);
                             removeStartEnd(name);
 
                           }
-                          break;
+                        break;
 
-                          case "right_to_object":
+                      case "right_to_object":
                         const questionF= response["questionF"];
                         if(questionF!=null){
-                          editMetaInfo("F",setJsonData("Yes",false));
+                          editMetaInfo("F",null);
                           removeStartEnd(name);
 
                         }
-                        break;
+                      break;
 
-                        case "right_to_object_to_automated_processing":
+                      case "right_to_object_to_automated_processing":
                         const questionG= response["questionG"];
                         if(questionG!=null){
-                          editMetaInfo("G",setJsonData("Yes",false));
+                          editMetaInfo("G",null);
                           removeStartEnd(name);
 
                         }
-                        break;
+                      break;
 
-                        case "right_to_restrict_processing":
+                      case "right_to_restrict_processing":
                         const questionH= response["questionH"];
                         if(questionH!=null){
-                          editMetaInfo("H",setJsonData("Yes",false));
+                          editMetaInfo("H",null);
                           removeStartEnd(name);
 
                         }
-                        break;
+                      break;
 
-                        case "right_to_be_forgotten":
+                      case "right_to_be_forgotten":
                         const questionI= response["questionI"];
                         if(questionI!=null){
-                          editMetaInfo("I",setJsonData("Yes",false));
+                          editMetaInfo("I",null);
                           removeStartEnd(name);
-
                         }
-                        break;
+                      break;
 
-                        case "right_to_be_informed_of_data_breaches":
+                      case "right_to_be_informed_of_data_breaches":
                         const questionL= response["questionL"];
                         if(questionL!=null){
-                          editMetaInfo("L",setJsonData("Yes",false));
+                          editMetaInfo("L",null);
                           removeStartEnd(name);
-
                         }
-                        break;
-
+                      break;
                       default:
                         break;
-
-                    }
-                    
+                    } 
                   }
-                 
                   reorderDiagram();
                 })
               }
@@ -355,21 +349,26 @@ async function loadDiagram(diagram){
           }*/
 
           eventBus.on('element.changed', function(event) {
-            const element = event.element;
+            const element = event.element;//sequence flow element
             if (element && element.type === 'bpmn:SequenceFlow') {
-              const source = element.source; 
+              const source = element.source; //la sorgente della freccia
               if (source!=null) {
-                const newEnd = element.target; 
+                const newEnd = element.target; //dove punta la freccia
+
                 const idSplitted = source.id.split("_");
                 const activityIdInConsent= idSplitted[1] +"_"+ idSplitted[2];
-                const target = elementRegistry.get(activityIdInConsent);
+
+                const target = elementRegistry.get(activityIdInConsent); //activity that generated the Call Activity
+
+                const targetFlow = (target && target.incoming) ? elementRegistry.get(target.incoming.id) : true;
+                
                 if(idSplitted[0]=="consent"){
                   if(newEnd == null || newEnd == undefined){
                     displayDynamicAlert("Is not possible to keep only the gdpr path, it should be connected to an activity","warning",3000);
                     modeling.removeShape(source);
                     return;
                   }
-                  else if(activityIdInConsent != newEnd.id){
+                  else if(activityIdInConsent != newEnd.id && targetFlow == element){
                     const newEnd= elementRegistry.get(element.businessObject.targetRef.id);
                     if(bpmnActivityTypes.some(item => item == newEnd.type)){
                       const new_id="consent_"+newEnd.id+"_"+idSplitted[3];
@@ -400,6 +399,19 @@ async function loadDiagram(diagram){
                     }*/
                     
                   }
+                  else{
+                    if(bpmnActivityTypes.some(item => item == newEnd.type)){
+                    const newSetQuestionB = new Array();
+                    getAnswerQuestionX("questionB").then((response)=>{
+                      response.forEach(q =>{
+                          newSetQuestionB.push(q);
+                      });
+                      newSetQuestionB.push({id: newEnd.id, value: newEnd.businessObject.name})
+                      editMetaInfo("B",setJsonData("No",newSetQuestionB));
+                  });
+                }
+                  
+              }
 
                 }
                 
@@ -1444,6 +1456,7 @@ export async function getActivities() {
 //type: the type of path i want to remove ex. consent for data
 export function removeConsentFromActivity(activity,type){
   elementRegistry=viewer.get('elementRegistry');
+  console.log("ALL",elementRegistry.getAll())
   try{
     var i=0;
     var name=type+activity.id+"_"+i;
@@ -1454,9 +1467,26 @@ export function removeConsentFromActivity(activity,type){
       var name=type+activity.id+"_"+i;
       toRemove = elementRegistry.get(name);
     }
+
+    const Act=elementRegistry.get(activity.id);
+    console.log("activity",Act);
+
+    const incomingSet=Act.incoming;
+    console.log("incomingSet",incomingSet);
+    if(incomingSet.length >0){
+      for(var i=0; i< incomingSet.length;i++){
+        var incoming_elem=incomingSet[i];
+        console.log("incoming",incoming_elem);
+        const source= incoming_elem.source;
+        const splitted= source.id.split("_");
+        if(splitted[0]=="consent" && type=="consent_"){
+          modeling.removeConnection(incoming_elem);
+        }
+      };
+    }
     reorderDiagram();
   }catch(e){
-    console.error("Some problem in removing path gdpr added to activity")
+    console.error("Some problem in removing path gdpr added to activity",e)
   }
 }
 //
