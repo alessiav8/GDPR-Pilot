@@ -130,6 +130,7 @@ bpmnActivityTypes.concat(
     "bpmn:ErrorEventDefinition",
 ]);
 
+
 const gdprActivityQuestionsPrefix=[
   "consent",
 ]
@@ -218,8 +219,87 @@ async function loadDiagram(diagram){
                       editMetaInfo("B",setJsonData("No",new_meta));
                     }
                   }
-                  else if(name.startsWith("")){
+                  if(name.startsWith("right")){
+                    displayDynamicAlert("This action impact the gdpr compliance level");
+                    switch(name){
+                      case "right_to_access":
+                        const questionC= response["questionC"];
+                        if(questionC!=null){
+                          editMetaInfo("C",setJsonData("Yes",false));
+                          removeStartEnd(name);
+                        }
+                        break;
+
+                      case "right_to_portability":
+                        const questionD= response["questionD"];
+                        if(questionD!=null){
+                        editMetaInfo("D",setJsonData("Yes",false));
+                        removeStartEnd(name);
+
+                        }
+                        break;
+
+                        case "right_to_rectify":
+                          const questionE= response["questionE"];
+                          if(questionE!=null){
+                            editMetaInfo("E",setJsonData("Yes",false));
+                            removeStartEnd(name);
+
+                          }
+                          break;
+
+                          case "right_to_object":
+                        const questionF= response["questionF"];
+                        if(questionF!=null){
+                          editMetaInfo("F",setJsonData("Yes",false));
+                          removeStartEnd(name);
+
+                        }
+                        break;
+
+                        case "right_to_object_to_automated_processing":
+                        const questionG= response["questionG"];
+                        if(questionG!=null){
+                          editMetaInfo("G",setJsonData("Yes",false));
+                          removeStartEnd(name);
+
+                        }
+                        break;
+
+                        case "right_to_restrict_processing":
+                        const questionH= response["questionH"];
+                        if(questionH!=null){
+                          editMetaInfo("H",setJsonData("Yes",false));
+                          removeStartEnd(name);
+
+                        }
+                        break;
+
+                        case "right_to_be_forgotten":
+                        const questionI= response["questionI"];
+                        if(questionI!=null){
+                          editMetaInfo("I",setJsonData("Yes",false));
+                          removeStartEnd(name);
+
+                        }
+                        break;
+
+                        case "right_to_be_informed_of_data_breaches":
+                        const questionL= response["questionL"];
+                        if(questionL!=null){
+                          editMetaInfo("L",setJsonData("Yes",false));
+                          removeStartEnd(name);
+
+                        }
+                        break;
+
+                      default:
+                        break;
+
+                    }
+                    
                   }
+                 
                   reorderDiagram();
                 })
               }
@@ -276,16 +356,14 @@ async function loadDiagram(diagram){
 
           eventBus.on('element.changed', function(event) {
             const element = event.element;
-          
             if (element && element.type === 'bpmn:SequenceFlow') {
               const source = element.source; 
               if (source!=null) {
                 const newEnd = element.target; 
-                const idSplitted= source.id.split("_");
+                const idSplitted = source.id.split("_");
+                const activityIdInConsent= idSplitted[1] +"_"+ idSplitted[2];
+                const target = elementRegistry.get(activityIdInConsent);
                 if(idSplitted[0]=="consent"){
-                  const activityIdInConsent= idSplitted[1] +"_"+ idSplitted[2];
-                  const target = elementRegistry.get(activityIdInConsent);
-
                   if(newEnd == null || newEnd == undefined){
                     displayDynamicAlert("Is not possible to keep only the gdpr path, it should be connected to an activity","warning",3000);
                     modeling.removeShape(source);
@@ -377,6 +455,14 @@ function backArrowSubProcess(){
 
 }
 //
+
+//ausiliar function to remove start and end from call activity
+function removeStartEnd(name){
+  const start = elementRegistry.get(name+"_start");
+  const end = elementRegistry.get(name+"_end");
+  modeling.removeShape(end);
+  modeling.removeShape(start);
+}
 
 //function to change the ID for the mainProcess
 function changeID(){
