@@ -1230,22 +1230,9 @@ export function reorderDiagram() {
                 const newXAdd= oldX +add;
                 //modeling.resizeShape(element, {x: element.x + add , y: element.y, width: element.width, height:element.di.bounds.height});
                 modeling.moveShape(element, { x: add, y: 0});
-                if(element.x != newXAdd){
-                  //console.log("Need to delete and readd",element);
-                  const t=element.type;
-                  const y= element.y;
-                  const parent=element.parent;
-                  modeling.removeShape(element);
-
-                  const new_elem=modeling.elementFactory({
-                    type:t,
-                    y: y,
-                    x: oldX+add,
-                  });
-                  modeling.createShape(element, {x: oldX+add+100, y: y}, parent);
-                }
-                else{
-                  //console.log("Positioned correctly ",element.id," old ", oldX, " new ",newXAdd, " add ",add);
+                const exist_label = elementRegistry.get(element.id+"_label");
+                if(exist_label){
+                  modeling.moveShape(exist_label, { x: add, y: 0});
                 }
   
                 const newSequenceFlowAttrsIncoming = {
