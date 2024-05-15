@@ -586,6 +586,67 @@ export async function getSettedActivity(question){
 }
 //
 
+export function displayDynamicAlert(message,type,time) {
+  const alertContainer = document.getElementById('alertContainer');
+    const alertDiv = document.createElement('div');
+    alertDiv.className =`alert alert-${type} alert-dismissible fade show`;
+    alertDiv.setAttribute('role', 'alert');
+
+    alertDiv.innerHTML = `
+        <strong>Important!</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    const closeButton = alertDiv.querySelector('.btn-close');
+    closeButton.addEventListener('click', () => {
+        alertDiv.remove();
+    });
+    alertContainer.appendChild(alertDiv);
+    setTimeout(() => {
+        alertDiv.remove();
+    }, time); 
+}
+
+
+export function displayDynamicPopUp(message) {
+  const alertContainer = document.getElementById('alertContainer');
+
+  // Crea il div per l'alert
+  const alertDiv = document.createElement('div');
+  alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+  alertDiv.setAttribute('role', 'alert');
+
+  // Contenuto dell'alert con messaggio e bottoni
+  alertDiv.innerHTML = `
+    <strong>${message}</strong>
+    <hr>
+    <button type="button" class="btn btn-success yes-btn">Yes</button>
+    <button type="button" class="btn btn-danger no-btn">No</button>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  `;
+
+  // Aggiungi l'alertContainer
+  alertContainer.appendChild(alertDiv);
+
+  // Gestore di evento per il pulsante "Yes"
+  alertDiv.querySelector('.yes-btn').addEventListener('click', () => {
+    alertDiv.remove(); // Rimuovi l'alert
+    console.log('Yes clicked');
+    // Esegui azioni per il pulsante "Yes"
+  });
+
+  // Gestore di evento per il pulsante "No"
+  alertDiv.querySelector('.no-btn').addEventListener('click', () => {
+    alertDiv.remove(); // Rimuovi l'alert
+    console.log('No clicked');
+    // Esegui azioni per il pulsante "No"
+  });
+  
+}
+
+
+
 
 
 

@@ -22,7 +22,7 @@ import consent_to_use_the_data from '../../resources/consent_to_use_the_data.bpm
 import confirmForGDPRPath from '../customizations/confirm';
 
 import { yesdropDownA, nodropDownA,yesdropDownB,nodropDownB,yesdropDownC,nodropDownC,yesdropDownD,nodropDownD,yesdropDownE,nodropDownE,yesdropDownF,nodropDownF,yesdropDownG,nodropDownG,yesdropDownH,nodropDownH,yesdropDownI,nodropDownI,yesdropDownL,nodropDownL,createWithOnlyQuestionXExpandable,getLastAnswered } from './questions.js';
-import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData } from './support.js';
+import { createDropDown, removeUlFromDropDown, closeSideBarSurvey, getMetaInformationResponse,isGdprCompliant,setGdprButtonCompleted,setJsonData,displayDynamicAlert,displayDynamicPopUp } from './support.js';
 import axios from 'axios';
 import zeebeModdleDescriptor from 'zeebe-bpmn-moddle/resources/zeebe';
 
@@ -273,6 +273,61 @@ async function loadDiagram(diagram){
                 }
               })
           }*/
+
+          eventBus.on('element.changed', function(event) {
+            const element = event.element;
+          
+            if (element && element.type === 'bpmn:SequenceFlow') {
+              const source = element.source; 
+              if (source!=null) {
+                const newEnd = element.target; 
+                const idSplitted= source.id.split("_");
+                if(idSplitted[0]=="consent"){
+                  const activityIdInConsent= idSplitted[1] +"_"+ idSplitted[2];
+                  const target = elementRegistry.get(activityIdInConsent);
+
+                  if(newEnd == null || newEnd == undefined){
+                    displayDynamicAlert("Is not possible to keep only the gdpr path, it should be connected to an activity","warning",3000);
+                    modeling.removeShape(source);
+                    return;
+                  }
+                  else if(activityIdInConsent != newEnd.id){
+                    const newEnd= elementRegistry.get(element.businessObject.targetRef.id);
+                    if(bpmnActivityTypes.some(item => item == newEnd.type)){
+                      const new_id="consent_"+newEnd.id+"_"+idSplitted[3];
+                      modeling.updateProperties(source, {
+                        id: new_id,
+                      });          
+                      const newSetQuestionB=new Array();
+                      getAnswerQuestionX("questionB").then((response)=>{
+                        response.forEach(q =>{
+                          if(q.id==target.id){
+                            newSetQuestionB.push({id: newEnd.id, value: newEnd.businessObject.name});
+                          }
+                          else{
+                            newSetQuestionB.push(q);
+                          }
+                        });
+                        editMetaInfo("B",setJsonData("No",newSetQuestionB));
+                      }); 
+
+                      
+                    }
+                    //TODO:
+                    /*else{
+                      const newNameUse = idSplitted[0]+"_";
+                      modeling.updateProperties(source, {
+                        id: newNameUse,
+                      });    
+                    }*/
+                    
+                  }
+
+                }
+                
+              }
+          }
+          });
 
 
           })
@@ -629,7 +684,7 @@ function handleClickOnGdprButton(){
 
     survey_area.appendChild(close_survey);
 
-    const title = "GDPR compliance";
+    const title = "GDPR panel";
     const textNode = document.createTextNode(title);
 
     const divTitle = document.createElement("div");
@@ -1119,19 +1174,24 @@ function getOrderedSub(){
   elementRegistry = viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
   const new_set=new Array();
+  //prendo solo gli elementi che mi interessano
   var starts = allElements.filter(element => allBpmnElements.some(item=> item === element.type));
+
   while(starts[0]){
+      //vedo se c'è uno start e prendo il primo
       const exist = starts.filter(element=> element.type=="bpmn:startEvent" || element.type=="bpmn:StartEvent")[0];
-      if(exist) starts = starts - exist;
+      if(exist) starts = starts - exist; //tolgo l'elemento preso dal set
       const start = exist ? exist : starts.splice(-1, 1)[0];
+      //se non è già presente nel set, aggiungilo
       if(!new_set.some(item=> item == start)) {
         new_set.push(start);
       }
-      var first = start;
 
-      while(hasOutgoing(first)){
-        const next_to_add = hasOutgoing(first);
-        const next = elementRegistry.get(next_to_add.businessObject.targetRef.id);
+      //start diventa il nostro punto di partenza
+      var first = start;
+      while(hasOutgoing(first)){ //finchè c'è un ramo uscente prendi l'elemento collegato al ramo ed aggiungilo
+        const next_to_add = hasOutgoing(first); //prendo riferimento
+        const next = elementRegistry.get(next_to_add.businessObject.targetRef.id); //il riferimento diventa il mio nuovo next
         if(!new_set.some(item => item == next)) {
           new_set.push(next);
         }
@@ -1193,62 +1253,46 @@ function isInRange(number, min) {
 //function to reorder the diagram
 export function reorderDiagram() {
   const sub=getOrderedSub();
-  //console.log("sub to reorder diagram",sub)
   sub.forEach(element => {
     const previousElementSet = getPreviousElement(element);
-    //console.log("previous element set ",previousElementSet," of ",element.id);
     if(previousElementSet.length > 0){
       previousElementSet.forEach(previousElement => {
-        //console.log("Is in range?",element.y,previousElement.y,isInRange(previousElement.y,element.y,20) ,isInRange(element.y,previousElement.y,20))
-        if( isInRange(previousElement.y, element.y) || isInRange(element.y, previousElement.y) ){
-        const compare = (previousElement.width == 36 ) ? 80 : (previousElement.width==50) ? 120 : 150; 
-
+        const compare = (previousElement.width == 36 ) ? 90 : (previousElement.width == 50) ? 150 : 150; 
         const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
-        const add = compare - diff;
+        var add = compare - diff;
+        var addY=0;
+        if(! (isInRange(previousElement.y, element.y) || isInRange(element.y, previousElement.y)) ){
+          addY = 150 - (element.y - previousElement.y);
+          add = 0;
+        }
+        const incomingElementSet = element.incoming;
+        if(incomingElementSet.length > 0){
+          for(var i=0; i< incomingElementSet.length; i++){
+            var incomingElement=incomingElementSet[i]; //freccia entrante corrente
+            if(incomingElement.businessObject.sourceRef.id == previousElement.id){
+              const setToDelete = element.incoming;
+              var toAddAgain= new Array();
 
-        //console.log("element",element.businessObject.name,"\nprevious",previousElement.businessObject.name,"id: ",previousElement.id,"\ncompare: ",compare,"\ndiff: ",diff,"\nadd: ",add)
-
-          const incomingElementSet = element.incoming;
-          var newXelement= element.x;    
-          if(incomingElementSet.length > 0){
-            for(var i=0; i< incomingElementSet.length; i++){
-              var incomingElement=incomingElementSet[i]; //freccia entrante corrente
-               //console.log("Element ",element.id," element name ",element.businessObject.name,"\n flow considered",incomingElementSet[i],"\n compare",compare," diff: ",diff," add: ",add)
-              if(incomingElement.businessObject.sourceRef.id == previousElement.id){
-                const setToDelete = element.incoming;
-                var toAddAgain= new Array();
-
-                setToDelete.forEach(item=>{
+              setToDelete.forEach(item=>{
                   const source = elementRegistry.get(item.businessObject.sourceRef.id);
                   toAddAgain.push(source);
                   modeling.removeConnection(item);
-                });
-
-                //console.log("\nconsidering ",element,"i move it");
-
-                const oldX= element.x;
-                const newXAdd= oldX +add;
-                //modeling.resizeShape(element, {x: element.x + add , y: element.y, width: element.width, height:element.di.bounds.height});
-                modeling.moveShape(element, { x: add, y: 0});
-                const exist_label = elementRegistry.get(element.id+"_label");
-                if(exist_label){
-                  modeling.moveShape(exist_label, { x: add, y: 0});
-                }
-  
-                const newSequenceFlowAttrsIncoming = {
+              });
+              modeling.moveShape(element, { x: add, y: addY});
+              const exist_label = elementRegistry.get(element.id+"_label");
+              if(exist_label){
+                  modeling.moveShape(exist_label, { x: add, y: addY});
+              }
+              const newSequenceFlowAttrsIncoming = {
                   type: "bpmn:SequenceFlow",
-                };
-                //console.log("\nNew position ",element,"\n");
-
-                toAddAgain.forEach(item=>{
+              };
+              toAddAgain.forEach(item=>{
                   modeling.createConnection(item, element, newSequenceFlowAttrsIncoming, element.parent);
-                });
+              });
              }
 
             };
-        }
-        
-      }
+        }     
     });
     }
   
@@ -1275,7 +1319,7 @@ export function handleSideBar(open){
     mode.textContent = "GDPR Mode"
     const visualized = localStorage.getItem("popUpVisualized") == "true" ? true : false;
     if(!visualized){
-      window.alert("You are now in GDPR mode, and the editor is disabled. \n If you want to edit again, you must close the GDPR panel.");
+      displayDynamicAlert("You are now in GDPR mode, and the editor is disabled. \n If you want to edit again, you must close the GDPR panel.","warning",6000);
       localStorage.setItem("popUpVisualized", "true");
     }
   }else{

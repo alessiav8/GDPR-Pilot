@@ -182,3 +182,11 @@
   }
 
 
+.yes-btn{
+  height: auto;
+  margin-right: 5%;
+}
+
+.no-btn{
+  height: auto;
+}
