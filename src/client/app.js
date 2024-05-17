@@ -130,6 +130,8 @@ const bpmnActivityTypes = [
   "bpmn:ManualTask",
 ];
 
+const rights=["right_to_access","right_to_portability","right_to_rectify","right_to_object","right_to_object_to_automated_processing","right_to_restrict_processing","right_to_be_forgotten","right_to_be_informed_of_data_breaches"];
+
 const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:Gateway",
   "bpmn:ExclusiveGateway",
@@ -327,18 +329,7 @@ async function loadDiagram(diagram) {
                   default:
                     break;
                 }
-                if( (response["questionC"]==null || response["questionC"] == "Yes") && 
-                  (response["questionD"]==null || response["questionD"] == "Yes") && 
-                  (response["questionE"]==null || response["questionE"] == "Yes") && 
-                  (response["questionF"]==null || response["questionF"] == "Yes") && 
-                  (response["questionG"]==null || response["questionG"] == "Yes") && 
-                  (response["questionH"]==null || response["questionH"] == "Yes") && 
-                  (response["questionI"]==null || response["questionI"] == "Yes") && 
-                  (response["questionL"]==null || response["questionL"] == "Yes") 
-                ){
-                  const groupName = elementRegistry.get("GdprGroup");
-                  if(groupName) modeling.removeShape(groupName);
-                }
+                
               }
               reorderDiagram();
             });
@@ -384,7 +375,7 @@ async function loadDiagram(diagram) {
           }
 
         }
-        console.log("connection removed", source, target);
+       
       })
 
         /*if(elementRegistry.getAll().length > 0) {
@@ -541,33 +532,61 @@ function backArrowSubProcess() {
 }
 //
 
-//ausiliar function to remove start and end from call activity
+//auxiliary function to remove start and end from call activity
+//name: id of the element
+//the result of this function is the remotion of the entire gdpr path connected
 function removeStartEnd(name) {
   elementRegistry = viewer.get("elementRegistry");
   const nameSplitted = name.split("_");
+  console.log("name splitted",nameSplitted);
   if (
     nameSplitted[nameSplitted.length - 1] != "start" &&
     nameSplitted[nameSplitted.length - 1] != "end"
-  ) {
+  ) 
+  {
     const start = elementRegistry.get(name + "_start");
     const end = elementRegistry.get(name + "_end");
     const thisAct = elementRegistry.get(name);
-    if (end) modeling.removeShape(end);
-    if (start) modeling.removeShape(start);
+
+    if(thisAct) {modeling.removeShape(thisAct);}
+    if(end) {modeling.removeShape(end);}
+    if(start) {modeling.removeShape(start);}
+
   } else if (nameSplitted[nameSplitted.length - 1] == "start") {
+
     const nameWithoutEnd = name.substring(0, name.length - 6);
-    const activity = elementRegistry.get(nameWithoutEnd);
+    const start = elementRegistry.get(nameWithoutEnd);
     const end = elementRegistry.get(nameWithoutEnd + "_end");
     const thisAct = elementRegistry.get(name);
-    if (activity) modeling.removeShape(activity);
-    if (end) modeling.removeShape(end);
+
+    if (start) {modeling.removeShape(start);}
+    if (end) {modeling.removeShape(end);}
+    if(thisAct) {modeling.removeShape(thisAct);}
+
   } else if (nameSplitted[nameSplitted.length - 1] == "end") {
+
     const nameWithoutEnd = name.substring(0, name.length - 4);
-    const activity = elementRegistry.get(nameWithoutEnd);
-    const end = elementRegistry.get(nameWithoutEnd + "_start");
+    const end = elementRegistry.get(nameWithoutEnd);
+    const start = elementRegistry.get(nameWithoutEnd + "_start");
     const thisAct = elementRegistry.get(name);
-    if (activity) modeling.removeShape(activity);
-    if (end) modeling.removeShape(end);
+
+    if (end) {modeling.removeShape(activity);}
+    if (start) {modeling.removeShape(start);}
+    if(thisAct) {modeling.removeShape(thisAct);}
+
+  }
+  const all= elementRegistry.getAll();
+  var exists = false;
+
+  for(var i=0; i < all.length; i++) {
+    if(rights.some(item => item == all[i].id)){
+        exists=true;
+        break;
+    }
+  }
+  if(exists==false){
+    const groupName = elementRegistry.get("GdprGroup");
+    if(groupName) modeling.removeShape(groupName);
   }
 }
 
