@@ -233,6 +233,7 @@ async function loadDiagram(diagram) {
             var element = event.element;
             //if(element.type==="bpmn:CallActivity"){
             const name = element.businessObject.id;
+            if(name){
             getMetaInformationResponse().then((response) => {
               if (name.startsWith("consent")) {
                 const questionB = response["questionB"];
@@ -342,45 +343,14 @@ async function loadDiagram(diagram) {
               reorderDiagram();
             });
 
-            //}
+            }
           } catch (e) {
             console.error("error in shape.removed");
           }
         });
         //
 
-        eventBus.on(
-          "commandStack.connection.delete.preExecute",
-          function (event) {
-            var context = event.context;
-
-            if (context && context.source && context.target) {
-              var source = context.source;
-              var target = context.target;
-
-              console.log("Context:", context);
-              console.log("Source:", source);
-              console.log("Target:", target);
-
-              var sourceId = source.id;
-              var targetId = target.id;
-
-              if (
-                sourceId.split("_")[0] === "consent" ||
-                sourceId.split("_")[0] === "right"
-              ) {
-                displayDynamicAlert(
-                  "This action will compromise the gdpr compliance level",
-                  "warning",
-                  2000
-                );
-              }
-            }
-
-            console.log("Event connection:", event);
-          }
-        );
-
+       
         /* eventBus.on('connect.end', function(event) {
                 var context = event.context,
                     source = context.source,
@@ -400,7 +370,22 @@ async function loadDiagram(diagram) {
                       console.log('Connessione non disponibile');
                     }
               });*/
-        console.log("event", eventBus);
+        console.log("eventBus", eventBus);
+
+      eventBus.on("commandStack.connection.delete.postExecuted", function(event){
+        const context = event.context;
+        const source = context.source;
+        const target = context.target;
+        if(source && source.id.split('_')[0]=="consent"){ //se il flow è stato rimosso da una consent activity
+          editMetaB(target.id);
+          if(source.outgoing.length == 0){
+            displayDynamicAlert("A consent activity must be connected to an activity","danger",2000);
+            modeling.removeShape(source);
+          }
+
+        }
+        console.log("connection removed", source, target);
+      })
 
         /*if(elementRegistry.getAll().length > 0) {
               getMetaInformationResponse().then((response)=>{
@@ -499,6 +484,25 @@ async function loadDiagram(diagram) {
   }
 }
 //end function to load the diagram
+
+//function to edit the metas of B
+//idActivity: id of the activity that was conneted to the consent path
+async function editMetaB(idActivity){
+  elementRegistry=viewer.get("elementRegistry");
+  var questionB = await getAnswerQuestionX("questionB");
+  var result= new Array();
+  if(idActivity && questionB.length > 1){
+    questionB = questionB.filter(item => item.id != idActivity);
+    questionB.forEach(item =>{
+      const activity= elementRegistry.get(item.id);
+      if(!result.some(element=> element.id == activity.id)){
+        result.push({id:activity.id, value: activity.businessObject.id});
+      }
+    })
+    editMetaInfo("B", setJsonData("No", result));
+  }
+}
+//
 
 //function create backArrow subProcess
 function backArrowSubProcess() {
@@ -1491,14 +1495,21 @@ export function reorderDiagram() {
               const setToDelete = element.incoming;
               var toAddAgain = new Array();
 
-              setToDelete.forEach((item) => {
+              /*setToDelete.forEach((item) => {
                 const source = elementRegistry.get(
                   item.businessObject.sourceRef.id
                 );
                 toAddAgain.push(source);
-                modeling.removeConnection(item);
-              });
+                //modeling.removeConnection(item);
+              });*/
+              const newPositionX= element.x + add;
+              const newPositionY= element.y + addY;
               modeling.moveShape(element, { x: add, y: addY });
+              const newWaypoints = [
+                { x: previousElement.x + previousElement.width , y: previousElement.y + previousElement.height / 2 },
+                { x: newPositionX, y: newPositionY + element.height / 2 }
+              ];
+              modeling.updateWaypoints(incomingElement, newWaypoints);
               const exist_label = elementRegistry.get(element.id + "_label");
               if (exist_label) {
                 modeling.moveShape(exist_label, { x: add, y: addY });
@@ -1506,14 +1517,14 @@ export function reorderDiagram() {
               const newSequenceFlowAttrsIncoming = {
                 type: "bpmn:SequenceFlow",
               };
-              toAddAgain.forEach((item) => {
+              /*toAddAgain.forEach((item) => {
                 modeling.createConnection(
                   item,
                   element,
                   newSequenceFlowAttrsIncoming,
                   element.parent
                 );
-              });
+              });*/
             }
           }
         }
@@ -1831,7 +1842,6 @@ export async function getAnswerQuestionX(question) {
     } else {
       result = null;
     }
-    console.log("result", result);
     return result;
   } catch (e) {
     console.error("error in getting a certain answer");
