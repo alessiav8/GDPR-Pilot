@@ -259,11 +259,11 @@ export function setGdprButtonCompleted(isCompleted){
   const gdpr_button = document.querySelector("#gdpr_compliant_button");
   if(gdpr_button.style.backgroundColor != "rgb(44, 169, 18)" && isCompleted ){
     gdpr_button.style.backgroundColor = "#2CA912";
-    gdpr_button.textContent = "GDPR complient";
+    gdpr_button.textContent = "GDPR compliance";
   }
   else{
     gdpr_button.style.border = "0.3vh solid #10ad74";
-    gdpr_button.textContent = "Ensure GDPR complience";
+    gdpr_button.textContent = "Ensure GDPR compliance";
     gdpr_button.style.backgroundColor ="white";
   }
 }
