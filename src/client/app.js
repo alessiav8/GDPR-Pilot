@@ -14,6 +14,8 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { query, classes } from "min-dom";
 
 import disableModeling from "../customizations/DisableModeling.js";
+import DisabledTypeChangeContextPadProvider from '../customizations/contextPadExtension.js';
+
 
 import diagram from "../../resources/diagram.bpmn";
 import diagram_two_activities from "../../resources/diagram_two_activities.bpmn";
@@ -215,6 +217,7 @@ async function loadDiagram(diagram) {
 
         var bpmnReplace = viewer.get("bpmnReplace");
         var translate = viewer.get("translate");
+        var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
         //
 
         //this prevent the modification of the id when someone change the type of something
