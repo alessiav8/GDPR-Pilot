@@ -52,7 +52,8 @@ async function yesdropDownA() {
   );
   removeUlFromDropDown("#dropDownA");
   editMetaInfo("A", setJsonData("Yes", false));
-  allowOpenNextQuestion("B");
+  //allowOpenNextQuestion("B");
+  enableButtons();
 }
 //end handle click yes for question A
 
@@ -161,8 +162,6 @@ async function nodropDownA() {
     "Do you handle personal data in your process?"
   );
   setGdprButtonCompleted(true);
-  //closeSideBarSurvey();
-
   removeUlFromDropDown("#dropDownA");
   handleSideBar(false);
   editMetaInfo("A", setJsonData("No", false));
@@ -270,20 +269,22 @@ async function addBPath(activities, activities_already_selected) {
 export function createWithOnlyQuestionXExpandable(letter,questions){
   const letters=["B","C","D","E","F","G","H","I","L"];
   var disabled = true;
-  var value = (questions["questionA"]==null)?  null : questions["questionA"][0].value;
+  var valueA = (questions["questionA"]==null)?  null : questions["questionA"][0].value;
   if (letter=="A"){
-    createDropDown( "dropDownA",true,"Personal data","Do you handle personal data in your process?",false,value);
+    createDropDown( "dropDownA",true,"Personal data","Do you handle personal data in your process?",false,valueA);
   }
   else{
-    createDropDown( "dropDownA",true,"Personal data","Do you handle personal data in your process?",false,value);
+    createDropDown( "dropDownA",true,"Personal data","Do you handle personal data in your process?",false,valueA);
   }
+
+  if(valueA == "Yes"){
+    disabled = false;
+  }
+  else{
+    disabled = true;
+  }
+
   for (let i=0; i<letters.length; i++){
-    if(letters[i]==letter){
-      disabled = false;
-    }
-    else{
-      disabled = true;
-    }
     switch(letters[i]){
       case "B":
         createDropDown(
@@ -481,5 +482,31 @@ function handleNoClick(diagram, start_label, end_label, id, start_type,current_l
   questionDone("#dropDown"+current_letter);
 }
 //
+
+function enableButtons(){
+  const letters = ["B", "C", "D", "E", "F", "G", "H", "I","L"];
+  /*const area = document.querySelector("#areaDropDowns");
+  letters.forEach(letter=>{
+    const name= "dropDown"+letter;
+    const dropContainer = document.querySelector(name);
+    console.log("drop container",dropContainer);
+    if(dropContainer){
+      const drop= dropContainer.querySelector(".btn");
+      if(drop){
+        drop.removeAttribute("data-bs-toggle");
+        drop.style.border = "0.00002vh solid gray";
+      }
+    }
+  })*/
+
+  letters.forEach(letter=>{
+    const dropDown= document.querySelector("#dropDown"+letter);
+    const button = dropDown.querySelector(".btn");
+    button.setAttribute("data-bs-toggle", "collapse");
+    button.style.border = "0.00002vh solid";
+    button.style.backgroundColor="white";
+  });
+
+}
 
 export { yesdropDownA, nodropDownA, yesdropDownB, nodropDownB, addBPath };

@@ -538,7 +538,6 @@ function backArrowSubProcess() {
 function removeStartEnd(name) {
   elementRegistry = viewer.get("elementRegistry");
   const nameSplitted = name.split("_");
-  console.log("name splitted",nameSplitted);
   if (
     nameSplitted[nameSplitted.length - 1] != "start" &&
     nameSplitted[nameSplitted.length - 1] != "end"
@@ -570,7 +569,7 @@ function removeStartEnd(name) {
     const start = elementRegistry.get(nameWithoutEnd + "_start");
     const thisAct = elementRegistry.get(name);
 
-    if (end) {modeling.removeShape(activity);}
+    if (end) {modeling.removeShape(end);}
     if (start) {modeling.removeShape(start);}
     if(thisAct) {modeling.removeShape(thisAct);}
 

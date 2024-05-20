@@ -65,14 +65,13 @@ export async function openDrop(drop,type,open){
 //
 
 //function to create a drop down
-//id:id to use for the dropdown
+//id:id to use for the dropdown ex "dropDownA"
 //isExpanded: whether the dropdown must be expanded
 //text Content: the macro title of the drop down 
 //questionText: the question itself
 //isDisabled: is disabled or can me clicked?
-//
+//valueButton: if the question was answered with was the answer Yes or No 
 function createDropDown(id, isExpanded, textContent, questionText, isDisabled, valueButton) {
-  console.log("value of "+ valueButton);
   //the row that will contain the drop down
   const space = document.querySelector("#areaDropDowns");
   const row = document.createElement("div");
