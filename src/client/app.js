@@ -381,6 +381,26 @@ async function loadDiagram(diagram) {
        
       })
 
+      eventBus.on("element.click", function(event){
+        const elementClicked = event.element;
+        const isBOpen = (localStorage.getItem("isOpenB") == null) ? null : (localStorage.getItem("isOpenB") == "true") ? true : false;
+        if(isBOpen && bpmnActivityTypes.some(item=> item == elementClicked.type)){ //se B è aperto 
+          const check = document.getElementById("checkbox_"+elementClicked.id);
+
+          if(elementClicked.di.stroke == null){//se non è già selezionato
+            modeling.setColor([elementClicked], {
+              stroke: 'rgb(44, 169, 18)',
+            })
+            check.checked=true;
+        }
+        else{ //se era selezionato e lo stiamo deselezionando
+           // removing previously set colors
+          modeling.setColor([elementClicked], null);
+          check.checked=false;
+        }
+        }
+      });
+
         eventBus.on("element.changed", function (event) {
           const element = event.element; //sequence flow element
 
@@ -870,10 +890,21 @@ import_button.addEventListener("click", () => {
 });
 //end import handler
 
+//a function to deselect every element selected before
+export function cleanSelection(){
+  const selection = viewer.get("selection");
+  const setSelected= selection.get();
+  setSelected.forEach(selectedElement =>{
+    selection.deselect(selectedElement);
+  })
+}
+//
+
 //function to handle the click of the gdpr button ---> open side bar
 function handleClickOnGdprButton() {
   viewer.get("canvas").zoom("fit-viewport");
   handleSideBar(true);
+  cleanSelection();
   const mainColumn = document.querySelector(".main-column");
   const sidebarColumn = document.querySelector(".sidebar-column");
   const canvasRaw = document.querySelector("#canvas-raw");
@@ -902,6 +933,8 @@ function handleClickOnGdprButton() {
     close_survey.addEventListener("click", () => {
       closeSideBarSurvey();
       handleSideBar(false);
+      decolorEverySelected();
+      localStorage.setItem("isOpenB",false);
     });
 
     survey_area.appendChild(close_survey);
@@ -1893,6 +1926,28 @@ export async function getAnswerQuestionX(question) {
   }
 }
 //
+
+export function decolorEverySelected(){
+  elementRegistry = viewer.get("elementRegistry");
+  const all= elementRegistry.getAll();
+  all.forEach(item =>{
+    if(item.di.stroke == "#2ca912"){
+      modeling.setColor(item, null);
+    }
+  })
+}
+
+export function colorActivity(activityId){
+  const activity = elementRegistry.get(activityId);
+  modeling.setColor([activity], {
+    stroke: 'rgb(44, 169, 18)',
+  })
+}
+
+export function decolorActivity(activityId){
+  const activity = elementRegistry.get(activityId);
+  modeling.setColor([activity],null);
+}
 
 export {
   getDiagram,

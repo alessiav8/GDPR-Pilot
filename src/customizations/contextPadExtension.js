@@ -52,7 +52,6 @@ import {
           delete entries['delete'];
         }
       }
-      console.log(entries);
   
       return entries;
     };

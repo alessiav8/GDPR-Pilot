@@ -54,6 +54,7 @@ async function yesdropDownA() {
   editMetaInfo("A", setJsonData("Yes", false));
   //allowOpenNextQuestion("B");
   enableButtons();
+  localStorage.setItem("isOpenB",true);
 }
 //end handle click yes for question A
 

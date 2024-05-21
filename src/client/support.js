@@ -24,7 +24,7 @@ import {
   addBPath,
   openDropDown,
 } from "./questions.js";
-import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram } from "./app.js";
+import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram,cleanSelection,decolorEverySelected,colorActivity,decolorActivity } from "./app.js";
 
 //close sideBarSurvey
 function closeSideBarSurvey() {
@@ -97,10 +97,20 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
   button.setAttribute("href","#ulCollapse"+id);
 
   button.style.width = "100%";
-
   button.setAttribute("ariaExpanded", isExpanded);
   button.textContent = textContent;
   dropDown.appendChild(button);
+
+  if(id=="dropDownB"){
+    button.addEventListener("click",function(event) {
+      const isOpen = (localStorage.getItem("isOpenB") == null ) ? null : (localStorage.getItem("isOpenB") == "true" ) ? true : false;
+      if(isOpen == null){
+        localStorage.setItem("isOpenB",true);
+      }else{
+        localStorage.setItem("isOpenB",!isOpen);
+      }
+    })
+  }
 
   const ulContainer = document.createElement("div");
   ulContainer.id="ulCollapse"+id;
@@ -318,6 +328,7 @@ export function questionDone(dD){
 
 //function to create ul and handle activity selection
 async function createUlandSelectActivities(dropDownID, titleText, activities_already_selected) {
+  cleanSelection();
   const dropDown = document.querySelector(dropDownID);
   const space = document.querySelector("#areaDropDowns");
 
@@ -373,14 +384,25 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           checkbox.type = "checkbox";
           checkbox.name = "activity";
           checkbox.value = activity.id;
+          checkbox.id="checkbox_"+activity.id;
           if(activities_already_selected){
             if(activities_already_selected.some(item=> item.id === activity.id)) {
               checkbox.checked = true;
+              colorActivity(activity.id);
             }
             else {
               checkbox.checked = false;
             }
           }
+
+          checkbox.addEventListener("click", function(event){
+            if(event.target.checked ==true){
+              colorActivity(event.target.value);
+            }
+            else{
+              decolorActivity(event.target.value);
+            }
+          });
           c1.appendChild(checkbox);
           c2.appendChild(label);
 
@@ -430,6 +452,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           addBPath(selectedActivities, activities_already_selected);
           });
           openDrop("dropDownB","yes",true);
+          decolorEverySelected();
         });
 
           
