@@ -24,7 +24,7 @@ import {
   addBPath,
   openDropDown,
 } from "./questions.js";
-import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram,cleanSelection,decolorEverySelected,colorActivity,decolorActivity } from "./app.js";
+import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram,cleanSelection,decolorEverySelected,colorActivity,decolorActivity,getAnswerQuestionX } from "./app.js";
 
 //close sideBarSurvey
 function closeSideBarSurvey() {
@@ -100,17 +100,6 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
   button.setAttribute("ariaExpanded", isExpanded);
   button.textContent = textContent;
   dropDown.appendChild(button);
-
-  if(id=="dropDownB"){
-    button.addEventListener("click",function(event) {
-      const isOpen = (localStorage.getItem("isOpenB") == null ) ? null : (localStorage.getItem("isOpenB") == "true" ) ? true : false;
-      if(isOpen == null){
-        localStorage.setItem("isOpenB",true);
-      }else{
-        localStorage.setItem("isOpenB",!isOpen);
-      }
-    })
-  }
 
   const ulContainer = document.createElement("div");
   ulContainer.id="ulCollapse"+id;
@@ -329,6 +318,7 @@ export function questionDone(dD){
 //function to create ul and handle activity selection
 async function createUlandSelectActivities(dropDownID, titleText, activities_already_selected) {
   cleanSelection();
+  localStorage.setItem("isOpenB",true);
   const dropDown = document.querySelector(dropDownID);
   const space = document.querySelector("#areaDropDowns");
 
@@ -337,6 +327,38 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
     while (collapse.firstChild) {
       collapse.removeChild(collapse.firstChild);
     }
+    
+    const button = dropDown.querySelector(".btn");
+    button.addEventListener("click",function(event) {
+      const isOpen = (localStorage.getItem("isOpenB") == null ) ? null : (localStorage.getItem("isOpenB") == "true" ) ? true : false;
+      if(isOpen == null){
+        localStorage.setItem("isOpenB",true);
+      }else{
+        localStorage.setItem("isOpenB",!isOpen);
+        if(isOpen){
+          decolorEverySelected();
+        }
+        else{ //se il drop di C è aperto 
+          getAnswerQuestionX("questionB").then((result)=>{
+            if(result && result.length > 0){
+              result.forEach(act =>{
+                colorActivity(act.id);
+              });
+            }
+          });
+          getActivities().then((result)=>{
+            if(result&& result.length >0 ){
+              result.forEach(act=>{
+                const c = document.getElementById("checkbox_"+ act.id);
+                if(c && c.checked){
+                  colorActivity(act.id);
+                }
+              })
+            }
+          })
+        }
+      }
+    })
 
     const ulDropDown= document.createElement("div");
     ulDropDown.className = "card card-body";
@@ -396,13 +418,15 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           }
 
           checkbox.addEventListener("click", function(event){
-            if(event.target.checked ==true){
+            if(event.target.checked == true){
               colorActivity(event.target.value);
             }
             else{
               decolorActivity(event.target.value);
             }
+
           });
+
           c1.appendChild(checkbox);
           c2.appendChild(label);
 

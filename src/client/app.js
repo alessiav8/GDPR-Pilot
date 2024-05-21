@@ -218,12 +218,12 @@ async function loadDiagram(diagram) {
         eventBus = viewer.get("eventBus");
         contextPad = viewer.get("contextPad");
         commandStack = viewer.get('commandStack');
-
-
         var bpmnReplace = viewer.get("bpmnReplace");
         var translate = viewer.get("translate");
         var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
         //
+
+        localStorage.setItem("isOpenB",false);
 
         //this prevent the modification of the id when someone change the type of something
         eventBus.on("element.updateId", function (event) {
@@ -391,12 +391,12 @@ async function loadDiagram(diagram) {
             modeling.setColor([elementClicked], {
               stroke: 'rgb(44, 169, 18)',
             })
-            check.checked=true;
+            if(check) check.checked=true;
         }
         else{ //se era selezionato e lo stiamo deselezionando
            // removing previously set colors
           modeling.setColor([elementClicked], null);
-          check.checked=false;
+          if(check) check.checked=false;
         }
         }
       });
