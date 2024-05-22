@@ -988,8 +988,8 @@ function handleClickOnGdprButton() {
 //to remove every path added
 function handleUndoGdpr() {
   elementRegistry = viewer.get("elementRegistry");
-  var conferma = confirm("Are you sure?");
-  if (conferma) {
+  displayDynamicPopUp("Are you sure?").then(conferma =>{
+    if(conferma){
     getMetaInformationResponse().then((response) => {
       for (let question in response) {
         if (response[question] != null) {
@@ -1048,6 +1048,7 @@ function handleUndoGdpr() {
       }
     });*/
   }
+  });
   setGdprButtonCompleted(false);
 }
 //

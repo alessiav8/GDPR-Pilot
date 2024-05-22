@@ -654,42 +654,48 @@ export function displayDynamicAlert(message,type,time) {
 
 
 export function displayDynamicPopUp(message) {
-  const alertContainer = document.getElementById('alertContainer');
+  return new Promise((resolve) => {
+    const alertContainer = document.getElementById('alertContainer');
 
-  // Crea il div per l'alert
-  const alertDiv = document.createElement('div');
-  alertDiv.className = 'alert alert-warning alert-dismissible fade show';
-  alertDiv.setAttribute('role', 'alert');
+    if (!alertContainer) {
+      console.error('alertContainer element not found');
+      resolve(false); 
+      return;
+    }
 
-  // Contenuto dell'alert con messaggio e bottoni
-  alertDiv.innerHTML = `
-    <strong>${message}</strong>
-    <hr>
-    <button type="button" class="btn btn-success yes-btn">Yes</button>
-    <button type="button" class="btn btn-danger no-btn">No</button>
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  `;
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+    alertDiv.setAttribute('role', 'alert');
+    alertDiv.style.position = 'fixed';
+    alertDiv.style.right = '50vh';
+    alertDiv.style.left = '50vh';
+    alertDiv.style.width = '50%';
+    alertDiv.style.bottom = '82%';
+    alertDiv.style.zIndex = '1050'; 
 
-  // Aggiungi l'alertContainer
-  alertContainer.appendChild(alertDiv);
+    alertDiv.innerHTML = `<center>
+      <strong>${message}</strong>
+      <hr>
+      <button type="button" class="btn btn-success yes-btn">Yes</button>
+      <button type="button" class="btn btn-danger no-btn">No</button>
+    </center>`;
 
-  // Gestore di evento per il pulsante "Yes"
-  alertDiv.querySelector('.yes-btn').addEventListener('click', () => {
-    alertDiv.remove(); // Rimuovi l'alert
-    console.log('Yes clicked');
-    // Esegui azioni per il pulsante "Yes"
+    alertContainer.appendChild(alertDiv);
+
+    alertDiv.querySelector('.yes-btn').addEventListener('click', () => {
+      alertDiv.remove(); 
+      resolve(true); 
+    });
+
+    alertDiv.querySelector('.no-btn').addEventListener('click', () => {
+      alertDiv.remove(); 
+      resolve(false); 
+    });
   });
-
-  // Gestore di evento per il pulsante "No"
-  alertDiv.querySelector('.no-btn').addEventListener('click', () => {
-    alertDiv.remove(); // Rimuovi l'alert
-    console.log('No clicked');
-    // Esegui azioni per il pulsante "No"
-  });
-  
 }
+
+
+
 
 
 

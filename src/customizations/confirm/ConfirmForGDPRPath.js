@@ -1,5 +1,5 @@
 import { isAny } from "bpmn-js/lib/features/modeling/util/ModelingUtil";
-//import {displayDynamicPopUp} from "../../client/support.js";
+import {displayDynamicPopUp} from "../../client/support.js";
 
 
 export default class ConfirmForGDPRPath {
@@ -31,10 +31,11 @@ export default class ConfirmForGDPRPath {
                 acc[key] = {
                   ...value,
                   action: () => {
-                    const confirmed = confirm("This action will compromise the gdpr compliance level and is not revertible. Do you want to proceed?");
-                    if (confirmed) {    
-                      value.action();
-                    }
+                    displayDynamicPopUp("This action will compromise the gdpr compliance level and is not revertible. Do you want to proceed?").then(confirmed=>{
+                      if (confirmed) {    
+                        value.action();
+                      }
+                    })
                   }
                 };
             return acc;
