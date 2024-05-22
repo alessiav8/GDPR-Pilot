@@ -384,20 +384,30 @@ async function loadDiagram(diagram) {
       eventBus.on("element.click", function(event){
         const elementClicked = event.element;
         const isBOpen = (localStorage.getItem("isOpenB") == null) ? null : (localStorage.getItem("isOpenB") == "true") ? true : false;
-        if(isBOpen && bpmnActivityTypes.some(item=> item == elementClicked.type)){ //se B è aperto 
-          const check = document.getElementById("checkbox_"+elementClicked.id);
+        const dropDownB = document.getElementById("dropDownB");
+        const collapsed = (dropDownB)? dropDownB.querySelector(".btn") : null;
 
-          if(elementClicked.di.stroke == null){//se non è già selezionato
-            modeling.setColor([elementClicked], {
-              stroke: 'rgb(44, 169, 18)',
-            })
-            if(check) check.checked=true;
-        }
-        else{ //se era selezionato e lo stiamo deselezionando
-           // removing previously set colors
-          modeling.setColor([elementClicked], null);
-          if(check) check.checked=false;
-        }
+        if(dropDownB && collapsed){
+          const buttonInside = dropDownB.querySelector(".btn-light");
+          const buttonInsideId= (buttonInside) ? buttonInside.id : null;
+          const isDifferent = ( buttonInsideId && buttonInsideId != "yes_dropDownB" && buttonInsideId != "no_dropDownB")  ? true : false;
+          const isCollapsed= (collapsed && collapsed.ariaExpanded == "true" || collapsed.ariaExpanded==null) ? true : false;
+          if(isDifferent && bpmnActivityTypes.some(item=> item == elementClicked.type) && isCollapsed){
+          // if(isBOpen && bpmnActivityTypes.some(item=> item == elementClicked.type)){ //se B è aperto 
+              const check = document.getElementById("checkbox_"+elementClicked.id);
+
+              if(elementClicked.di.stroke == null){//se non è già selezionato
+                modeling.setColor([elementClicked], {
+                  stroke: 'rgb(44, 169, 18)',
+                })
+                if(check) check.checked=true;
+              }
+              else{ 
+                modeling.setColor([elementClicked], null);
+                if(check) check.checked=false;
+              }
+          }
+
         }
       });
 
@@ -1050,6 +1060,7 @@ function handleUndoGdpr() {
   }
   });
   setGdprButtonCompleted(false);
+  decolorEverySelected();
 }
 //
 
@@ -1363,6 +1374,7 @@ function addActivityBetweenTwoElements(
   secondElement,
   newElement
 ) {
+  console.log("addActivityBetweenTwoElements", firstElement, secondElement,newElement);
   const modeling = viewer.get("modeling");
   const getBoundsNew = newElement.di.bounds;
 

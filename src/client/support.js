@@ -33,12 +33,15 @@ function closeSideBarSurvey() {
   const canvasRaw = document.querySelector("#canvas-raw");
   const spaceBetween = document.querySelector(".space-between");
   const survey_col = document.getElementById("survey_col");
+  const survey_area= document.getElementById("survey_area")
 
-  survey_col.removeChild(document.getElementById("survey_area"));
-  mainColumn.style.width = "100%";
-  sidebarColumn.style.width = "0%";
-  sidebarColumn.style.height = "0%";
-  sidebarColumn.style.marginTop = "0vh";
+  if(survey_col && survey_area ){
+    survey_col.removeChild(document.getElementById("survey_area"));
+    mainColumn.style.width = "100%";
+    sidebarColumn.style.width = "0%";
+    sidebarColumn.style.height = "0%";
+    sidebarColumn.style.marginTop = "0vh";
+  }
 }
 //
 
@@ -445,6 +448,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
         submitButton.textContent = "Submit";
         submitButton.style.width = "30%";
         submitButton.type = "submit";
+        submitButton.id="submit_"+dropDownID;
 
         subDiv.appendChild(submitButton);
         ulDropDown.appendChild(form);
@@ -672,6 +676,8 @@ export function displayDynamicPopUp(message) {
     alertDiv.style.width = '50%';
     alertDiv.style.bottom = '82%';
     alertDiv.style.zIndex = '1050'; 
+    alertDiv.style.backgroundColor = 'white';
+    alertDiv.style.border="white"
 
     alertDiv.innerHTML = `<center>
       <strong>${message}</strong>

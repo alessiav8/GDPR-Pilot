@@ -186,6 +186,8 @@ async function nodropDownB(activities_already_selected,isLast) {
     );
   }
   allowOpenNextQuestion("C");
+  editMetaInfo("B", setJsonData("No", false));
+
 }
 //
 
@@ -250,6 +252,10 @@ async function addBPath(activities, activities_already_selected) {
               const name = "consent_" + activity.id + "_" + i;
               await addSubProcess(name,"Right to be informed and to Consent",consent_to_use_the_data,element,previousSet[i]);
             }
+          }
+          else{
+            const name = "consent_" + activity.id + "_0" ;
+            await addSubProcess(name,"Right to be informed and to Consent",consent_to_use_the_data,element, null);
           }
     }
     });
