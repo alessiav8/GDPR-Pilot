@@ -11,6 +11,19 @@
     border-radius: 4px;
   }
 
+  .canvas-style {
+    height: 86vh;
+    width: 98.2%;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1vh;
+    margin-left: 3vh;
+    margin-right: 3vh;
+    border-radius: 4px;
+  }
+
 #canvas_raw{
   display: flex;
 }

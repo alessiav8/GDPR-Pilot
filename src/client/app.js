@@ -59,6 +59,8 @@ import {
 } from "./support.js";
 import axios from "axios";
 import zeebeModdleDescriptor from "zeebe-bpmn-moddle/resources/zeebe";
+import right_to_access from "../../resources/right_to_be_consent.bpmn";
+
 
 var MetaPackage = require("../customizations/metaInfo.json");
 var current_diagram = diagram_two_activities;
@@ -80,6 +82,9 @@ var viewer = new BpmnJS({
   additionalModules: [disableModeling, confirmForGDPRPath],
 });
 
+const subProcessBpmnModeler = new BpmnJS({ container: '#subProcessCanvas' });
+
+
 //statements
 const export_button = document.getElementById("export_button");
 const import_button = document.getElementById("import_button");
@@ -92,6 +97,7 @@ const over_canvas = document.getElementById("over_canvas");
 const edit = document.getElementById("mode");
 const endpoint = "http://localhost:3000";
 
+
 var elementFactory;
 var modeling;
 var elementRegistry;
@@ -103,6 +109,8 @@ var modeler;
 var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
 var questions_answers;
+var originalRootElement;
+
 
 var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
@@ -129,6 +137,8 @@ const bpmnActivityTypes = [
   "bpmn:ReceiveTask",
   "bpmn:manualTask",
   "bpmn:ManualTask",
+  "bpmn:SubProcess",
+  "bpmn:subProcess"
 ];
 
 const rights=["right_to_access","right_to_portability","right_to_rectify","right_to_object","right_to_object_to_automated_processing","right_to_restrict_processing","right_to_be_forgotten","right_to_be_informed_of_data_breaches"];
@@ -202,6 +212,31 @@ function callChatGpt() {
 }
 //
 
+function createGoBackButton() {
+  var sub = document.getElementById("GoBack");
+  var goBackButton = document.createElement('div');
+  goBackButton.id = 'goBack';
+  goBackButton.innerText = 'Main Process';
+  goBackButton.style.marginLeft = "47.3%";
+  goBackButton.style.marginTop = "3vh";
+  goBackButton.style.position = "absolute";
+  goBackButton.style.textDecoration = 'underline';
+  goBackButton.style.fontWeight = 'bold';
+  goBackButton.style.cursor = 'pointer';
+  goBackButton.style.zIndex = '1050'; 
+
+  sub.style.display = "block";
+  sub.appendChild(goBackButton);
+
+  goBackButton.addEventListener('click', function() {
+    canvas_ref.setRootElement(originalRootElement, true);
+    sub.style.display = "none";
+    goBackButton.remove();
+  });
+}
+
+
+
 //function to load the diagram through importXML
 async function loadDiagram(diagram) {
   try {
@@ -222,8 +257,10 @@ async function loadDiagram(diagram) {
         var translate = viewer.get("translate");
         var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
         //
+        originalRootElement = viewer.get('canvas').getRootElement();
 
-        localStorage.setItem("isOpenB",false);
+        
+
 
         //this prevent the modification of the id when someone change the type of something
         eventBus.on("element.updateId", function (event) {
@@ -409,12 +446,36 @@ async function loadDiagram(diagram) {
           }
 
         }
+
+
+        //open callActivity diagram 
+
+        var subProcessPlaneBehavior = viewer.get('subProcessPlaneBehavior');
+        if (subProcessPlaneBehavior) {
+          if (elementClicked) {
+            if(!elementRegistry.get("sub_"+elementClicked.id)){
+              var newRootElement = subProcessPlaneBehavior._createNewDiagram(elementClicked);
+              newRootElement.id= "sub_"+elementClicked.id;
+              canvas_ref.setRootElement(newRootElement, true);
+              createGoBackButton();
+            }
+            else{
+              newRootElement = elementRegistry.get("sub_"+elementClicked.id);
+              canvas_ref.setRootElement(newRootElement, true);
+              createGoBackButton();
+            }
+          } else {
+            console.log('CallActivity element not found');
+          }
+        } else {
+          console.log('SubProcessPlaneBehavior service not found');
+        }
+      
+
       });
 
         eventBus.on("element.changed", function (event) {
           const element = event.element; //sequence flow element
-
-          console.log("element.changed", event);
           if (element && element.type === "bpmn:SequenceFlow") {
             const source = element.source; //la sorgente della freccia
             if (source != null) {
