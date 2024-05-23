@@ -171,6 +171,7 @@ async function nodropDownA() {
 
 //handle click no for question B
 async function nodropDownB(activities_already_selected,isLast) {
+  //editMetaInfo("B", setJsonData("No", []));
   await createUlandSelectActivities(
     "#dropDownB",
     "Select the activities where you request personal data for the first time",
@@ -186,7 +187,6 @@ async function nodropDownB(activities_already_selected,isLast) {
     );
   }
   allowOpenNextQuestion("C");
-  editMetaInfo("B", setJsonData("No", false));
 
 }
 //
@@ -238,9 +238,10 @@ async function addSubProcess(name, title, diagram, element, previous) {
 //function to add the path to solve B
 async function addBPath(activities, activities_already_selected) {
   const answers_done = await getAnswerQuestionX("questionB");
-  editMetaInfo("B", setJsonData("No", activities));
   await checkDropDownOrdAdd("dropDownC",false, "User data access", "Do you allow users to access their data?");
-  
+  editMetaInfo("B", setJsonData("No", activities));
+  console.log("activities",activities);
+
   try {
     activities.forEach(async function (activity) {
         const element = getElement(activity.id);

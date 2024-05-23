@@ -22,6 +22,7 @@ import diagram_two_activities from "../../resources/diagram_two_activities.bpmn"
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
 import confirmForGDPRPath from "../customizations/confirm";
 
+
 import {
   yesdropDownA,
   nodropDownA,
@@ -59,7 +60,6 @@ import {
 } from "./support.js";
 import axios from "axios";
 import zeebeModdleDescriptor from "zeebe-bpmn-moddle/resources/zeebe";
-import right_to_access from "../../resources/right_to_be_consent.bpmn";
 
 
 var MetaPackage = require("../customizations/metaInfo.json");
@@ -73,6 +73,7 @@ const moddle_2 = new BpmnModdle({ zeebe: zeebeModdle });
 
 const second_viewer = new BpmnModeler({});
 
+
 var viewer = new BpmnJS({
   container: "#canvas",
   moddleExtensions: {
@@ -81,8 +82,6 @@ var viewer = new BpmnJS({
   },
   additionalModules: [disableModeling, confirmForGDPRPath],
 });
-
-const subProcessBpmnModeler = new BpmnJS({ container: '#subProcessCanvas' });
 
 
 //statements
@@ -229,7 +228,8 @@ function createGoBackButton() {
   sub.appendChild(goBackButton);
 
   goBackButton.addEventListener('click', function() {
-    canvas_ref.setRootElement(originalRootElement, true);
+    viewer.clear();
+    loadDiagram(originalRootElement);
     sub.style.display = "none";
     goBackButton.remove();
   });
@@ -247,8 +247,6 @@ async function loadDiagram(diagram) {
         elementFactory = viewer.get("elementFactory");
         modeling = viewer.get("modeling");
         elementRegistry = viewer.get("elementRegistry");
-        changeID();
-        checkMetaInfo();
         canvas_ref = viewer.get("canvas");
         eventBus = viewer.get("eventBus");
         contextPad = viewer.get("contextPad");
@@ -256,11 +254,10 @@ async function loadDiagram(diagram) {
         var bpmnReplace = viewer.get("bpmnReplace");
         var translate = viewer.get("translate");
         var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
-        //
-        originalRootElement = viewer.get('canvas').getRootElement();
 
-        
-
+       // changeID();
+        checkMetaInfo();
+        console.log("elementRegistry: ",elementRegistry)
 
         //this prevent the modification of the id when someone change the type of something
         eventBus.on("element.updateId", function (event) {
@@ -273,7 +270,6 @@ async function loadDiagram(diagram) {
         viewer.on("shape.removed", function (event) {
           try {
             var element = event.element;
-            //if(element.type==="bpmn:CallActivity"){
             const name = element.businessObject.id;
             if(name){
             getMetaInformationResponse().then((response) => {
@@ -286,6 +282,7 @@ async function loadDiagram(diagram) {
                     (element) =>
                       element.id != "response" && element.id != activity_id
                   );
+                  console.log("Meta from remove",event);
                   editMetaInfo("B", setJsonData("No", new_meta));
                 }
               }
@@ -381,7 +378,6 @@ async function loadDiagram(diagram) {
         });
         //
 
-       
         /* eventBus.on('connect.end', function(event) {
                 var context = event.context,
                     source = context.source,
@@ -403,180 +399,187 @@ async function loadDiagram(diagram) {
               });*/
         console.log("eventBus", eventBus);
 
-      eventBus.on("commandStack.connection.delete.postExecuted", function(event){
-        /*const context = event.context;
-        const source = context.source;
-        const target = context.target;
-        if(source && source.id.split('_')[0]=="consent"){ //se il flow è stato rimosso da una consent activity
-          editMetaB(target.id);
-          if(source.outgoing.length == 0){
-            //displayDynamicAlert("A consent activity must be connected to an activity","danger",2000);
-            modeling.removeShape(source);
-          }
-
-        }*/
-       
-      })
-
-      eventBus.on("element.click", function(event){
-        const elementClicked = event.element;
-        const isBOpen = (localStorage.getItem("isOpenB") == null) ? null : (localStorage.getItem("isOpenB") == "true") ? true : false;
-        const dropDownB = document.getElementById("dropDownB");
-        const collapsed = (dropDownB)? dropDownB.querySelector(".btn") : null;
-
-        if(dropDownB && collapsed){
-          const buttonInside = dropDownB.querySelector(".btn-light");
-          const buttonInsideId= (buttonInside) ? buttonInside.id : null;
-          const isDifferent = ( buttonInsideId && buttonInsideId != "yes_dropDownB" && buttonInsideId != "no_dropDownB")  ? true : false;
-          const isCollapsed= (collapsed && collapsed.ariaExpanded == "true" || collapsed.ariaExpanded==null) ? true : false;
-          if(isDifferent && bpmnActivityTypes.some(item=> item == elementClicked.type) && isCollapsed){
-          // if(isBOpen && bpmnActivityTypes.some(item=> item == elementClicked.type)){ //se B è aperto 
-              const check = document.getElementById("checkbox_"+elementClicked.id);
-
-              if(elementClicked.di.stroke == null){//se non è già selezionato
-                modeling.setColor([elementClicked], {
-                  stroke: 'rgb(44, 169, 18)',
-                })
-                if(check) check.checked=true;
-              }
-              else{ 
-                modeling.setColor([elementClicked], null);
-                if(check) check.checked=false;
-              }
-          }
-
-        }
-
-
-        //open callActivity diagram 
-
-        var subProcessPlaneBehavior = viewer.get('subProcessPlaneBehavior');
-        if (subProcessPlaneBehavior) {
-          if (elementClicked) {
-            if(!elementRegistry.get("sub_"+elementClicked.id)){
-              var newRootElement = subProcessPlaneBehavior._createNewDiagram(elementClicked);
-              newRootElement.id= "sub_"+elementClicked.id;
-              canvas_ref.setRootElement(newRootElement, true);
-              createGoBackButton();
-            }
-            else{
-              newRootElement = elementRegistry.get("sub_"+elementClicked.id);
-              canvas_ref.setRootElement(newRootElement, true);
-              createGoBackButton();
-            }
-          } else {
-            console.log('CallActivity element not found');
-          }
-        } else {
-          console.log('SubProcessPlaneBehavior service not found');
-        }
-      
-
-      });
+        eventBus.on("element.click", handleClick);
+        
 
         eventBus.on("element.changed", function (event) {
-          const element = event.element; //sequence flow element
-          if (element && element.type === "bpmn:SequenceFlow") {
-            const source = element.source; //la sorgente della freccia
-            if (source != null) {
+            const element = event.element; //sequence flow element
+            if (element && element.type === "bpmn:SequenceFlow") {
+              const source = element.source; //la sorgente della freccia
+              if (source != null) {
 
-              const newEnd = element.target; //dove punta la freccia nuova
-              const idSplitted = source.id.split("_");
-              const activityIdInConsent = idSplitted[1] + "_" + idSplitted[2];
-              const target = elementRegistry.get(activityIdInConsent); //activity that generated the Call Activity
+                const newEnd = element.target; //dove punta la freccia nuova
+                const idSplitted = source.id.split("_");
+                const activityIdInConsent = idSplitted[1] + "_" + idSplitted[2];
+                const target = elementRegistry.get(activityIdInConsent); //activity that generated the Call Activity
 
-              var hasStillConsent = false;
-              if(target && target.incoming){
-                const set = target.incoming; //le frecce entranti nell'attività generatrici del consent
-                for(var i=0; i< set.length ; i++){
-                  const sourceTarget = (set[i].source) ? set[i].source.id.split("_")[0] : false;
-                if(sourceTarget =="consent") {
-                  hasStillConsent = true; //l'attività vecchia ha ancora un collegamento ad un consent 
-                  break;
-                }
-                };
-              } 
-              
-              if (idSplitted[0] == "consent") { //se la source è una consent activity 
-
-                //NON SO SE QUESTO ABBIA SENSO TENERLO
-                /*if (newEnd == null || newEnd == undefined) { // 
-                  displayDynamicAlert(
-                    "Is not possible to keep only the gdpr path, it should be connected to an activity",
-                    "warning",
-                    3000
-                  );
-                  modeling.removeShape(source);
-                  return;
-                } else */
-                if (target.id != newEnd.id) {
-                  //se la nuova attività è diversa da quella che ha generato il gdpr path
-                  //const newEnd = elementRegistry.get(element.businessObject.targetRef.id);
-                  if (bpmnActivityTypes.some((item) => item == newEnd.type)) {
-                    const new_id = "consent_" + newEnd.id + "_" + idSplitted[3];
-                    modeling.updateProperties(source, {
-                      id: new_id,
-                    });
-                    //qui faccio l'edit di quello che c'è in questionB per eliminare eventualmente il vecchio collegamento 
-                    //e inserire quello nuovo 
-                    //controllare che la vecchia non sia legata magari ad un altro consent
-
-                    const newSetQuestionB = new Array();
-                    getAnswerQuestionX("questionB").then((response) => {
-                      response.forEach((q) => {
-                        if (q.id == target.id) {
-                          newSetQuestionB.push({
-                            id: newEnd.id,
-                            value: newEnd.businessObject.name,
-                          });
-                        if(hasStillConsent) newSetQuestionB.push(q);
-
-                        } else {
-                          newSetQuestionB.push(q);
-                        }
-                      });
-                      editMetaInfo("B", setJsonData("No", newSetQuestionB));
-                    });
+                var hasStillConsent = false;
+                if(target && target.incoming){
+                  const set = target.incoming; //le frecce entranti nell'attività generatrici del consent
+                  for(var i=0; i< set.length ; i++){
+                    const sourceTarget = (set[i].source) ? set[i].source.id.split("_")[0] : false;
+                  if(sourceTarget =="consent") {
+                    hasStillConsent = true; //l'attività vecchia ha ancora un collegamento ad un consent 
+                    break;
                   }
-                  //TODO:
-                  /*else{
-                      const newNameUse = idSplitted[0]+"_";
+                  };
+                } 
+                
+                if (idSplitted[0] == "consent") { //se la source è una consent activity 
+
+                  //NON SO SE QUESTO ABBIA SENSO TENERLO
+                  /*if (newEnd == null || newEnd == undefined) { // 
+                    displayDynamicAlert(
+                      "Is not possible to keep only the gdpr path, it should be connected to an activity",
+                      "warning",
+                      3000
+                    );
+                    modeling.removeShape(source);
+                    return;
+                  } else */
+                  if (target.id != newEnd.id) {
+                    //se la nuova attività è diversa da quella che ha generato il gdpr path
+                    //const newEnd = elementRegistry.get(element.businessObject.targetRef.id);
+                    if (bpmnActivityTypes.some((item) => item == newEnd.type)) {
+                      const new_id = "consent_" + newEnd.id + "_" + idSplitted[3];
                       modeling.updateProperties(source, {
-                        id: newNameUse,
-                      });    
-                    }*/
-                } /*else {
-                  if (bpmnActivityTypes.some((item) => item == newEnd.type)) {
-                    const newSetQuestionB = new Array();
-                    getAnswerQuestionX("questionB").then((response) => {
-                      response.forEach((q) => {
-                        newSetQuestionB.push(q);
+                        id: new_id,
                       });
-                      newSetQuestionB.push({
-                        id: newEnd.id,
-                        value: newEnd.businessObject.name,
+                      //qui faccio l'edit di quello che c'è in questionB per eliminare eventualmente il vecchio collegamento 
+                      //e inserire quello nuovo 
+                      //controllare che la vecchia non sia legata magari ad un altro consent
+
+                      const newSetQuestionB = new Array();
+                      getAnswerQuestionX("questionB").then((response) => {
+                        response.forEach((q) => {
+                          if (q.id == target.id) {
+                            newSetQuestionB.push({
+                              id: newEnd.id,
+                              value: newEnd.businessObject.name,
+                            });
+                          if(hasStillConsent) newSetQuestionB.push(q);
+
+                          } else {
+                            newSetQuestionB.push(q);
+                          }
+                        });
+                        editMetaInfo("B", setJsonData("No", newSetQuestionB));
                       });
-                      editMetaInfo("B", setJsonData("No", newSetQuestionB));
-                    });
-                  }
-                }*/
+                    }
+                    //TODO:
+                    /*else{
+                        const newNameUse = idSplitted[0]+"_";
+                        modeling.updateProperties(source, {
+                          id: newNameUse,
+                        });    
+                      }*/
+                  } /*else {
+                    if (bpmnActivityTypes.some((item) => item == newEnd.type)) {
+                      const newSetQuestionB = new Array();
+                      getAnswerQuestionX("questionB").then((response) => {
+                        response.forEach((q) => {
+                          newSetQuestionB.push(q);
+                        });
+                        newSetQuestionB.push({
+                          id: newEnd.id,
+                          value: newEnd.businessObject.name,
+                        });
+                        editMetaInfo("B", setJsonData("No", newSetQuestionB));
+                      });
+                    }
+                  }*/
+                }
               }
             }
-          }
+          });
+        })
+        .catch((error) => {
+          console.error("Errore nell'importazione dell'XML:", error);
         });
-      })
-      .catch((error) => {
-        console.error("Errore nell'importazione dell'XML:", error);
-      });
+
   } catch (err) {
     console.error("Si è verificato un errore:", err);
   }
 }
 //end function to load the diagram
 
+async function handleClick(event){
+  const elementClicked = event.element;
+  const isBOpen = (localStorage.getItem("isOpenB") == null) ? null : (localStorage.getItem("isOpenB") == "true") ? true : false;
+  const dropDownB = document.getElementById("dropDownB");
+  const collapsed = (dropDownB)? dropDownB.querySelector(".btn") : null;
+
+  if(dropDownB && collapsed){
+    const buttonInside = dropDownB.querySelector(".btn-light");
+    const buttonInsideId= (buttonInside) ? buttonInside.id : null;
+    const isDifferent = ( buttonInsideId && buttonInsideId != "yes_dropDownB" && buttonInsideId != "no_dropDownB")  ? true : false;
+    const isCollapsed= (collapsed && collapsed.ariaExpanded == "true" || collapsed.ariaExpanded==null) ? true : false;
+    if(isDifferent && bpmnActivityTypes.some(item=> item == elementClicked.type) && isCollapsed){
+    // if(isBOpen && bpmnActivityTypes.some(item=> item == elementClicked.type)){ //se B è aperto 
+        const check = document.getElementById("checkbox_"+elementClicked.id);
+
+        if(elementClicked.di.stroke == null){//se non è già selezionato
+          modeling.setColor([elementClicked], {
+            stroke: 'rgb(44, 169, 18)',
+          })
+          if(check) check.checked=true;
+        }
+        else{ 
+          modeling.setColor([elementClicked], null);
+          if(check) check.checked=false;
+        }
+    }
+
+  }
+
+
+  //open callActivity diagram 
+
+   /*if (elementClicked && elementClicked.id.split("_")[0]=="consent" || elementClicked.id.split("_")[0]=="right" && (elementClicked.type=="bpmn:callActivity" ||elementClicked.type=="bpmn:CallActivity")) {
+      //if(!elementRegistry.get("sub_"+elementClicked.id)){
+        /*var newRootElement = subProcessPlaneBehavior._createNewDiagram(elementClicked);
+        newRootElement.id= "sub_"+elementClicked.id;
+        canvas_ref.setRootElement(newRootElement, true);*/
+        //originalRootElement = viewer.get('canvas').getRootElement();
+       /* viewer.clear();
+        viewer.saveXML({ format: true })
+        .then(({ xml, error }) => {
+          if (error) {
+            console.log(error);
+          } 
+          else {
+
+            originalRootElement = diagram;
+            const idToPass= (elementClicked.id.split("_")[0]=="consent")? "consent" : elementClicked.id;
+            window.open("diagrams.html?id="+idToPass,"_blank");
+            loadDiagram(xml);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+
+                      
+        //canvas.style.pointerEvents = 'none';
+        //canvas.style.userSelect = 'none';
+
+      //}
+    
+      /*else{
+        newRootElement = elementRegistry.get("sub_"+elementClicked.id);
+        canvas_ref.setRootElement(newRootElement, true);
+        createGoBackButton();
+      }*/
+      
+    //} 
+  
+
+} 
+
 //function to edit the metas of B
 //idActivity: id of the activity that was conneted to the consent path
 async function editMetaB(idActivity){
+  console.log("editMetaB")
   elementRegistry=viewer.get("elementRegistry");
   var questionB = await getAnswerQuestionX("questionB");
   var result= new Array();
@@ -1169,7 +1172,6 @@ async function checkQuestion() {
   try {
     const response = await getMetaInformationResponse();
     questions_answers = response;
-    console.log("answer", questions_answers);
     if (questions_answers["questionA"] === null) {
       createWithOnlyQuestionXExpandable("A", questions_answers);
     } else {

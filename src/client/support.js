@@ -333,12 +333,10 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
     
     const button = dropDown.querySelector(".btn");
     button.addEventListener("click",function(event) {
-      const isOpen = (localStorage.getItem("isOpenB") == null ) ? null : (localStorage.getItem("isOpenB") == "true" ) ? true : false;
-      if(isOpen == null){
-        localStorage.setItem("isOpenB",true);
-      }else{
-        localStorage.setItem("isOpenB",!isOpen);
-        if(isOpen){
+
+      const isOpen = button.className != "btn collapsed" || button.ariaExpanded == true;
+      
+        if(!isOpen){
           decolorEverySelected();
         }
         else{ //se il drop di C è aperto 
@@ -360,7 +358,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
             }
           })
         }
-      }
+      
     })
 
     const ulDropDown= document.createElement("div");
@@ -413,7 +411,6 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
           if(activities_already_selected){
             if(activities_already_selected.some(item=> item.id === activity.id)) {
               checkbox.checked = true;
-              colorActivity(activity.id);
             }
             else {
               checkbox.checked = false;
@@ -546,14 +543,14 @@ async function getMetaInformationResponse() {
         const questionElements = xmlDoc.querySelectorAll("modelMetaData")[0];
         const setOfQuestions=["A", "B", "C", "D", "E", "F","G","H", "I", "L"];
         var questions = {};
-        setOfQuestions.forEach(letter=>{
-          const valore = questionElements.getAttribute("question"+letter);
-          const res= JSON.parse(valore);
-          questions["question"+letter]=res;
-        })
-        questions["gdpr_compliant"]=questionElements.getAttribute("gdpr_compliant");
-        console.log("questions",questions)
+          setOfQuestions.forEach(letter=>{
+            const valore = (questionElements!= undefined) ? questionElements.getAttribute("question"+letter): null;
+            const res= (valore!=null)? JSON.parse(valore) : null;
+            questions["question"+letter]=res;
+          })
+          questions["gdpr_compliant"]=(questionElements!= undefined) ?questionElements.getAttribute("gdpr_compliant") : "false";    
         return questions;
+
     } catch (error) {
         console.error("An error occurred in getMetaInformationResponse:", error);
         throw error;

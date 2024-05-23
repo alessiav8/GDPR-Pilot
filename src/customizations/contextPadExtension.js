@@ -29,10 +29,26 @@ import {
     var bpmnReplace = this._bpmnReplace,
         elementRegistry = this._elementRegistry,
         translate = this._translate;
-  
+
+      function openNewPage(event) {
+            const idToPass= (element.id.split("_")[0]=="consent") ? "consent" : element.id;
+            window.open("diagrams.html?id="+idToPass, '_blank');
+      }
+          
+      
     return function(entries) {
       if (element.id.split('_')[0] == "consent") {
         delete entries['replace'];
+
+        entries['open.new-page'] = {
+          group: 'connect',
+          className: 'bpmn-icon-subprocess-expanded', // Sostituisci con l'icona desiderata
+          title: translate('Open the related called process'),
+          action: {
+            click: openNewPage
+          }
+        };
+        
       }
       else if (element.id.split('_')[0] == "right" && element.type!="bpmn:SequenceFlow") {
         delete entries['replace'];
@@ -41,6 +57,19 @@ import {
         delete entries['append.gateway'];
         delete entries['append.intermediate-event'];
         delete entries['connect'];
+
+        if(element.id.split("_")[element.id.length -1 ] != "start" && element.id.split("_")[element.id.length -1]!="end"){
+          entries['open.new-page'] = {
+            group: 'connect',
+            className: 'bpmn-icon-subprocess-expanded', // Sostituisci con l'icona desiderata
+            title: translate('Apri Nuova Pagina'),
+            action: {
+              click: openNewPage
+            }
+          };
+        }
+
+        
       }
       else if(element.type=="bpmn:SequenceFlow"){
         const sourceId= element.source.id;

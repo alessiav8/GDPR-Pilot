@@ -1,9 +1,12 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/client/app.js',
+  entry: {
+    app: './src/client/app.js', 
+    subP: './src/client/subP.js' 
+  },
   output: {
-    filename: 'bundle.js', 
+    filename: '[name].bundle.js', 
     path: path.resolve(__dirname, 'public'),
   },
   devServer: {
@@ -16,7 +19,6 @@ module.exports = {
     hot: true,
     historyApiFallback: true,
   },
-  
   module: {
     rules: [
       {
