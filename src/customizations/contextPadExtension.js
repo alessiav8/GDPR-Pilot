@@ -37,12 +37,17 @@ import {
           
       
     return function(entries) {
+      const idSplitted = element.id.split("_");
       if (element.id.split('_')[0] == "consent") {
         delete entries['replace'];
+        delete entries['append.append-task'];
+        delete entries['append.end-event'];
+        delete entries['append.gateway'];
+        delete entries['append.intermediate-event'];
 
         entries['open.new-page'] = {
           group: 'connect',
-          className: 'bpmn-icon-subprocess-expanded', // Sostituisci con l'icona desiderata
+          className: 'bpmn-icon-subprocess-collapsed',
           title: translate('Open the related called process'),
           action: {
             click: openNewPage
@@ -58,11 +63,11 @@ import {
         delete entries['append.intermediate-event'];
         delete entries['connect'];
 
-        if(element.id.split("_")[element.id.length -1 ] != "start" && element.id.split("_")[element.id.length -1]!="end"){
+        if(idSplitted[idSplitted.length -1 ] != "start" && idSplitted[idSplitted.length -1]!="end"){
           entries['open.new-page'] = {
             group: 'connect',
-            className: 'bpmn-icon-subprocess-expanded', // Sostituisci con l'icona desiderata
-            title: translate('Apri Nuova Pagina'),
+            className: 'bpmn-icon-subprocess-collapsed', // Sostituisci con l'icona desiderata
+            title: translate('Open the related called process'),
             action: {
               click: openNewPage
             }

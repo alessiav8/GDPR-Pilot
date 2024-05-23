@@ -45,7 +45,7 @@
                 diagramToPass =right_to_access;
                 break
             case "right_to_portability":
-                diagramToPass=right_of_portability;
+                diagramToPass=right_to_portability;
                 break;
             case "right_to_rectify":
                 diagramToPass=right_to_rectify;

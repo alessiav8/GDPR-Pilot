@@ -407,44 +407,36 @@ async function loadDiagram(diagram) {
             if (element && element.type === "bpmn:SequenceFlow") {
               const source = element.source; //la sorgente della freccia
               if (source != null) {
-
                 const newEnd = element.target; //dove punta la freccia nuova
                 const idSplitted = source.id.split("_");
                 const activityIdInConsent = idSplitted[1] + "_" + idSplitted[2];
                 const target = elementRegistry.get(activityIdInConsent); //activity that generated the Call Activity
-
                 var hasStillConsent = false;
+                var isTheSameActivity = false;
                 if(target && target.incoming){
                   const set = target.incoming; //le frecce entranti nell'attività generatrici del consent
                   for(var i=0; i< set.length ; i++){
                     const sourceTarget = (set[i].source) ? set[i].source.id.split("_")[0] : false;
-                  if(sourceTarget =="consent") {
-                    hasStillConsent = true; //l'attività vecchia ha ancora un collegamento ad un consent 
-                    break;
-                  }
+                    if(sourceTarget =="consent") {
+                      hasStillConsent = true; //l'attività vecchia ha ancora un collegamento ad un consent
+                      if(set[i].source == source) isTheSameActivity=true;
+                      break;
+                    }
                   };
                 } 
                 
                 if (idSplitted[0] == "consent") { //se la source è una consent activity 
 
-                  //NON SO SE QUESTO ABBIA SENSO TENERLO
-                  /*if (newEnd == null || newEnd == undefined) { // 
-                    displayDynamicAlert(
-                      "Is not possible to keep only the gdpr path, it should be connected to an activity",
-                      "warning",
-                      3000
-                    );
-                    modeling.removeShape(source);
-                    return;
-                  } else */
                   if (target.id != newEnd.id) {
                     //se la nuova attività è diversa da quella che ha generato il gdpr path
                     //const newEnd = elementRegistry.get(element.businessObject.targetRef.id);
-                    if (bpmnActivityTypes.some((item) => item == newEnd.type)) {
-                      const new_id = "consent_" + newEnd.id + "_" + idSplitted[3];
-                      modeling.updateProperties(source, {
-                        id: new_id,
-                      });
+                    if (newEnd.type != "bpmn:StartEvent" && newEnd.type != "bpmn:startEvent" &&  newEnd.type != "bpmn:EndEvent" && newEnd.type != "bpmn:endEvent") {
+                      if(isTheSameActivity == false){
+                        const new_id = "consent_" + newEnd.id + "_" + idSplitted[3];
+                        modeling.updateProperties(source, {
+                          id: new_id,
+                        });
+                    }
                       //qui faccio l'edit di quello che c'è in questionB per eliminare eventualmente il vecchio collegamento 
                       //e inserire quello nuovo 
                       //controllare che la vecchia non sia legata magari ad un altro consent
@@ -465,6 +457,9 @@ async function loadDiagram(diagram) {
                         });
                         editMetaInfo("B", setJsonData("No", newSetQuestionB));
                       });
+                    }
+                    else{
+                      modeling.removeConnection(element);
                     }
                     //TODO:
                     /*else{
@@ -531,48 +526,6 @@ async function handleClick(event){
     }
 
   }
-
-
-  //open callActivity diagram 
-
-   /*if (elementClicked && elementClicked.id.split("_")[0]=="consent" || elementClicked.id.split("_")[0]=="right" && (elementClicked.type=="bpmn:callActivity" ||elementClicked.type=="bpmn:CallActivity")) {
-      //if(!elementRegistry.get("sub_"+elementClicked.id)){
-        /*var newRootElement = subProcessPlaneBehavior._createNewDiagram(elementClicked);
-        newRootElement.id= "sub_"+elementClicked.id;
-        canvas_ref.setRootElement(newRootElement, true);*/
-        //originalRootElement = viewer.get('canvas').getRootElement();
-       /* viewer.clear();
-        viewer.saveXML({ format: true })
-        .then(({ xml, error }) => {
-          if (error) {
-            console.log(error);
-          } 
-          else {
-
-            originalRootElement = diagram;
-            const idToPass= (elementClicked.id.split("_")[0]=="consent")? "consent" : elementClicked.id;
-            window.open("diagrams.html?id="+idToPass,"_blank");
-            loadDiagram(xml);
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-
-                      
-        //canvas.style.pointerEvents = 'none';
-        //canvas.style.userSelect = 'none';
-
-      //}
-    
-      /*else{
-        newRootElement = elementRegistry.get("sub_"+elementClicked.id);
-        canvas_ref.setRootElement(newRootElement, true);
-        createGoBackButton();
-      }*/
-      
-    //} 
-  
 
 } 
 
@@ -1760,14 +1713,16 @@ export function removeConsentFromActivity(activity, type) {
         var incoming_elem = incomingSet[i];
         const source = incoming_elem.source;
         const splitted = source.id.split("_");
+        console.log("remove connection",incoming_elem,"\n source",source,"\nsplitted",splitted)
         if (splitted[0] == "consent" && type == "consent_") {
-          commandStack.execute('connection.delete', {
-            shape: incoming_elem
-        }, {
-            context: {
-                autoExecute: false
-            }
-        });        
+          try {
+            commandStack.execute('connection.delete', {
+              connection: incoming_elem
+            });
+            console.log('Connection removed successfully');
+          } catch (error) {
+            console.error('Error removing connection:', error);
+          }
       }
       }
     }
