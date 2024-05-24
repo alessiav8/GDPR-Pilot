@@ -244,6 +244,7 @@ async function loadDiagram(diagram) {
       .importXML(diagram)
       .then(async () => {
         viewer.get("canvas").zoom("fit-viewport");
+
         elementFactory = viewer.get("elementFactory");
         modeling = viewer.get("modeling");
         elementRegistry = viewer.get("elementRegistry");
@@ -257,7 +258,7 @@ async function loadDiagram(diagram) {
 
        // changeID();
         checkMetaInfo();
-        console.log("elementRegistry: ",elementRegistry)
+        console.log("elementRegistry: ",elementRegistry);
 
         //this prevent the modification of the id when someone change the type of something
         eventBus.on("element.updateId", function (event) {
