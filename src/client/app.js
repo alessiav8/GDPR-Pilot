@@ -3,6 +3,7 @@ import "bpmn-js/dist/assets/diagram-js.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
+import BpmnViewer from "bpmn-js/dist/bpmn-viewer.production.min.js";
 
 import BpmnModdle from "bpmn-moddle";
 import BpmnModeler from "bpmn-js/lib/Modeler";
@@ -82,6 +83,8 @@ var viewer = new BpmnJS({
   },
   additionalModules: [disableModeling, confirmForGDPRPath],
 });
+
+var secondViewerOnly = new BpmnViewer({});
 
 
 //statements
@@ -254,7 +257,7 @@ async function loadDiagram(diagram) {
         commandStack = viewer.get('commandStack');
         var bpmnReplace = viewer.get("bpmnReplace");
         var translate = viewer.get("translate");
-        var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate);
+        var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate,viewer, secondViewerOnly);
 
        // changeID();
         checkMetaInfo();

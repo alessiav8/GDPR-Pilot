@@ -6,12 +6,15 @@ import {
     assign
   } from 'min-dash';
   
-  export default function DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate) {
+  import right_to_access from "../../resources/right_to_be_consent.bpmn";
+
+  export default function DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate, viewer,second) {
     contextPad.registerProvider(this);
-  
     this._bpmnReplace = bpmnReplace;
     this._elementRegistry = elementRegistry;
     this._translate = translate;
+    this._viewer=viewer;
+    this._second= second;
   }
   
   DisabledTypeChangeContextPadProvider.$inject = [
@@ -28,11 +31,32 @@ import {
   DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function(element) {
     var bpmnReplace = this._bpmnReplace,
         elementRegistry = this._elementRegistry,
-        translate = this._translate;
+        translate = this._translate,
+        viewer = this._viewer,
+        second= this._second;
 
       function openNewPage(event) {
-            const idToPass= (element.id.split("_")[0]=="consent") ? "consent" : element.id;
-            window.open("diagrams.html?id="+idToPass, '_blank');
+            viewer.detach();
+            second.attachTo('#canvas');
+            second.importXML(right_to_access);
+
+            const back = document.getElementById('GoBackArrow');
+            back.className = 'btn btn-primary';
+            back.style.display="block";
+            const container = second._container;
+            container.appendChild(back);
+
+            back.addEventListener('click',function(event){
+              second.detach();
+              viewer.attachTo('#canvas');
+              back.style.display="none"
+              
+
+            })
+
+            //const idToPass= (element.id.split("_")[0]=="consent") ? "consent" : element.id;
+            //window.open("diagrams.html?id="+idToPass, '_blank');
+
       }
           
       
