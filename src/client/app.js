@@ -782,6 +782,7 @@ export_button.addEventListener("click", function () {
   try {
     closeSideBarSurvey();
     handleSideBar(false);
+    decolorEverySelected();
   } catch (e) {
     console.log("Error", e);
   }
@@ -912,6 +913,7 @@ import_button.addEventListener("click", () => {
   try {
     closeSideBarSurvey();
     handleSideBar(false);
+    decolorEverySelected();
   } catch (e) {
     console.log("Error", e);
   }
