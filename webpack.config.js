@@ -3,7 +3,6 @@ const path = require('path');
 module.exports = {
   entry: {
     app: './src/client/app.js', 
-    subP: './src/client/subP.js' 
   },
   output: {
     filename: '[name].bundle.js', 

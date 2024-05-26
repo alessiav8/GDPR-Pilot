@@ -1853,9 +1853,23 @@ export async function addSubEvent(
   path_name,
   start_type
 ) {
-  elementRegistry = viewer.get("elementRegistry");
+  const elementRegistry = viewer.get("elementRegistry");
+  const elementFactory = viewer.get("elementFactory");
+  const modeling = viewer.get("modeling");
+
   const gdpr = elementRegistry.get("GdprGroup");
+  if (!gdpr) {
+    console.error('GdprGroup not found in element registry');
+    return;
+  }
+
   const parent = gdpr.parent;
+  console.log("Parent",parent)
+  if (!parent) {
+    console.error('Parent of GdprGroup is undefined');
+    return;
+  }
+
   const y = await findFreeY(gdpr.y, gdpr.height);
 
   const start_event = elementFactory.createShape({
@@ -1869,13 +1883,18 @@ export async function addSubEvent(
   start_event.businessObject.name = start_event_title;
   start_event.businessObject.id = path_name + "_start";
 
-  modeling.createShape(start_event, { x: 0, y: 0 }, parent);
-  modeling.resizeShape(start_event, {
-    x: gdpr.x + 70,
-    y: y,
-    width: start_event.width,
-    height: start_event.height,
-  });
+  try {
+    modeling.createShape(start_event, { x: gdpr.x + 70, y: y}, parent);
+    /*modeling.resizeShape(start_event, {
+      x: gdpr.x + 70,
+      y: y,
+      width: start_event.width,
+      height: start_event.height,
+    });*/
+  } catch (error) {
+    console.error('Error creating or resizing start_event:', error);
+    return;
+  }
 
   const end_event = elementFactory.createShape({
     type: "bpmn:EndEvent",
@@ -1885,38 +1904,58 @@ export async function addSubEvent(
   });
 
   end_event.businessObject.id = path_name + "_end";
-
   end_event.businessObject.name = end_event_title;
 
-  modeling.createShape(end_event, { x: 0, y: 0 }, parent);
-  modeling.resizeShape(end_event, {
-    x: gdpr.x + 350,
-    y: y,
-    width: end_event.width,
-    height: end_event.height,
-  });
+  try {
+    modeling.createShape(end_event, { x: gdpr.x + 350, y: y }, parent);
+   /* modeling.resizeShape(end_event, {
+      x: gdpr.x + 350,
+      y: y,
+      width: end_event.width,
+      height: end_event.height,
+    });*/
+  } catch (error) {
+    console.error('Error creating or resizing end_event:', error);
+    return;
+  }
 
   const title_splitted = path_name.split("_");
-  var title = "";
+  let title = "";
   title_splitted.forEach((part) => {
-    var new_part = "";
-    if (title == "") {
+    let new_part = "";
+    if (title === "") {
       new_part = part.charAt(0).toUpperCase() + part.slice(1);
     }
-    title = new_part == "" ? title + part + " " : title + new_part + " ";
+    title = new_part === "" ? title + part + " " : title + new_part + " ";
   });
 
-  const subprocess = await subProcessGeneration(
-    path_name,
-    title,
-    diagram,
-    end_event
-  );
+  let subprocess;
+  try {
+    subprocess = await subProcessGeneration(
+      path_name,
+      title.trim(),
+      diagram,
+      end_event
+    );
+  } catch (error) {
+    console.error('Error generating subprocess:', error);
+    return;
+  }
 
-  await addActivityBetweenTwoElements(start_event, end_event, subprocess);
+  try {
+    await addActivityBetweenTwoElements(start_event, end_event, subprocess);
+  } catch (error) {
+    console.error('Error adding activity between elements:', error);
+    return;
+  }
 
-  reorderDiagram();
+  try {
+    reorderDiagram();
+  } catch (error) {
+    console.error('Error reordering diagram:', error);
+  }
 }
+
 //
 
 //function to delete the gdrp path
@@ -1985,6 +2024,28 @@ export function decolorActivity(activityId){
   const activity = elementRegistry.get(activityId);
   modeling.setColor([activity],null);
 }
+
+
+//possibile primo prompt 
+/*Given this process bpmn generate for me a definition of how it works in 20 lines maximum, 
+no lists or anything. Just a description of what the process does and its purpose.*/
+
+
+//secondo prompt 
+/*Given a bpmn process of which this is the description: {} 
+Given the definition of consent: "Consent to Use the Data: when retrieving personal data, the Data Controller needs 
+to ask the Data Subject for consent and to provide the Data Subject with information about the intentions on how to use and/or process the data."
+
+If you ask the consent for a certain set of data you can use them without asking the consent again. 
+The consent is about just personal data of the user not anything else! 
+personal data are the information that identifies or makes identifiable, directly.
+Particularly important are:
+- data that allow direct identification-such as biographical data (for example: first and last names), pictures, etc. - and data that allow indirect identification-such as an identification number (e.g., social security number, IP address, license plate number);
+- data falling into special categories: these are the so-called "sensitive" data, i.e., data revealing racial or ethnic origin, religious or philosophical beliefs, political opinions, trade union membership, relating to health or sex life. Regulation (EU) 2016/679 (Article 9) also included genetic data, biometric data, and data relating to sexual orientation in the notion;
+- data relating to criminal convictions and offenses: these are so-called "judicial" data, i.e., those that may reveal the existence of certain judicial measures subject to entry in the criminal record (e.g., final criminal convictions, conditional release, prohibition or obligation to stay, alternative measures to detention) or the quality of defendant or suspect. Regulation (EU) 2016/6. The activity must directly involve some personal data to be considered in the answer keep this in mind and for those data must miss the request of consent because if some activity in a privious moment has request for consent i don't need to request the consent again 
+Which activities require the request for consent before being executed? The list of activities is: {} Print just the name of the activities that requires the consent before in a strict manner. 
+*/
+//
 
 export {
   getDiagram,

@@ -321,7 +321,6 @@ export function questionDone(dD){
 //function to create ul and handle activity selection
 async function createUlandSelectActivities(dropDownID, titleText, activities_already_selected) {
   cleanSelection();
-  localStorage.setItem("isOpenB",true);
   const dropDown = document.querySelector(dropDownID);
   const space = document.querySelector("#areaDropDowns");
 
@@ -382,6 +381,7 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
 
     try {
       const activities = await getActivities();
+      console.log("activities: ",activities)
       if (activities.length === 0) {
         divActivities.style.display = "flex";
         divActivities.style.justifyContent = "center";
