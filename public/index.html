@@ -26,6 +26,7 @@
 
 
 
+
 </head>
 <body>
 
@@ -33,10 +34,19 @@
     <div id="mode" >
       Edit Mode
     </div></div>
-  <div class="PrimaryContainer" id="primary_container">
+  <div class="PrimaryContainer" id="primary_container" >
     <div id="alertContainer" style="position: absolute; width: 80%; margin-left: 10%; margin-right: 10%"></div>
-    <div id="GoBackArrow" class="btn btn-primary" style="display: none;">Back to Main Process</div>
-
+    <div class="row" style="position: absolute; width: 100%" >
+      <div class="col-2">
+        <div id="GoBackArrow" class="div" style="display: none; ">Main Process</div>
+      </div>
+      <div class="col-1">
+        <div id="separator" style="display:none;"> > </div>
+    </div>
+      <div class="col-2">
+        <div id="name_subprocess" style="display:none;"> Consent to use the data </div>
+    </div>
+  </div>
     <div id="over_canvas"></div>
     <div class="row" id="canvas_raw" style="width: 100%; height:85%">
       <div class="main-column" id="canvas_col"> 

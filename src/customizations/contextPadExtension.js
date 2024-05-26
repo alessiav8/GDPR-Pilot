@@ -5,8 +5,18 @@ import {
   import {
     assign
   } from 'min-dash';
-  
+
+  //diagrams 
   import right_to_access from "../../resources/right_to_be_consent.bpmn";
+  import right_to_portability from "../../resources/right_of_portability.bpmn";
+  import right_to_rectify from "../../resources/right_to_rectify.bpmn";
+  import right_to_object from "../../resources/right_to_object.bpmn";
+  import right_to_object_to_automated_processing from "../../resources/right_to_object_to_automated_processing.bpmn";
+  import right_to_restrict_processing from "../../resources/right_to_restrict_processing.bpmn";
+  import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
+  import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
+  import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
+  //  
 
   export default function DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate, viewer,second) {
     contextPad.registerProvider(this);
@@ -38,21 +48,70 @@ import {
       function openNewPage(event) {
             viewer.detach();
             second.attachTo('#canvas');
-            second.importXML(right_to_access);
+
+            var title =  "Consent to use the data";
+            var diagramToPass = consent_to_use_the_data;
+            switch (element.id) {
+                case "right_to_access":
+                    diagramToPass = right_to_access;
+                    title= "Right to access"
+                    break;
+                case "right_to_portability":
+                    diagramToPass = right_to_portability;
+                    title="Right to portability"
+                    break;
+                case "right_to_rectify":
+                    diagramToPass = right_to_rectify;
+                    title="Right to rectify"
+                    break;
+                case "right_to_object":
+                    diagramToPass = right_to_object;
+                    title="Right to object"
+                    break;
+                case "right_to_object_to_automated_processing":
+                    diagramToPass = right_to_object_to_automated_processing;
+                    title="Right to object to automated processing"
+                    break;
+                case "right_to_restrict_processing":
+                    diagramToPass = right_to_restrict_processing;
+                    title="Right to restrict processing"
+                    break;
+                case "right_to_be_forgotten":
+                    diagramToPass = right_to_be_forgotten;
+                    title="Right to be forgotten"
+                    break;
+                case "right_to_be_informed_of_data_breaches":
+                    diagramToPass = right_to_be_informed_of_data_breaches;
+                    title="Right to be informed of data breaches"
+                    break;
+                default:
+                    break;
+            }
+
+            
+            second.importXML(diagramToPass);
+            second.get('canvas').zoom('fit-viewport');
 
             const back = document.getElementById('GoBackArrow');
-            back.className = 'btn btn-primary';
+            const separator = document.getElementById('separator');
+            const name = document.getElementById('name_subprocess');
+
             back.style.display="block";
+            separator.style.display="block";
+            name.style.display="block";
+            name.innerHTML=title;
+
             const container = second._container;
             container.appendChild(back);
 
             back.addEventListener('click',function(event){
               second.detach();
               viewer.attachTo('#canvas');
-              back.style.display="none"
-              
 
-            })
+              back.style.display="none";
+              separator.style.display="none";
+              name.style.display="none";           
+             })
 
             //const idToPass= (element.id.split("_")[0]=="consent") ? "consent" : element.id;
             //window.open("diagrams.html?id="+idToPass, '_blank');
@@ -71,7 +130,7 @@ import {
 
         entries['open.new-page'] = {
           group: 'connect',
-          className: 'bpmn-icon-subprocess-collapsed',
+          className: 'custom-icon-expand',
           title: translate('Open the related called process'),
           action: {
             click: openNewPage
@@ -90,7 +149,7 @@ import {
         if(idSplitted[idSplitted.length -1 ] != "start" && idSplitted[idSplitted.length -1]!="end"){
           entries['open.new-page'] = {
             group: 'connect',
-            className: 'bpmn-icon-subprocess-collapsed', // Sostituisci con l'icona desiderata
+            className: 'custom-icon-expand', 
             title: translate('Open the related called process'),
             action: {
               click: openNewPage
