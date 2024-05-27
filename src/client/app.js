@@ -62,18 +62,13 @@ import {
 } from "./support.js";
 import axios from "axios";
 import zeebeModdleDescriptor from "zeebe-bpmn-moddle/resources/zeebe";
-
-
+const zeebeModdle = require("zeebe-bpmn-moddle/resources/zeebe.json");
 var MetaPackage = require("../customizations/metaInfo.json");
-var current_diagram = diagram_two_activities;
 
 var moddle = new BpmnModdle({ camunda: camundaModdle });
-
-const zeebeModdle = require("zeebe-bpmn-moddle/resources/zeebe.json");
-
 const moddle_2 = new BpmnModdle({ zeebe: zeebeModdle });
-
 const second_viewer = new BpmnModeler({});
+var secondViewerOnly = new BpmnViewer({});
 
 
 var viewer = new BpmnJS({
@@ -85,7 +80,6 @@ var viewer = new BpmnJS({
   additionalModules: [disableModeling, confirmForGDPRPath],
 });
 
-var secondViewerOnly = new BpmnViewer({});
 
 
 //statements
@@ -113,10 +107,9 @@ var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
 var questions_answers;
 var originalRootElement;
-
-
 var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
+var current_diagram = diagram_two_activities;
 
 //gdpr questions
 const YA = document.getElementById("yes_dropDownA");
@@ -143,9 +136,7 @@ const bpmnActivityTypes = [
   "bpmn:SubProcess",
   "bpmn:subProcess"
 ];
-
 const rights=["right_to_access","right_to_portability","right_to_rectify","right_to_object","right_to_object_to_automated_processing","right_to_restrict_processing","right_to_be_forgotten","right_to_be_informed_of_data_breaches"];
-
 const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:Gateway",
   "bpmn:ExclusiveGateway",
@@ -168,7 +159,6 @@ const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:CallActivity",
   "bpmn:ErrorEventDefinition",
 ]);
-
 const gdprActivityQuestionsPrefix = ["consent"];
 //
 
@@ -198,20 +188,21 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 // end function to load the first diagram
 
+
 //function to call the AP of chatGPT
-function callChatGpt() {
-  axios
-    .get(endpoint + "/api/sensitive-data")
-    .then((response) => {
-      const messageReceived = response.data.message.content;
-      console.log("Response from chatGPT:", messageReceived);
-    })
-    .catch((error) => {
-      console.error(
-        "Errore durante il recupero delle informazioni sensibili:",
-        error
-      );
+async function callChatGpt(message) {
+  const url = 'http://localhost:3000/api/sensitive-data';
+  try {
+    const response = await axios.get(url, {
+      params: {
+        message: message
+      }
     });
+    return response.data;
+  } catch (error) {
+    console.error('There was a problem with the request:', error);
+    throw error;
+  }
 }
 //
 
@@ -935,7 +926,7 @@ export function cleanSelection(){
 //
 
 //function to handle the click of the gdpr button ---> open side bar
-function handleClickOnGdprButton() {
+async function handleClickOnGdprButton() {
   viewer.get("canvas").zoom("fit-viewport");
   handleSideBar(true);
   cleanSelection();
@@ -1014,8 +1005,35 @@ function handleClickOnGdprButton() {
     undo_button.addEventListener("click", handleUndoGdpr);
     checkQuestion();
   }
+  //const description = sendMessageToServer("I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines.");
+  try {
+    const currentXML = await getXMLOfTheCurrentBpmn();
+    const descriptionRequest =  await callChatGpt("I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." + currentXML);
+    const description= descriptionRequest.content;
+    console.log(description);
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
 }
 //
+
+async function getXMLOfTheCurrentBpmn(){
+  return new Promise((resolve, reject) => {
+    viewer.saveXML({ format: true }).then(({ xml, error }) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      } else {
+        resolve(xml);
+      }
+    }).catch((error) => {
+      console.log(error);
+      reject(error);
+    });
+  });
+}
+
+
 
 //function to handle the undo of everything we made for the gdpr compliance
 //i have to edit the meta info

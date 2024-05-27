@@ -5,26 +5,37 @@ const axios = require('axios');
 const OpenAI = require('openai');
 
 app.use(cors({
-    origin: 'http://localhost:8080',
-
+  origin: 'http://localhost:8080',
+  methods: ['GET'], 
+  allowedHeaders: ['Content-Type'],
 }));
 
 const PORT = process.env.PORT || 3000; 
 
-const API_KEY = process.env.OPENAI_API_KEY
+const API_KEY = process.env.API_KEY
 
 const openai = new OpenAI({
     apiKey: API_KEY,
 });
 
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:8080');
+  next();
+});
+
 app.get('/api/sensitive-data', async (req, res) => {
+
+  const userMessage = req.query.message || 'Hello!';
   try {
     const completion = await openai.chat.completions.create({
-        messages: [{ role: "system", content: "You are a helpful assistant." }],
-        model: "gpt-3.5-turbo",
-      });
+      messages: [
+        { role: "user", content: userMessage }
+      ],
+      model: "gpt-3.5-turbo",
+    });
 
-    res.json(completion.choices[0]);
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080'); // Aggiungi l'header CORS
+    res.json(completion.choices[0].message);  
   } catch (error) {
     console.error('Errore durante la richiesta di informazioni sensibili:', error);
     res.status(500).json({ error: 'Errore durante il recupero delle informazioni sensibili' });
