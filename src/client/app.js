@@ -22,6 +22,7 @@ import diagram from "../../resources/diagram.bpmn";
 import diagram_two_activities from "../../resources/diagram_two_activities.bpmn";
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
 import confirmForGDPRPath from "../customizations/confirm";
+import diagram_to_test_part from "../../resources/diagram_to_test_part.bpmn";
 
 
 import {
@@ -192,7 +193,7 @@ function getExtension(element, type) {
 
 //function that loads the first diagram displayed at every load
 document.addEventListener("DOMContentLoaded", async function () {
-  await loadDiagram(diagram_two_activities);
+  await loadDiagram(diagram_to_test_part);
   localStorage.setItem("popUpVisualized", false);
 });
 // end function to load the first diagram
@@ -1740,53 +1741,76 @@ export function removeConsentFromActivity(activity, type) {
 //
 
 //
-function getStartFirst() {
+function getStartFirst(parent) {
   elementRegistry = viewer.get("elementRegistry");
-  const allElements = elementRegistry.getAll();
-  allElements.forEach((element) => {
-    if (
-      element.type == "bpmn:StartEvent" ||
-      (element.type == "bpmn:startEvent" && element.id == "StartEvent_1")
-    ) {
-      return element;
+  const allElements = parent.children;
+  var result = null;
+  for(var i=0;i < allElements.length; i++){ 
+    if (allElements[i].type == "bpmn:StartEvent" || allElements[i].type == "bpmn:startEvent"){
+      result = allElements[i];
+      break;
     }
-  });
-  return null;
+  };
+  console.log("Start event result:", result);
+  return result;
 }
 //
+
+function getParticipantFromCollaboration(collaboration){
+  var parentRoot=collaboration;
+  if(parentRoot.children[0].type=="bpmn:Participant"){
+    parentRoot = parentRoot.children[0];
+  }
+  else{
+    for(var i=0; i <parentRoot.children.length; i++) {
+      if(parentRoot.children[i].type=="bpmn:Participant"){
+        parentRoot = parentRoot.children[i];
+        break;
+      }
+    }
+  }
+  return parentRoot;
+
+}
 
 //function to add the group where i'm going to insert the path for gdpr compliance
 export function createAGroup() {
   modeling = viewer.get("modeling");
   canvas_ref = viewer.get("canvas");
-  const parentRoot = canvas_ref.getRootElement();
+  var parentRoot = canvas_ref.getRootElement();
+  var oldP = null;
 
-  const start = getStartFirst();
+  if (parentRoot.type=="bpmn:Collaboration") {
+    parentRoot=getParticipantFromCollaboration(parentRoot);
+    oldP= { x: parentRoot.x, y: parentRoot.y, width: parentRoot.width * 1.5, height: parentRoot.height*1.5};
+
+  }
+  const start = getStartFirst(parentRoot);
+
   var x = 0;
   var y = 0;
 
   if (start != null) {
-    x = start.x - 15000;
+    x = start.x - 150;
     y = start.y;
   }
   const groupShape = elementFactory.createShape({
     type: "bpmn:Group",
-    width: 200,
-    height: 50,
+    width: 420,
+    height: 150,
     id: "GdprGroup",
   });
 
   groupShape.id = "GdprGroup";
   groupShape.businessObject.id = "GdprGroup";
   groupShape.businessObject.name = "Achieve Gdpr Compliance";
-
-  modeling.createShape(groupShape, { x: 0, y: 0 }, parentRoot);
-  modeling.resizeShape(groupShape, {
-    x: x - 300,
-    y: y - 25,
-    width: 420,
-    height: 150,
-  });
+  try{
+    modeling.createShape(groupShape, { x: x - 300, y: y - 300}, parentRoot);
+    if(oldP) modeling.resizeShape(parentRoot, oldP);
+  }
+  catch(error){
+    console.error("error in creating/resizing group");
+  }
 
   viewer.get("canvas").zoom("fit-viewport");
 }
@@ -1863,8 +1887,10 @@ export async function addSubEvent(
     return;
   }
 
-  const parent = gdpr.parent;
-  console.log("Parent",parent)
+  var parent = viewer.get('canvas').getRootElement();//= gdpr.parent;
+  if(parent.type=="bpmn:Collaboration") {
+    parent = getParticipantFromCollaboration(parent);
+  }
   if (!parent) {
     console.error('Parent of GdprGroup is undefined');
     return;
