@@ -27,9 +27,7 @@ import {
   existsGdprPath,
   getAnswerQuestionX,
 } from "./app.js";
-
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
-
 import right_to_access from "../../resources/right_to_be_consent.bpmn";
 import right_to_portability from "../../resources/right_of_portability.bpmn";
 import right_to_rectify from "../../resources/right_to_rectify.bpmn";

@@ -183,14 +183,14 @@ function getExtension(element, type) {
 
 //function that loads the first diagram displayed at every load
 document.addEventListener("DOMContentLoaded", async function () {
-  await loadDiagram(diagram_to_test_part);
+  await loadDiagram(diagram_two_activities);
   localStorage.setItem("popUpVisualized", false);
 });
 // end function to load the first diagram
 
 
 //function to call the AP of chatGPT
-async function callChatGpt(message) {
+export async function callChatGpt(message) {
   const url = 'http://localhost:3000/api/sensitive-data';
   try {
     const response = await axios.get(url, {
@@ -1005,19 +1005,11 @@ async function handleClickOnGdprButton() {
     undo_button.addEventListener("click", handleUndoGdpr);
     checkQuestion();
   }
-  //const description = sendMessageToServer("I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines.");
-  try {
-    const currentXML = await getXMLOfTheCurrentBpmn();
-    const descriptionRequest =  await callChatGpt("I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." + currentXML);
-    const description= descriptionRequest.content;
-    console.log(description);
-  } catch (error) {
-    console.error("An error occurred:", error);
-  }
 }
 //
 
-async function getXMLOfTheCurrentBpmn(){
+//function to get back the xml of the current diagram 
+export async function getXMLOfTheCurrentBpmn(){
   return new Promise((resolve, reject) => {
     viewer.saveXML({ format: true }).then(({ xml, error }) => {
       if (error) {
@@ -1032,6 +1024,7 @@ async function getXMLOfTheCurrentBpmn(){
     });
   });
 }
+//
 
 
 
@@ -1147,8 +1140,8 @@ gdpr_button.addEventListener("click", handleClickOnGdprButton);
 
 //function to generete the right questions dropdown
 async function checkQuestion() {
-  try {
-    const response = await getMetaInformationResponse();
+  try {  
+    const response = await getMetaInformationResponse();   
     questions_answers = response;
     if (questions_answers["questionA"] === null) {
       createWithOnlyQuestionXExpandable("A", questions_answers);

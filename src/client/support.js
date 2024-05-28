@@ -24,7 +24,7 @@ import {
   addBPath,
   openDropDown,
 } from "./questions.js";
-import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram,cleanSelection,decolorEverySelected,colorActivity,decolorActivity,getAnswerQuestionX } from "./app.js";
+import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram,cleanSelection,decolorEverySelected,colorActivity,decolorActivity,getAnswerQuestionX,callChatGpt,getXMLOfTheCurrentBpmn } from "./app.js";
 
 //close sideBarSurvey
 function closeSideBarSurvey() {
@@ -67,6 +67,61 @@ export async function openDrop(drop,type,open){
 }
 //
 
+function addTextBelowButton(buttonId, text) {
+  const button = document.getElementById(buttonId);
+  const textElement = document.createElement("p");
+  textElement.innerHTML = "Suggested by <br>ChatGPT";
+  textElement.style.marginTop="5px"
+  textElement.style.fontSize = "10px";
+  textElement.style.color = "rgba(16, 173, 116)";
+  button.parentNode.insertBefore(textElement, button.nextSibling);
+}
+
+async function predictionChatGPT(id){
+  try{
+    console.log("GPT prediction")
+    const currentXML = await getXMLOfTheCurrentBpmn();
+    const description =  await callChatGpt("I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." + currentXML).content;
+    switch(id){
+      case "dropDownA":
+        const hasPersonalData = await callChatGpt("Given the description of a bpmn process that i provide to you, are you able to say to me if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no. The description you have to analyze"+description+" and the xml",+currentXML).content;
+        if(hasPersonalData == "Yes"){
+          const YesButton = document.getElementById("yes_"+id);
+          YesButton.style.backgroundColor = "rgba(16, 173, 116, 0.3)";  
+          addTextBelowButton("yes_" + id);
+      
+        }else{
+          const YesButton = document.getElementById("no_"+id);
+          YesButton.style.backgroundColor = "rgba(16, 173, 116, 0.3)";    
+          addTextBelowButton("no_" + id);
+
+        }
+        break;
+      case "dropDownB":
+        break;
+      case "dropDownC":
+        break;
+      case "dropDownD":
+        break;
+      case "dropDownE":
+        break;
+      case "dropDownF":
+        break;
+      case "dropDownG":
+        break;
+      case "dropDownH":
+        break;
+      case "dropDownI":
+        break;
+      case "dropDownL":
+        break;
+    }
+    return result;
+  }catch(e) {
+    console.error("Error in prediction chatGPT", e);
+  }
+}
+
 //function to create a drop down
 //id:id to use for the dropdown ex "dropDownA"
 //isExpanded: whether the dropdown must be expanded
@@ -74,7 +129,7 @@ export async function openDrop(drop,type,open){
 //questionText: the question itself
 //isDisabled: is disabled or can me clicked?
 //valueButton: if the question was answered with was the answer Yes or No 
-function createDropDown(id, isExpanded, textContent, questionText, isDisabled, valueButton) {
+async function createDropDown(id, isExpanded, textContent, questionText, isDisabled, valueButton) {
   //the row that will contain the drop down
   const space = document.querySelector("#areaDropDowns");
   const row = document.createElement("div");
@@ -84,6 +139,8 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
   dropDown.className = "dropdown";
   dropDown.style.width = "100%";
   dropDown.id = id;
+
+  if(valueButton==null) predictionChatGPT(id);
 
   const button = document.createElement("button");
   button.className = "btn";
@@ -98,6 +155,10 @@ function createDropDown(id, isExpanded, textContent, questionText, isDisabled, v
     button.style.border = "0.00002vh solid gray";
   }
   button.setAttribute("href","#ulCollapse"+id);
+
+ // const prediction = await predictionChatGPT(id);
+  //console.log("predictionChatGPT: " + prediction)
+
 
   button.style.width = "100%";
   button.setAttribute("ariaExpanded", isExpanded);
