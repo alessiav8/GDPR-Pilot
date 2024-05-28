@@ -79,13 +79,15 @@ function addTextBelowButton(buttonId, text) {
 
 async function predictionChatGPT(id){
   try{
-    console.log("GPT prediction")
     const currentXML = await getXMLOfTheCurrentBpmn();
-    const description =  await callChatGpt("I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." + currentXML).content;
+    const descriptionReq =  await callChatGpt("I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." + currentXML);
+    const description = descriptionReq.content;
     switch(id){
       case "dropDownA":
-        const hasPersonalData = await callChatGpt("Given the description of a bpmn process that i provide to you, are you able to say to me if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no. The description you have to analyze"+description+" and the xml",+currentXML).content;
-        if(hasPersonalData == "Yes"){
+        const hasPersonalDataReq = await callChatGpt("Given the description of a bpmn process that i provide to you, are you able to say to me if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no. The description you have to analyze"+description+" and the xml",+currentXML);
+        const hasPersonalData = hasPersonalDataReq.content;
+        console.log("Prediction", hasPersonalData)
+        if(hasPersonalData == "Yes" || hasPersonalData == "yes"){
           const YesButton = document.getElementById("yes_"+id);
           YesButton.style.backgroundColor = "rgba(16, 173, 116, 0.3)";  
           addTextBelowButton("yes_" + id);
@@ -116,7 +118,6 @@ async function predictionChatGPT(id){
       case "dropDownL":
         break;
     }
-    return result;
   }catch(e) {
     console.error("Error in prediction chatGPT", e);
   }
