@@ -3,7 +3,7 @@ import "bpmn-js/dist/assets/diagram-js.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
-import BpmnViewer from "bpmn-js/dist/bpmn-viewer.production.min.js";
+import NavigatedViewer from "bpmn-js/dist/bpmn-navigated-viewer.production.min.js";
 
 import BpmnModdle from "bpmn-moddle";
 import BpmnModeler from "bpmn-js/lib/Modeler";
@@ -68,7 +68,7 @@ var MetaPackage = require("../customizations/metaInfo.json");
 var moddle = new BpmnModdle({ camunda: camundaModdle });
 const moddle_2 = new BpmnModdle({ zeebe: zeebeModdle });
 const second_viewer = new BpmnModeler({});
-var secondViewerOnly = new BpmnViewer({});
+var secondViewerOnly = new NavigatedViewer({});
 
 
 var viewer = new BpmnJS({

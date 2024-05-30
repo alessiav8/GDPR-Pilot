@@ -75,9 +75,12 @@ function addTextBelowButton(Id, answer) {
     buttonId = "no_" + Id;
   }
   else{
-    let array = JSON.parse(answer);
-    buttonId = "no_" + Id;
-    console.log("Array of activities",array)
+    let array = (JSON.parse(answer)) ? JSON.parse(answer) : null ;
+    if(array){
+      buttonId = "no_" + Id;
+      console.log("Array of activities",array);
+      localStorage.setItem("activities_suggested",JSON.stringify(array));
+    }
   }
   const button = document.getElementById(buttonId);
   if(button){
@@ -113,6 +116,10 @@ async function predictionChatGPT(id){
         addTextBelowButton(id, hasConsent);
         break;
       case "dropDownC":
+        const hasRightToAccessReq = await callChatGpt("Given a bpmn process of which this is the description:"+description+"Given the definition of Consent to Use the Data: when retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If you ask the consent for a certain set of data you can use them without asking the consent again. Considering that,the consent is about just personal data of the user not anything else!and personal data are the information that identifies or makes identifiable, directly. Particularly important are:- data that allow direct identification-such as biographical data (for example: first and last names), pictures, etc. - and data that allow indirect identification-such as an identification number (e.g., social security number, IP address, license plate number);- data falling into special categories: these are the so-called sensitive data, i.e., data revealing racial or ethnic origin, religious or philosophical beliefs, political opinions, trade union membership, relating to health or sex life. Regulation (EU) 2016/679 (Article 9) also included genetic data, biometric data, and data relating to sexual orientation in the notion;- data relating to criminal convictions and offenses: these are so-called judicial data, i.e., those that may reveal the existence of certain judicial measures subject to entry in the criminal record (e.g., final criminal convictions, conditional release, prohibition or obligation to stay, alternative measures to detention) or the quality of defendant or suspect. Regulation (EU) 2016/6. The activity must directly involve some personal data to be considered in the answer keep this in mind and for those data must miss the request of consent because if some activity in a previous moment has request for consent i don't need to request the consent again. Which activities require the request for consent before being executed among the one that are in this list:"+activitiesSet+".For the analysis please consider just the name of the activity.  Print just an array with the id of the activities that requires the consent before and for which this consent is not alreqdy present in the process, among the activities in the set, that requires the consent before being executed and if and only if does not exist already an activity in which the consent is requested. if the consent is not necessary for no one activity just print No");
+        const hasRightToAccess = hasRightToAccessReq.content;
+        //console.log("Has Consent?",hasConsent)
+        //addTextBelowButton(id, hasConsent);
         break;
       case "dropDownD":
         break;
