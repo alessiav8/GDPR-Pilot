@@ -67,14 +67,29 @@ export async function openDrop(drop,type,open){
 }
 //
 
-function addTextBelowButton(buttonId, text) {
+function addTextBelowButton(Id, answer) {
+  var buttonId;
+  if(answer.includes("yes") || answer.includes("Yes")){
+    buttonId = "yes_" + Id;
+  }else if(answer.includes("No") || answer.includes("no")){
+    buttonId = "no_" + Id;
+  }
+  else{
+    let array = JSON.parse(answer);
+    buttonId = "no_" + Id;
+    console.log("Array of activities",array)
+  }
   const button = document.getElementById(buttonId);
-  const textElement = document.createElement("p");
-  textElement.innerHTML = "Suggested by <br>ChatGPT";
-  textElement.style.marginTop="5px"
-  textElement.style.fontSize = "10px";
-  textElement.style.color = "rgba(16, 173, 116)";
-  button.parentNode.insertBefore(textElement, button.nextSibling);
+  if(button){
+    button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";  
+    const textElement = document.createElement("p");
+    textElement.innerHTML = "Suggested by <br>OpenAI";
+    textElement.style.marginTop="5px"
+    textElement.style.fontSize = "10px";
+    textElement.style.color = "rgba(16, 173, 116)";
+    textElement.id= "p_"+buttonId;
+    button.parentNode.insertBefore(textElement, button.nextSibling);
+  }
 }
 
 async function predictionChatGPT(id){
@@ -82,24 +97,20 @@ async function predictionChatGPT(id){
     const currentXML = await getXMLOfTheCurrentBpmn();
     const descriptionReq =  await callChatGpt("I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." + currentXML);
     const description = descriptionReq.content;
+    const activitiesSet = await getActivities();
     switch(id){
       case "dropDownA":
-        const hasPersonalDataReq = await callChatGpt("Given the description of a bpmn process that i provide to you, are you able to say to me if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no. The description you have to analyze"+description+" and the xml",+currentXML);
+        const hasPersonalDataReq = await callChatGpt("Given the description of a bpmn process that i provide to you, are you able to say to me if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no. The description you have to analyze"+description+" and the xml",+currentXML," an example of activities that involves personal data are: Request personal data, request name and surname, request phone number ecc...");
         const hasPersonalData = hasPersonalDataReq.content;
         console.log("Prediction", hasPersonalData)
-        if(hasPersonalData == "Yes" || hasPersonalData == "yes"){
-          const YesButton = document.getElementById("yes_"+id);
-          YesButton.style.backgroundColor = "rgba(16, 173, 116, 0.3)";  
-          addTextBelowButton("yes_" + id);
-      
-        }else{
-          const YesButton = document.getElementById("no_"+id);
-          YesButton.style.backgroundColor = "rgba(16, 173, 116, 0.3)";    
-          addTextBelowButton("no_" + id);
-
-        }
+        addTextBelowButton(id, hasPersonalData);
+        
         break;
       case "dropDownB":
+        const hasConsentReq = await callChatGpt("Given a bpmn process of which this is the description:"+description+"Given the definition of Consent to Use the Data: when retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If you ask the consent for a certain set of data you can use them without asking the consent again. Considering that,the consent is about just personal data of the user not anything else!and personal data are the information that identifies or makes identifiable, directly. Particularly important are:- data that allow direct identification-such as biographical data (for example: first and last names), pictures, etc. - and data that allow indirect identification-such as an identification number (e.g., social security number, IP address, license plate number);- data falling into special categories: these are the so-called sensitive data, i.e., data revealing racial or ethnic origin, religious or philosophical beliefs, political opinions, trade union membership, relating to health or sex life. Regulation (EU) 2016/679 (Article 9) also included genetic data, biometric data, and data relating to sexual orientation in the notion;- data relating to criminal convictions and offenses: these are so-called judicial data, i.e., those that may reveal the existence of certain judicial measures subject to entry in the criminal record (e.g., final criminal convictions, conditional release, prohibition or obligation to stay, alternative measures to detention) or the quality of defendant or suspect. Regulation (EU) 2016/6. The activity must directly involve some personal data to be considered in the answer keep this in mind and for those data must miss the request of consent because if some activity in a previous moment has request for consent i don't need to request the consent again. Which activities require the request for consent before being executed among the one that are in this list:"+activitiesSet+".For the analysis please consider just the name of the activity.  Print just an array with the id of the activities that requires the consent before and for which this consent is not alreqdy present in the process, among the activities in the set, that requires the consent before being executed and if and only if does not exist already an activity in which the consent is requested. if the consent is not necessary for no one activity just print No");
+        const hasConsent = hasConsentReq.content;
+        console.log("Has Consent?",hasConsent)
+        addTextBelowButton(id, hasConsent);
         break;
       case "dropDownC":
         break;

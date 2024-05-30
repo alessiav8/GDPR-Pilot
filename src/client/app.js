@@ -364,7 +364,7 @@ async function loadDiagram(diagram) {
                 }
                 
               }
-              reorderDiagram();
+              //reorderDiagram();
             });
 
             }
@@ -1861,15 +1861,15 @@ async function findFreeY(y_ex, max_height) {
       y = y + 120;
     }
   });
-  if (max_height < y + 120) {
+  if (max_height < max_height + 120) {
     const group = elementRegistry.get("GdprGroup");
     modeling.resizeShape(group, {
       x: group.x,
       y: group.y,
       width: group.width,
-      height: group.height + 300,
+      height: group.height + 110,
     });
-    modeling.updateProperties(group, { height: max_height + 120 });
+    //modeling.updateProperties(group, { height: max_height + 120 });
   }
   return y;
 }

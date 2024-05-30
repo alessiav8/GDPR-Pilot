@@ -62,6 +62,7 @@ function yesdropDownB() {
   questionDone("#dropDownB");
   allowOpenNextQuestion("C");
   editYesNoButton("#yes_dropDownB");
+  removeChatGPTTip("dropDownB");
 }
 //
 
@@ -71,6 +72,7 @@ export function yesdropDownC() {
   questionDone("#dropDownC");
   allowOpenNextQuestion("D");
   editYesNoButton("#yes_dropDownC");
+  removeChatGPTTip("dropDownC");
 
 }
 //
@@ -81,6 +83,7 @@ export function yesdropDownD() {
   questionDone("#dropDownD");
   allowOpenNextQuestion("E");
   editYesNoButton("#yes_dropDownD");
+  removeChatGPTTip("dropDownD");
 
   
 }
@@ -92,6 +95,8 @@ export function yesdropDownE() {
   questionDone("#dropDownE");
   allowOpenNextQuestion("F");
   editYesNoButton("#yes_dropDownE"); 
+  removeChatGPTTip("dropDownE");
+
 }
 //
 
@@ -101,6 +106,7 @@ export function yesdropDownF() {
   questionDone("#dropDownF");
   allowOpenNextQuestion("G");
   editYesNoButton("#yes_dropDownF");
+  removeChatGPTTip("dropDownF");
 
   
 }
@@ -112,6 +118,8 @@ export function yesdropDownG() {
   questionDone("#dropDownG");
   allowOpenNextQuestion("H");
   editYesNoButton("#yes_dropDownG");
+  removeChatGPTTip("dropDownG");
+
 }
 //
 
@@ -121,6 +129,7 @@ export function yesdropDownH() {
   questionDone("#dropDownH");
   allowOpenNextQuestion("I");
   editYesNoButton("#yes_dropDownH");
+  removeChatGPTTip("dropDownH");
 
 }
 //
@@ -131,6 +140,8 @@ export function yesdropDownI() {
   questionDone("#dropDownI");  
   allowOpenNextQuestion("L");
   editYesNoButton("#yes_dropDownI");
+  removeChatGPTTip("dropDownI");
+
 }
 //
 
@@ -142,6 +153,8 @@ export function yesdropDownL() {
   handleSideBar(false);
   editMetaInfo("gdpr", true);
   editYesNoButton("#yes_dropDownL");
+  removeChatGPTTip("dropDownL");
+
 
 }
 //
@@ -485,6 +498,7 @@ function handleNoClick(diagram, start_label, end_label, id, start_type,current_l
   editMetaInfo(current_letter, setJsonData("No", false));
   allowOpenNextQuestion(next_letter);
   questionDone("#dropDown"+current_letter);
+  removeChatGPTTip("dropDown"+current_letter);
 }
 //
 
@@ -513,5 +527,28 @@ function enableButtons(){
   });
 
 }
+
+//id: is the button id ex. yes_dropDownA or no_dropDownA
+//function to remove the p appended to show the openAI suggest
+function removeChatGPTTip(id){
+  var buttonId = false;
+  var pElement = false;
+  if(document.getElementById("p_yes_"+id)){
+    buttonId="yes_"+id;
+    pElement = document.getElementById("p_yes_"+id);
+  }
+  else if(document.getElementById("p_no_"+id)){
+    buttonId="no_"+id;
+    pElement = document.getElementById("p_no_"+id);
+  }
+  if(pElement && buttonId){
+    pElement.remove();
+    const button=document.getElementById(buttonId);
+    if(button){
+      button.style.backgroundColor = "white";  
+    }
+  }
+}
+//
 
 export { yesdropDownA, nodropDownA, yesdropDownB, nodropDownB, addBPath };
