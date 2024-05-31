@@ -22,7 +22,7 @@ import {
   nodropDownI,
   nodropDownL,
   addBPath,
-  openDropDown,
+  openDropDown, removeChatGPTTip
 } from "./questions.js";
 import { getDiagram,removeConsentFromActivity,getActivities,reorderDiagram,cleanSelection,decolorEverySelected,colorActivity,decolorActivity,getAnswerQuestionX,callChatGpt,getXMLOfTheCurrentBpmn } from "./app.js";
 
@@ -110,16 +110,16 @@ async function predictionChatGPT(id){
         
         break;
       case "dropDownB":
-        const hasConsentReq = await callChatGpt("Given a bpmn process of which this is the description:"+description+"Given the definition of Consent to Use the Data: when retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If you ask the consent for a certain set of data you can use them without asking the consent again. Considering that,the consent is about just personal data of the user not anything else!and personal data are the information that identifies or makes identifiable, directly. Particularly important are:- data that allow direct identification-such as biographical data (for example: first and last names), pictures, etc. - and data that allow indirect identification-such as an identification number (e.g., social security number, IP address, license plate number);- data falling into special categories: these are the so-called sensitive data, i.e., data revealing racial or ethnic origin, religious or philosophical beliefs, political opinions, trade union membership, relating to health or sex life. Regulation (EU) 2016/679 (Article 9) also included genetic data, biometric data, and data relating to sexual orientation in the notion;- data relating to criminal convictions and offenses: these are so-called judicial data, i.e., those that may reveal the existence of certain judicial measures subject to entry in the criminal record (e.g., final criminal convictions, conditional release, prohibition or obligation to stay, alternative measures to detention) or the quality of defendant or suspect. Regulation (EU) 2016/6. The activity must directly involve some personal data to be considered in the answer keep this in mind and for those data must miss the request of consent because if some activity in a previous moment has request for consent i don't need to request the consent again. Which activities require the request for consent before being executed among the one that are in this list:"+activitiesSet+".For the analysis please consider just the name of the activity.  Print just an array with the id of the activities that requires the consent before and for which this consent is not alreqdy present in the process, among the activities in the set, that requires the consent before being executed and if and only if does not exist already an activity in which the consent is requested. if the consent is not necessary for no one activity just print No");
+        const hasConsentReq = await callChatGpt("Given a bpmn process of which this is the description:"+description+"Given the definition of Consent to Use the Data: when retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If you ask the consent for a certain set of data you can use them without asking the consent again. Considering that,the consent is about just personal data of the user not anything else!and personal data are the information that identifies or makes identifiable, directly. Particularly important are:- data that allow direct identification-such as biographical data (for example: first and last names), pictures, etc. - and data that allow indirect identification-such as an identification number (e.g., social security number, IP address, license plate number);- data falling into special categories: these are the so-called sensitive data, i.e., data revealing racial or ethnic origin, religious or philosophical beliefs, political opinions, trade union membership, relating to health or sex life. Regulation (EU) 2016/679 (Article 9) also included genetic data, biometric data, and data relating to sexual orientation in the notion;- data relating to criminal convictions and offenses: these are so-called judicial data, i.e., those that may reveal the existence of certain judicial measures subject to entry in the criminal record (e.g., final criminal convictions, conditional release, prohibition or obligation to stay, alternative measures to detention) or the quality of defendant or suspect. Regulation (EU) 2016/6. The activity must directly involve some personal data to be considered in the answer keep this in mind and for those data must miss the request of consent because if some activity in a previous moment has request for consent i don't need to request the consent again. Which activities require the request for consent before being executed among the one that are in this list:"+activitiesSet+".For the analysis please consider just the name of the activity.  Print just an array with the id (each activity has a name and an id in the) of the activities that requires the consent before and for which this consent is not alreqdy present in the process, among the activities in the set, that requires the consent before being executed and if and only if does not exist already an activity in which the consent is requested. if the consent is not necessary for no one activity just print No");
         const hasConsent = hasConsentReq.content;
         console.log("Has Consent?",hasConsent)
         addTextBelowButton(id, hasConsent);
         break;
       case "dropDownC":
-        const hasRightToAccessReq = await callChatGpt("Given a bpmn process of which this is the description:"+description+"Given the definition of Consent to Use the Data: when retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If you ask the consent for a certain set of data you can use them without asking the consent again. Considering that,the consent is about just personal data of the user not anything else!and personal data are the information that identifies or makes identifiable, directly. Particularly important are:- data that allow direct identification-such as biographical data (for example: first and last names), pictures, etc. - and data that allow indirect identification-such as an identification number (e.g., social security number, IP address, license plate number);- data falling into special categories: these are the so-called sensitive data, i.e., data revealing racial or ethnic origin, religious or philosophical beliefs, political opinions, trade union membership, relating to health or sex life. Regulation (EU) 2016/679 (Article 9) also included genetic data, biometric data, and data relating to sexual orientation in the notion;- data relating to criminal convictions and offenses: these are so-called judicial data, i.e., those that may reveal the existence of certain judicial measures subject to entry in the criminal record (e.g., final criminal convictions, conditional release, prohibition or obligation to stay, alternative measures to detention) or the quality of defendant or suspect. Regulation (EU) 2016/6. The activity must directly involve some personal data to be considered in the answer keep this in mind and for those data must miss the request of consent because if some activity in a previous moment has request for consent i don't need to request the consent again. Which activities require the request for consent before being executed among the one that are in this list:"+activitiesSet+".For the analysis please consider just the name of the activity.  Print just an array with the id of the activities that requires the consent before and for which this consent is not alreqdy present in the process, among the activities in the set, that requires the consent before being executed and if and only if does not exist already an activity in which the consent is requested. if the consent is not necessary for no one activity just print No");
+        const hasRightToAccessReq = await callChatGpt("Given a bpmn process of which this is the description:"+description+"Given the definition of Right to Access: at any moment, the Data Subject can access the personal data associated to her. As a result, the Data Controller has the obligation to satisfy these requests. Is present in the bpmn model an activity in which the user access its personal data or not? If not reply 'No' and nothing else, otherwise replay 'Yes' and nothing else. if you are not sure just print No. To give a correct answer, analyze also the list of activities present in the process "+activitiesSet);
         const hasRightToAccess = hasRightToAccessReq.content;
-        //console.log("Has Consent?",hasConsent)
-        //addTextBelowButton(id, hasConsent);
+        console.log("Has Right To access?",hasRightToAccess)
+        addTextBelowButton(id, hasRightToAccess);
         break;
       case "dropDownD":
         break;
@@ -159,7 +159,12 @@ async function createDropDown(id, isExpanded, textContent, questionText, isDisab
   dropDown.style.width = "100%";
   dropDown.id = id;
 
-  if(valueButton==null) predictionChatGPT(id);
+  if(valueButton == null) {
+    predictionChatGPT(id);
+  }
+  else{
+    removeChatGPTTip(id)
+  }
 
   const button = document.createElement("button");
   button.className = "btn";
@@ -532,34 +537,50 @@ async function createUlandSelectActivities(dropDownID, titleText, activities_alr
         ulDropDown.appendChild(subDiv);
 
 
-        submitButton.addEventListener("click", (event) => {
+        submitButton.addEventListener("click", async function(event) {
+          // Prevent the default form submission behavior
           event.preventDefault();
+        
+          // Get the selected activities
           const selectedActivities = Array.from(
             form.querySelectorAll("input[name='activity']:checked")
-        
-          ).map((checkbox) =>
+          ).map((checkbox) => 
             activities.find((activity) => activity.id === checkbox.value)
           );
-          submitButton.style.border = "2px solid #2CA912"
-          submitButton.style.backgroundColor="white"
-          questionDone("#dropDownB")
-
-          getSettedActivity("questionB").then(response => {
-            const callSelected = response;
-            if(callSelected){
-              callSelected.forEach(element =>{
-                if(!selectedActivities.some(item=>item.id == element.id)){
-                  removeConsentFromActivity(element,"consent_");
+        
+          // Update the button styles
+          submitButton.style.border = "2px solid #2CA912";
+          submitButton.style.backgroundColor = "white";
+        
+          // Call the questionDone function
+          questionDone("#dropDownB");
+        
+          try {
+            // Get the setted activity
+            const callSelected = await getSettedActivity("questionB");
+            console.log("callSelected: ", callSelected);
+        
+            if (callSelected.length > 0) {
+              // Remove consent from activities not selected
+              callSelected.forEach(element => {
+                if (!selectedActivities.some(item => item.id == element.id)) {
+                  removeConsentFromActivity(element, "consent_");
                 }
-            })
-            reorderDiagram();
+              });
+        
+              // Reorder the diagram
+              reorderDiagram();
+            }
+            // Add the selected activities to the path
+            addBPath(selectedActivities, activities_already_selected);
+            // Open the dropdown
+            openDrop("dropDownB", "yes", true);
+            // Decolor every selected element
+            decolorEverySelected();
+          } catch (error) {
+            console.error("Error during the process:", error);
           }
-          addBPath(selectedActivities, activities_already_selected);
-          });
-          openDrop("dropDownB","yes",true);
-          decolorEverySelected();
         });
-
           
         divActivities.appendChild(form);      
       }

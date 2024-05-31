@@ -4,7 +4,7 @@ import "bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
 import NavigatedViewer from "bpmn-js/dist/bpmn-navigated-viewer.production.min.js";
-
+import BpmnAlignElements from 'bpmn-js/lib/features/align-elements/BpmnAlignElements.js'; 
 import BpmnModdle from "bpmn-moddle";
 import BpmnModeler from "bpmn-js/lib/Modeler";
 import { getNewShapePosition } from "bpmn-js/lib/features/auto-place/BpmnAutoPlaceUtil.js";
@@ -77,7 +77,7 @@ var viewer = new BpmnJS({
     meta: MetaPackage,
     zeebe: zeebeModdleDescriptor,
   },
-  additionalModules: [disableModeling, confirmForGDPRPath],
+  additionalModules: [disableModeling, confirmForGDPRPath,BpmnAlignElements ],
 });
 
 
@@ -158,6 +158,10 @@ const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:callActivity",
   "bpmn:CallActivity",
   "bpmn:ErrorEventDefinition",
+  "bpmn:IntermediateCatchEvent",
+  "bpmn:StartCatchEvent",
+  "bpmn:IntermediateThrowEvent",
+
 ]);
 const gdprActivityQuestionsPrefix = ["consent"];
 //
@@ -1380,7 +1384,9 @@ function getPreviousElement(referenceElement) {
     incoming.forEach((element) => {
       const previousE = element.businessObject.sourceRef.id;
       const prev = elementRegistry.get(previousE);
-      res.push(prev);
+      if(prev.type!=" bpmn:Participant") {
+        res.push(prev);
+      }
     });
     return res;
   } else return false;
@@ -1424,6 +1430,7 @@ function addActivityBetweenTwoElements(
     const newSequenceFlowAttrsOutgoing = {
       type: "bpmn:SequenceFlow",
     };
+
     modeling.createConnection(
       newElement,
       secondElement,
@@ -1443,10 +1450,12 @@ function addActivityBetweenTwoElements(
           firstElement.type == "bpmn:Gateway"
         ? secondElement.y
         : firstElement.y;
+        
     const outgoingFlow = firstElement.outgoing;
+
     if (outgoingFlow.length > 0) {
       outgoingFlow.forEach((outgoingElem) => {
-        if (outgoingElem.businessObject.targetRef.id === secondElement.id) {
+        if (outgoingElem.type!= "bpmn:MessageFlow" && outgoingElem.businessObject.targetRef.id === secondElement.id) {
           modeling.removeConnection(outgoingElem);
         }
       });
@@ -1495,9 +1504,12 @@ function getOrderedSub() {
   var starts = allElements.filter((element) =>
     allBpmnElements.some((item) => item === element.type)
   );
-
+  console.log("starts: ",starts)
+  let iterations = 0;
   while (starts[0]) {
     //vedo se c'è uno start e prendo il primo
+    if(iterations > 10) break;
+    iterations++;
     const exist = starts.filter(
       (element) =>
         element.type == "bpmn:startEvent" || element.type == "bpmn:StartEvent"
@@ -1511,7 +1523,11 @@ function getOrderedSub() {
 
     //start diventa il nostro punto di partenza
     var first = start;
+    console.log("while has outgoing",hasOutgoing(first),"\n considering ",first)
+    let it=0;
     while (hasOutgoing(first)) {
+      it++;
+      if(it > 10) break;
       //finchè c'è un ramo uscente prendi l'elemento collegato al ramo ed aggiungilo
       const next_to_add = hasOutgoing(first); //prendo riferimento
       const next = elementRegistry.get(next_to_add.businessObject.targetRef.id); //il riferimento diventa il mio nuovo next
@@ -1558,7 +1574,7 @@ function hasOutgoing(element) {
     outgoingSet.forEach((outgoing) => {
       const target = outgoing.businessObject.targetRef.id;
       const targetRef = elementRegistry.get(target);
-      set.push(targetRef);
+      if(target.type!="bpmn:Participant") set.push(targetRef);
     });
 
     outgoingSet.sort(compareByX);
@@ -1575,6 +1591,7 @@ function isInRange(number, min) {
 //function to reorder the diagram
 export function reorderDiagram() {
   const sub = getOrderedSub();
+
   sub.forEach((element) => {
     const previousElementSet = getPreviousElement(element);
     if (previousElementSet.length > 0) {

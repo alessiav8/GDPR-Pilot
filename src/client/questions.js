@@ -257,12 +257,13 @@ async function addBPath(activities, activities_already_selected) {
     activities.forEach(async function (activity) {
         const element = getElement(activity.id);
         if( answers_done == null || !answers_done.some(item => item.id === activity.id) ){
-          const previousSet = getPreviousElement(element);
+          var previousSet = getPreviousElement(element);
+          previousSet = previousSet.filter(item => item.type !="bpmn:Participant");
           if (previousSet.length > 0) {
             var i = 0;
             for (var i = 0; i < previousSet.length; i++) {
-              const name = "consent_" + activity.id + "_" + i;
-              await addSubProcess(name,"Right to be informed and to Consent",consent_to_use_the_data,element,previousSet[i]);
+                const name = "consent_" + activity.id + "_" + i;
+                await addSubProcess(name,"Right to be informed and to Consent",consent_to_use_the_data,element,previousSet[i]);
             }
           }
           else{
@@ -530,7 +531,7 @@ function enableButtons(){
 
 //id: is the button id ex. yes_dropDownA or no_dropDownA
 //function to remove the p appended to show the openAI suggest
-function removeChatGPTTip(id){
+export function removeChatGPTTip(id){
   var buttonId = false;
   var pElement = false;
   if(document.getElementById("p_yes_"+id)){
