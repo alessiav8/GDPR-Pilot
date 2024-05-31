@@ -7,6 +7,8 @@ import NavigatedViewer from "bpmn-js/dist/bpmn-navigated-viewer.production.min.j
 import BpmnAlignElements from 'bpmn-js/lib/features/align-elements/BpmnAlignElements.js'; 
 import BpmnModdle from "bpmn-moddle";
 import BpmnModeler from "bpmn-js/lib/Modeler";
+import AlignElements from 'diagram-js/lib/features/align-elements/AlignElements.js';
+
 import { getNewShapePosition } from "bpmn-js/lib/features/auto-place/BpmnAutoPlaceUtil.js";
 import camundaModdle from "camunda-bpmn-moddle/resources/camunda.json";
 
@@ -110,6 +112,7 @@ var originalRootElement;
 var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
 var current_diagram = diagram_two_activities;
+var alienator;
 
 //gdpr questions
 const YA = document.getElementById("yes_dropDownA");
@@ -251,10 +254,11 @@ async function loadDiagram(diagram) {
         eventBus = viewer.get("eventBus");
         contextPad = viewer.get("contextPad");
         commandStack = viewer.get('commandStack');
+        var rules=viewer.get('rules');
         var bpmnReplace = viewer.get("bpmnReplace");
         var translate = viewer.get("translate");
         var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate,viewer, secondViewerOnly);
-
+        alienator = new AlignElements(modeling,rules)
        // changeID();
         checkMetaInfo();
         console.log("elementRegistry: ",elementRegistry);
