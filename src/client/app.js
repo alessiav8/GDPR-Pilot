@@ -1552,20 +1552,14 @@ function addActivityBetweenTwoElements(
 
 //function to get the set of ordered elements, ordered by their sequence flow
 //all the elements but not the sequence flow or partecipant or collaboration
-function getOrderedSub() {
-  elementRegistry = viewer.get("elementRegistry");
-  const allElements = elementRegistry.getAll();
+function getOrderedSub(allElements) {
   const new_set = new Array();
   //prendo solo gli elementi che mi interessano
   var starts = allElements.filter((element) =>
     allBpmnElements.some((item) => item === element.type)
   );
-  console.log("starts: ", starts);
-  let iterations = 0;
   while (starts[0]) {
     //vedo se c'è uno start e prendo il primo
-    if (iterations > 10) break;
-    iterations++;
     const exist = starts.filter(
       (element) =>
         element.type == "bpmn:startEvent" || element.type == "bpmn:StartEvent"
@@ -1579,16 +1573,8 @@ function getOrderedSub() {
 
     //start diventa il nostro punto di partenza
     var first = start;
-    console.log(
-      "while has outgoing",
-      hasOutgoing(first),
-      "\n considering ",
-      first
-    );
-    let it = 0;
+
     while (hasOutgoing(first)) {
-      it++;
-      if (it > 10) break;
       //finchè c'è un ramo uscente prendi l'elemento collegato al ramo ed aggiungilo
       const next_to_add = hasOutgoing(first); //prendo riferimento
       const next = elementRegistry.get(next_to_add.businessObject.targetRef.id); //il riferimento diventa il mio nuovo next
@@ -1628,8 +1614,15 @@ function compareByX(c, d) {
 //function to say if an element has a successor and in the case, return it
 function hasOutgoing(element) {
   elementRegistry = viewer.get("elementRegistry");
-  const outgoingSet = element.outgoing;
-  //console.log("\nOutgoing of element",element.id,"\n",outgoingSet);
+  var outgoingSet = element.outgoing;
+
+  outgoingSet = outgoingSet.filter(
+    (outgoing) =>
+      outgoing.type == "bpmn:SequenceFlow" ||
+      outgoing.type == "bpmn:sequenceFlow"
+  );
+  console.log("outgoingSet", outgoingSet);
+
   const set = new Array();
   if (outgoingSet.length > 0) {
     outgoingSet.forEach((outgoing) => {
@@ -1649,10 +1642,40 @@ function isInRange(number, min) {
   return number >= min && number <= max;
 }
 
+function hasCollaboration() {
+  elementRegistry = viewer.get("elementRegistry");
+  const allElements = elementRegistry.getAll();
+  for (var i = 0; i < allElements.length; i++) {
+    if (allElements[i].type == "bpmn:Collaboration") {
+      const partecipants = allElements[i].children.filter(
+        (child) => child.type == "bpmn:Participant" && child.children.length > 0
+      );
+      return partecipants;
+    }
+  }
+  return false;
+}
+
 //function to reorder the diagram
 export function reorderDiagram() {
-  const sub = getOrderedSub();
+  elementRegistry = viewer.get("elementRegistry");
+  const allElements = elementRegistry.getAll();
+  //has some collaboration inside it?
+  const has_Collaboration = hasCollaboration();
+  if (has_Collaboration) {
+    has_Collaboration.forEach((part) => {
+      const subSet = getOrderedSub(part.children);
+      reOrderSubSet(subSet);
+    });
+  } else {
+    const sub = getOrderedSub(allElements);
+    reOrderSubSet(sub);
+  }
+  viewer.get("canvas").zoom("fit-viewport");
+}
+//
 
+function reOrderSubSet(sub) {
   sub.forEach((element) => {
     const previousElementSet = getPreviousElement(element);
     if (previousElementSet.length > 0) {
@@ -1724,9 +1747,7 @@ export function reorderDiagram() {
       });
     }
   });
-  viewer.get("canvas").zoom("fit-viewport");
 }
-//
 
 //function to get incoming sequence flow element
 function getIncoming(element) {
