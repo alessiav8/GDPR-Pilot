@@ -11,7 +11,7 @@ import {
   closeSideBarSurvey,
   questionDone,
   getSettedActivity,
-  openDrop
+  openDrop,
 } from "./support.js";
 import {
   getDiagram,
@@ -37,16 +37,15 @@ import right_to_restrict_processing from "../../resources/right_to_restrict_proc
 import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
 import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
 
-
-
 //----------------------------START YES HANDLER------------------------------------
 //handle click yes for question A
-async function yesdropDownA() {
+export async function yesdropDownA() {
   await checkDropDownOrdAdd(
     "dropDownA",
     true,
     "Personal data",
-    "Do you handle personal data in your process?",false
+    "Do you handle personal data in your process?",
+    false
   );
   removeUlFromDropDown("#dropDownA");
   editMetaInfo("A", setJsonData("Yes", false));
@@ -56,7 +55,7 @@ async function yesdropDownA() {
 //end handle click yes for question A
 
 //handle click yes for question B
-function yesdropDownB() {
+export function yesdropDownB() {
   //removeUlFromDropDown("#dropDownB");
   editMetaInfo("B", setJsonData("Yes", false));
   questionDone("#dropDownB");
@@ -73,7 +72,6 @@ export function yesdropDownC() {
   allowOpenNextQuestion("D");
   editYesNoButton("#yes_dropDownC");
   removeChatGPTTip("dropDownC");
-
 }
 //
 
@@ -84,8 +82,6 @@ export function yesdropDownD() {
   allowOpenNextQuestion("E");
   editYesNoButton("#yes_dropDownD");
   removeChatGPTTip("dropDownD");
-
-  
 }
 //
 
@@ -94,9 +90,8 @@ export function yesdropDownE() {
   editMetaInfo("E", setJsonData("Yes", false));
   questionDone("#dropDownE");
   allowOpenNextQuestion("F");
-  editYesNoButton("#yes_dropDownE"); 
+  editYesNoButton("#yes_dropDownE");
   removeChatGPTTip("dropDownE");
-
 }
 //
 
@@ -107,8 +102,6 @@ export function yesdropDownF() {
   allowOpenNextQuestion("G");
   editYesNoButton("#yes_dropDownF");
   removeChatGPTTip("dropDownF");
-
-  
 }
 //
 
@@ -119,7 +112,6 @@ export function yesdropDownG() {
   allowOpenNextQuestion("H");
   editYesNoButton("#yes_dropDownG");
   removeChatGPTTip("dropDownG");
-
 }
 //
 
@@ -130,18 +122,16 @@ export function yesdropDownH() {
   allowOpenNextQuestion("I");
   editYesNoButton("#yes_dropDownH");
   removeChatGPTTip("dropDownH");
-
 }
 //
 
 //function to handle yes of question I
 export function yesdropDownI() {
   editMetaInfo("I", setJsonData("Yes", false));
-  questionDone("#dropDownI");  
+  questionDone("#dropDownI");
   allowOpenNextQuestion("L");
   editYesNoButton("#yes_dropDownI");
   removeChatGPTTip("dropDownI");
-
 }
 //
 
@@ -154,8 +144,6 @@ export function yesdropDownL() {
   editMetaInfo("gdpr", true);
   editYesNoButton("#yes_dropDownL");
   removeChatGPTTip("dropDownL");
-
-
 }
 //
 
@@ -163,9 +151,8 @@ export function yesdropDownL() {
 
 //----------------------------START NO HANDLER------------------------------------
 
-
 //handle click no for question A
-async function nodropDownA() {
+export async function nodropDownA() {
   await checkDropDownOrdAdd(
     "dropDownA",
     true,
@@ -181,7 +168,7 @@ async function nodropDownA() {
 //end handle click no for question A
 
 //handle click no for question B
-async function nodropDownB(activities_already_selected,isLast) {
+export async function nodropDownB(activities_already_selected, isLast) {
   //editMetaInfo("B", setJsonData("No", []));
   await createUlandSelectActivities(
     "#dropDownB",
@@ -198,40 +185,103 @@ async function nodropDownB(activities_already_selected,isLast) {
     );
   }
   allowOpenNextQuestion("C");
-
 }
 //
 
 export function nodropDownC() {
-  handleNoClick(right_to_access,"Access Request Received","Access Request fulfilled","right_to_access",'bpmn:MessageEventDefinition',"C","D");  
+  handleNoClick(
+    right_to_access,
+    "Access Request Received",
+    "Access Request fulfilled",
+    "right_to_access",
+    "bpmn:MessageEventDefinition",
+    "C",
+    "D"
+  );
 }
 
 export async function nodropDownD() {
-  handleNoClick(right_to_portability,"Portability Request Received","Portability Request fulfilled","right_to_portability",'bpmn:MessageEventDefinition',"D","E");  
+  handleNoClick(
+    right_to_portability,
+    "Portability Request Received",
+    "Portability Request fulfilled",
+    "right_to_portability",
+    "bpmn:MessageEventDefinition",
+    "D",
+    "E"
+  );
 }
 
 export function nodropDownE() {
-  handleNoClick(right_to_rectify,"Rectification Request Received","Rectification Request fulfilled","right_to_rectify",'bpmn:MessageEventDefinition',"E","F");  
+  handleNoClick(
+    right_to_rectify,
+    "Rectification Request Received",
+    "Rectification Request fulfilled",
+    "right_to_rectify",
+    "bpmn:MessageEventDefinition",
+    "E",
+    "F"
+  );
 }
 
 export function nodropDownF() {
-  handleNoClick(right_to_object,"Objection Request Received","Objection Request fulfilled","right_to_object",'bpmn:MessageEventDefinition',"F","G");  
+  handleNoClick(
+    right_to_object,
+    "Objection Request Received",
+    "Objection Request fulfilled",
+    "right_to_object",
+    "bpmn:MessageEventDefinition",
+    "F",
+    "G"
+  );
 }
 
 export function nodropDownG() {
-  handleNoClick(right_to_object_to_automated_processing,"Objection to Automated Processing Request Received","Objection to Automated Processing Request fulfilled","right_to_object_to_automated_processing",'bpmn:MessageEventDefinition',"G","H");  
+  handleNoClick(
+    right_to_object_to_automated_processing,
+    "Objection to Automated Processing Request Received",
+    "Objection to Automated Processing Request fulfilled",
+    "right_to_object_to_automated_processing",
+    "bpmn:MessageEventDefinition",
+    "G",
+    "H"
+  );
 }
 
 export function nodropDownH() {
-  handleNoClick(right_to_restrict_processing,"Processing Restriction Request Received","Processing Restrict Request fulfilled","right_to_restrict_processing",'bpmn:MessageEventDefinition',"H","I");  
+  handleNoClick(
+    right_to_restrict_processing,
+    "Processing Restriction Request Received",
+    "Processing Restrict Request fulfilled",
+    "right_to_restrict_processing",
+    "bpmn:MessageEventDefinition",
+    "H",
+    "I"
+  );
 }
 
 export function nodropDownI() {
-  handleNoClick(right_to_be_forgotten,"Request to be Forgotten Received","Request to be Forgotten fulfilled","right_to_be_forgotten",'bpmn:MessageEventDefinition',"I","L");  
+  handleNoClick(
+    right_to_be_forgotten,
+    "Request to be Forgotten Received",
+    "Request to be Forgotten fulfilled",
+    "right_to_be_forgotten",
+    "bpmn:MessageEventDefinition",
+    "I",
+    "L"
+  );
 }
 
 export function nodropDownL() {
-  handleNoClick(right_to_be_informed_of_data_breaches,"Data Breach occurred","Data Breach Managed","right_to_be_informed_of_data_breaches",'bpmn:ErrorEventDefinition',"L","L");  
+  handleNoClick(
+    right_to_be_informed_of_data_breaches,
+    "Data Breach occurred",
+    "Data Breach Managed",
+    "right_to_be_informed_of_data_breaches",
+    "bpmn:ErrorEventDefinition",
+    "L",
+    "L"
+  );
   setGdprButtonCompleted(true);
 }
 
@@ -247,32 +297,52 @@ async function addSubProcess(name, title, diagram, element, previous) {
 }
 
 //function to add the path to solve B
-async function addBPath(activities, activities_already_selected) {
+export async function addBPath(activities, activities_already_selected) {
   const answers_done = await getAnswerQuestionX("questionB");
-  await checkDropDownOrdAdd("dropDownC",false, "User data access", "Do you allow users to access their data?");
+  await checkDropDownOrdAdd(
+    "dropDownC",
+    false,
+    "User data access",
+    "Do you allow users to access their data?"
+  );
   editMetaInfo("B", setJsonData("No", activities));
-  console.log("activities",activities);
+  console.log("activities", activities);
 
   try {
     activities.forEach(async function (activity) {
-        const element = getElement(activity.id);
-        if( answers_done == null || !answers_done.some(item => item.id === activity.id) ){
-          var previousSet = getPreviousElement(element);
-          previousSet = previousSet.filter(item => item.type !="bpmn:Participant");
-          if (previousSet.length > 0) {
-            var i = 0;
-            for (var i = 0; i < previousSet.length; i++) {
-                const name = "consent_" + activity.id + "_" + i;
-                await addSubProcess(name,"Right to be informed and to Consent",consent_to_use_the_data,element,previousSet[i]);
-            }
+      const element = getElement(activity.id);
+      if (
+        answers_done == null ||
+        !answers_done.some((item) => item.id === activity.id)
+      ) {
+        var previousSet = getPreviousElement(element);
+        previousSet = previousSet.filter(
+          (item) => item.type != "bpmn:Participant"
+        );
+        if (previousSet.length > 0) {
+          var i = 0;
+          for (var i = 0; i < previousSet.length; i++) {
+            const name = "consent_" + activity.id + "_" + i;
+            await addSubProcess(
+              name,
+              "Right to be informed and to Consent",
+              consent_to_use_the_data,
+              element,
+              previousSet[i]
+            );
           }
-          else{
-            const name = "consent_" + activity.id + "_0" ;
-            await addSubProcess(name,"Right to be informed and to Consent",consent_to_use_the_data,element, null);
-          }
-    }
+        } else {
+          const name = "consent_" + activity.id + "_0";
+          await addSubProcess(
+            name,
+            "Right to be informed and to Consent",
+            consent_to_use_the_data,
+            element,
+            null
+          );
+        }
+      }
     });
-  
   } catch (e) {
     console.error("Some error in addBPath", e);
   }
@@ -285,136 +355,182 @@ async function addBPath(activities, activities_already_selected) {
 
 //function to handle the creation of all the dropdown elements
 //letter: the last question replied
-export function createWithOnlyQuestionXExpandable(letter,questions){
-  const letters=["B","C","D","E","F","G","H","I","L"];
+export function createWithOnlyQuestionXExpandable(letter, questions) {
+  const letters = ["B", "C", "D", "E", "F", "G", "H", "I", "L"];
   var disabled = true;
-  var valueA = (questions["questionA"]==null)?  null : questions["questionA"][0].value;
-  if (letter=="A"){
-    createDropDown( "dropDownA",true,"Personal data","Do you handle personal data in your process?",false,valueA);
-  }
-  else{
-    createDropDown( "dropDownA",true,"Personal data","Do you handle personal data in your process?",false,valueA);
+  var valueA =
+    questions["questionA"] == null ? null : questions["questionA"][0].value;
+  if (letter == "A") {
+    createDropDown(
+      "dropDownA",
+      true,
+      "Personal data",
+      "Do you handle personal data in your process?",
+      false,
+      valueA
+    );
+  } else {
+    createDropDown(
+      "dropDownA",
+      true,
+      "Personal data",
+      "Do you handle personal data in your process?",
+      false,
+      valueA
+    );
   }
 
-  if(valueA == "Yes"){
+  if (valueA == "Yes") {
     disabled = false;
-  }
-  else{
+  } else {
     disabled = true;
   }
 
-  for (let i=0; i<letters.length; i++){
-    switch(letters[i]){
+  for (let i = 0; i < letters.length; i++) {
+    switch (letters[i]) {
       case "B":
+        var value =
+          questions["questionB"] == null
+            ? null
+            : questions["questionB"][0].value == "Yes"
+            ? "Yes"
+            : questions["questionB"][0].value == "No"
+            ? "No"
+            : null;
+        console.log(value);
         createDropDown(
           "dropDownB",
           false,
           "Consent",
-          "Did you ask for consent before?",disabled,
-          null
-          );
+          "Did you ask for consent before?",
+          disabled,
+          value
+        );
         break;
 
       case "C":
-        var value = (questions["questionC"]==null)?  null : questions["questionC"][0].value;
+        var value =
+          questions["questionC"] == null
+            ? null
+            : questions["questionC"][0].value;
         createDropDown(
           "dropDownC",
           false,
           "Access data",
-          "Do you allow users to access their data?",disabled,
+          "Do you allow users to access their data?",
+          disabled,
           value
         );
         break;
 
-
       case "D":
-        var value = (questions["questionD"]==null)?  null : questions["questionD"][0].value;
+        var value =
+          questions["questionD"] == null
+            ? null
+            : questions["questionD"][0].value;
         createDropDown(
           "dropDownD",
           false,
           "Data portability",
-          "Do you allow users to port their data?",disabled,
+          "Do you allow users to port their data?",
+          disabled,
           value
         );
         break;
 
-
       case "E":
-        var value = (questions["questionE"]==null)?  null : questions["questionE"][0].value;
+        var value =
+          questions["questionE"] == null
+            ? null
+            : questions["questionE"][0].value;
         createDropDown(
           "dropDownE",
           false,
           "Rectification",
-          "Do you allow users to rectify their data?",disabled,
+          "Do you allow users to rectify their data?",
+          disabled,
           value
         );
         break;
 
-      
       case "F":
-        var value = (questions["questionF"]==null)?  null : questions["questionF"][0].value;
+        var value =
+          questions["questionF"] == null
+            ? null
+            : questions["questionF"][0].value;
         createDropDown(
           "dropDownF",
           false,
           "Withdraw the consent",
-          "Do you allow users to withdraw the consent?",disabled,
+          "Do you allow users to withdraw the consent?",
+          disabled,
           value
         );
         break;
 
-
       case "G":
-        var value = (questions["questionG"]==null)?  null : questions["questionG"][0].value;
+        var value =
+          questions["questionG"] == null
+            ? null
+            : questions["questionG"][0].value;
         createDropDown(
           "dropDownG",
           false,
           "Access to automated processing ",
-          "Do you allow users to access to object to automated processing?",disabled,
-          value,
+          "Do you allow users to access to object to automated processing?",
+          disabled,
+          value
         );
         break;
 
-
       case "H":
-        var value = (questions["questionH"]==null)?  null : questions["questionH"][0].value;
+        var value =
+          questions["questionH"] == null
+            ? null
+            : questions["questionH"][0].value;
         createDropDown(
           "dropDownH",
           false,
           "Data Processing Restrictions",
-          "Do you allow users to restrict processing on their data?",disabled,
+          "Do you allow users to restrict processing on their data?",
+          disabled,
           value
         );
         break;
 
-
       case "I":
-        var value = (questions["questionI"]==null)?  null : questions["questionI"][0].value;
+        var value =
+          questions["questionI"] == null
+            ? null
+            : questions["questionI"][0].value;
         createDropDown(
           "dropDownI",
           false,
           "Data deletion",
-          "Do you allow users to be forgotten?",disabled,
+          "Do you allow users to be forgotten?",
+          disabled,
           value
-          );
+        );
         break;
 
-
       case "L":
-        var value = (questions["questionL"]==null)?  null : questions["questionL"][0].value;
+        var value =
+          questions["questionL"] == null
+            ? null
+            : questions["questionL"][0].value;
         createDropDown(
           "dropDownL",
           false,
           "Data breaches",
-          "Do you allow users to be informed of data breaches occurred to heir data?",disabled,
-          value,
-          );
+          "Do you allow users to be informed of data breaches occurred to heir data?",
+          disabled,
+          value
+        );
         break;
 
-      
       default:
         break;
     }
-    
   }
 }
 //
@@ -422,9 +538,9 @@ export function createWithOnlyQuestionXExpandable(letter,questions){
 //function to get the last answer that the user has done
 export function getLastAnswered(setOfQuestions) {
   var last = "A";
-  const set= ["A", "B", "C", "D", "E", "F", "G","H","I","L"]
-  for (let i=0; i < set.length; i++) {
-   if(setOfQuestions["question"+set[i]]!=null){
+  const set = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"];
+  for (let i = 0; i < set.length; i++) {
+    if (setOfQuestions["question" + set[i]] != null) {
       last = set[i];
     }
   }
@@ -432,41 +548,46 @@ export function getLastAnswered(setOfQuestions) {
 }
 //
 
-//function to enable again a dropdown 
-function allowOpenNextQuestion(nextQuestion){
-  const dropDown= document.querySelector("#dropDown"+nextQuestion);
+//function to enable again a dropdown
+function allowOpenNextQuestion(nextQuestion) {
+  const dropDown = document.querySelector("#dropDown" + nextQuestion);
   const button = dropDown.querySelector(".btn");
   button.setAttribute("data-bs-toggle", "collapse");
   button.style.border = "0.00002vh solid";
-  button.style.backgroundColor="white";
+  button.style.backgroundColor = "white";
 }
 //
 
 //function to open a specific @dropdown
 //dropdown: id of the dropdown to open
-export function openDropDown(dropdown){
-  const dropDown = document.querySelector("#"+dropdown);
+export function openDropDown(dropdown) {
+  const dropDown = document.querySelector("#" + dropdown);
   const button = dropDown.querySelector(".btn");
   button.setAttribute("aria-expanded", "true");
 }
 //
 
 //function to check if a group exists or to create it
-async function checkGroupOrCreate(){
+async function checkGroupOrCreate() {
   const exist_gdpr = existGdprGroup();
-  if(exist_gdpr == false ){
+  if (exist_gdpr == false) {
     createAGroup();
-  }
-  else{
+  } else {
     return;
   }
 }
 //
 
 //function to check if exists the drop of a question, in the negative case it create a new one
-async function checkDropDownOrdAdd(dropDown, bool, theme, question, isDisabled) {
+async function checkDropDownOrdAdd(
+  dropDown,
+  bool,
+  theme,
+  question,
+  isDisabled
+) {
   if (!document.querySelector("#" + dropDown)) {
-    await createDropDown(dropDown, bool, theme, question,isDisabled);
+    await createDropDown(dropDown, bool, theme, question, isDisabled);
   }
 }
 //
@@ -474,37 +595,44 @@ async function checkDropDownOrdAdd(dropDown, bool, theme, question, isDisabled) 
 //function to edit the color of the button
 //idButton the id of the yes/no button i have to edit
 //if id: yes then yes will have the green border and no the black one
-function editYesNoButton(idButton){
+function editYesNoButton(idButton) {
   const button = document.querySelector(idButton);
   button.style.border = "0.3vh solid #10ad74";
   const other_button_name = idButton.split("_");
-  if(other_button_name[0]=="#yes"){
-    const other = document.querySelector("#no_"+other_button_name[1]);
+  if (other_button_name[0] == "#yes") {
+    const other = document.querySelector("#no_" + other_button_name[1]);
     other.style.border = "0.01vh solid black";
-  }
-  else{
-    const other = document.querySelector("#yes_"+other_button_name[1]);
+  } else {
+    const other = document.querySelector("#yes_" + other_button_name[1]);
     other.style.border = "0.01vh solid black";
   }
 }
 //
 
 //function to handle the click on the No button
-function handleNoClick(diagram, start_label, end_label, id, start_type,current_letter,next_letter) {
+function handleNoClick(
+  diagram,
+  start_label,
+  end_label,
+  id,
+  start_type,
+  current_letter,
+  next_letter
+) {
   checkGroupOrCreate();
-  if(!existsGdprPath(id)) {
-    addSubEvent(diagram,start_label,end_label,id,start_type);  
+  if (!existsGdprPath(id)) {
+    addSubEvent(diagram, start_label, end_label, id, start_type);
   }
-  editYesNoButton("#no_dropDown"+current_letter);
+  editYesNoButton("#no_dropDown" + current_letter);
   editMetaInfo(current_letter, setJsonData("No", false));
   allowOpenNextQuestion(next_letter);
-  questionDone("#dropDown"+current_letter);
-  removeChatGPTTip("dropDown"+current_letter);
+  questionDone("#dropDown" + current_letter);
+  removeChatGPTTip("dropDown" + current_letter);
 }
 //
 
-function enableButtons(){
-  const letters = ["B", "C", "D", "E", "F", "G", "H", "I","L"];
+function enableButtons() {
+  const letters = ["B", "C", "D", "E", "F", "G", "H", "I", "L"];
   /*const area = document.querySelector("#areaDropDowns");
   letters.forEach(letter=>{
     const name= "dropDown"+letter;
@@ -519,37 +647,40 @@ function enableButtons(){
     }
   })*/
 
-  letters.forEach(letter=>{
-    const dropDown= document.querySelector("#dropDown"+letter);
+  letters.forEach((letter) => {
+    const dropDown = document.querySelector("#dropDown" + letter);
     const button = dropDown.querySelector(".btn");
     button.setAttribute("data-bs-toggle", "collapse");
     button.style.border = "0.00002vh solid";
-    button.style.backgroundColor="white";
+    button.style.backgroundColor = "white";
   });
-
 }
 
-//id: is the button id ex. yes_dropDownA or no_dropDownA
+//id: is the dropDown id ex. dropDownA
 //function to remove the p appended to show the openAI suggest
-export function removeChatGPTTip(id){
+export function removeChatGPTTip(id) {
   var buttonId = false;
   var pElement = false;
-  if(document.getElementById("p_yes_"+id)){
-    buttonId="yes_"+id;
-    pElement = document.getElementById("p_yes_"+id);
+  if (document.getElementById("p_yes_" + id)) {
+    buttonId = "yes_" + id;
+    pElement = document.getElementById("p_yes_" + id);
+  } else if (document.getElementById("p_no_" + id)) {
+    buttonId = "no_" + id;
+    pElement = document.getElementById("p_no_" + id);
   }
-  else if(document.getElementById("p_no_"+id)){
-    buttonId="no_"+id;
-    pElement = document.getElementById("p_no_"+id);
-  }
-  if(pElement && buttonId){
+  if (pElement && buttonId) {
     pElement.remove();
-    const button=document.getElementById(buttonId);
-    if(button){
-      button.style.backgroundColor = "white";  
+    const button = document.getElementById(buttonId);
+    if (button) {
+      button.style.backgroundColor = "white";
     }
   }
 }
 //
 
-export { yesdropDownA, nodropDownA, yesdropDownB, nodropDownB, addBPath };
+export function removeChatGPTTipFromAll() {
+  const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"];
+  letters.forEach((letter) => {
+    removeChatGPTTip("dropDown" + letter);
+  });
+}

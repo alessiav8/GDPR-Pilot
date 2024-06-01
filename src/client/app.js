@@ -4,10 +4,10 @@ import "bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
 import NavigatedViewer from "bpmn-js/dist/bpmn-navigated-viewer.production.min.js";
-import BpmnAlignElements from 'bpmn-js/lib/features/align-elements/BpmnAlignElements.js'; 
+import BpmnAlignElements from "bpmn-js/lib/features/align-elements/BpmnAlignElements.js";
 import BpmnModdle from "bpmn-moddle";
 import BpmnModeler from "bpmn-js/lib/Modeler";
-import AlignElements from 'diagram-js/lib/features/align-elements/AlignElements.js';
+import AlignElements from "diagram-js/lib/features/align-elements/AlignElements.js";
 
 import { getNewShapePosition } from "bpmn-js/lib/features/auto-place/BpmnAutoPlaceUtil.js";
 import camundaModdle from "camunda-bpmn-moddle/resources/camunda.json";
@@ -17,15 +17,13 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { query, classes } from "min-dom";
 
 import disableModeling from "../customizations/DisableModeling.js";
-import DisabledTypeChangeContextPadProvider from '../customizations/contextPadExtension.js';
-
+import DisabledTypeChangeContextPadProvider from "../customizations/contextPadExtension.js";
 
 import diagram from "../../resources/diagram.bpmn";
 import diagram_two_activities from "../../resources/diagram_two_activities.bpmn";
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
 import confirmForGDPRPath from "../customizations/confirm";
 import diagram_to_test_part from "../../resources/diagram_to_test_part.bpmn";
-
 
 import {
   yesdropDownA,
@@ -50,9 +48,9 @@ import {
   nodropDownL,
   createWithOnlyQuestionXExpandable,
   getLastAnswered,
+  removeChatGPTTipFromAll,
 } from "./questions.js";
 import {
-  createDropDown,
   removeUlFromDropDown,
   closeSideBarSurvey,
   getMetaInformationResponse,
@@ -72,17 +70,14 @@ const moddle_2 = new BpmnModdle({ zeebe: zeebeModdle });
 const second_viewer = new BpmnModeler({});
 var secondViewerOnly = new NavigatedViewer({});
 
-
 var viewer = new BpmnJS({
   container: "#canvas",
   moddleExtensions: {
     meta: MetaPackage,
     zeebe: zeebeModdleDescriptor,
   },
-  additionalModules: [disableModeling, confirmForGDPRPath,BpmnAlignElements ],
+  additionalModules: [disableModeling, confirmForGDPRPath, BpmnAlignElements],
 });
-
-
 
 //statements
 const export_button = document.getElementById("export_button");
@@ -95,7 +90,6 @@ const survey_col = document.getElementById("survey_col");
 const over_canvas = document.getElementById("over_canvas");
 const edit = document.getElementById("mode");
 const endpoint = "http://localhost:3000";
-
 
 var elementFactory;
 var modeling;
@@ -137,9 +131,18 @@ const bpmnActivityTypes = [
   "bpmn:manualTask",
   "bpmn:ManualTask",
   "bpmn:SubProcess",
-  "bpmn:subProcess"
+  "bpmn:subProcess",
 ];
-const rights=["right_to_access","right_to_portability","right_to_rectify","right_to_object","right_to_object_to_automated_processing","right_to_restrict_processing","right_to_be_forgotten","right_to_be_informed_of_data_breaches"];
+const rights = [
+  "right_to_access",
+  "right_to_portability",
+  "right_to_rectify",
+  "right_to_object",
+  "right_to_object_to_automated_processing",
+  "right_to_restrict_processing",
+  "right_to_be_forgotten",
+  "right_to_be_informed_of_data_breaches",
+];
 const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:Gateway",
   "bpmn:ExclusiveGateway",
@@ -164,7 +167,6 @@ const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:IntermediateCatchEvent",
   "bpmn:StartCatchEvent",
   "bpmn:IntermediateThrowEvent",
-
 ]);
 const gdprActivityQuestionsPrefix = ["consent"];
 //
@@ -195,19 +197,18 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 // end function to load the first diagram
 
-
 //function to call the AP of chatGPT
 export async function callChatGpt(message) {
-  const url = 'http://localhost:3000/api/sensitive-data';
+  const url = "http://localhost:3000/api/sensitive-data";
   try {
     const response = await axios.get(url, {
       params: {
-        message: message
-      }
+        message: message,
+      },
     });
     return response.data;
   } catch (error) {
-    console.error('There was a problem with the request:', error);
+    console.error("There was a problem with the request:", error);
     throw error;
   }
 }
@@ -215,29 +216,27 @@ export async function callChatGpt(message) {
 
 function createGoBackButton() {
   var sub = document.getElementById("GoBack");
-  var goBackButton = document.createElement('div');
-  goBackButton.id = 'goBack';
-  goBackButton.innerText = 'Main Process';
+  var goBackButton = document.createElement("div");
+  goBackButton.id = "goBack";
+  goBackButton.innerText = "Main Process";
   goBackButton.style.marginLeft = "47.3%";
   goBackButton.style.marginTop = "3vh";
   goBackButton.style.position = "absolute";
-  goBackButton.style.textDecoration = 'underline';
-  goBackButton.style.fontWeight = 'bold';
-  goBackButton.style.cursor = 'pointer';
-  goBackButton.style.zIndex = '1050'; 
+  goBackButton.style.textDecoration = "underline";
+  goBackButton.style.fontWeight = "bold";
+  goBackButton.style.cursor = "pointer";
+  goBackButton.style.zIndex = "1050";
 
   sub.style.display = "block";
   sub.appendChild(goBackButton);
 
-  goBackButton.addEventListener('click', function() {
+  goBackButton.addEventListener("click", function () {
     viewer.clear();
     loadDiagram(originalRootElement);
     sub.style.display = "none";
     goBackButton.remove();
   });
 }
-
-
 
 //function to load the diagram through importXML
 async function loadDiagram(diagram) {
@@ -253,15 +252,23 @@ async function loadDiagram(diagram) {
         canvas_ref = viewer.get("canvas");
         eventBus = viewer.get("eventBus");
         contextPad = viewer.get("contextPad");
-        commandStack = viewer.get('commandStack');
-        var rules=viewer.get('rules');
+        commandStack = viewer.get("commandStack");
+        var rules = viewer.get("rules");
         var bpmnReplace = viewer.get("bpmnReplace");
         var translate = viewer.get("translate");
-        var disabledTypeChangeContextPadProvider = new DisabledTypeChangeContextPadProvider(contextPad, bpmnReplace, elementRegistry, translate,viewer, secondViewerOnly);
-        alienator = new AlignElements(modeling,rules)
-       // changeID();
+        var disabledTypeChangeContextPadProvider =
+          new DisabledTypeChangeContextPadProvider(
+            contextPad,
+            bpmnReplace,
+            elementRegistry,
+            translate,
+            viewer,
+            secondViewerOnly
+          );
+        alienator = new AlignElements(modeling, rules);
+        // changeID();
         checkMetaInfo();
-        console.log("elementRegistry: ",elementRegistry);
+        console.log("elementRegistry: ", elementRegistry);
 
         //this prevent the modification of the id when someone change the type of something
         eventBus.on("element.updateId", function (event) {
@@ -275,106 +282,105 @@ async function loadDiagram(diagram) {
           try {
             var element = event.element;
             const name = element.businessObject.id;
-            if(name){
-            getMetaInformationResponse().then((response) => {
-              if (name.startsWith("consent")) {
-                const questionB = response["questionB"];
-                if (questionB != null) {
-                  var activity_id =
-                    name.split("_")[1] + "_" + name.split("_")[2];
-                  const new_meta = questionB.filter(
-                    (element) =>
-                      element.id != "response" && element.id != activity_id
+            if (name) {
+              getMetaInformationResponse().then((response) => {
+                if (name.startsWith("consent")) {
+                  const questionB = response["questionB"];
+                  if (questionB != null) {
+                    var activity_id =
+                      name.split("_")[1] + "_" + name.split("_")[2];
+                    const new_meta = questionB.filter(
+                      (element) =>
+                        element.id != "response" && element.id != activity_id
+                    );
+                    console.log("Meta from remove", event);
+                    editMetaInfo("B", setJsonData("No", new_meta));
+                  }
+                }
+
+                if (name.startsWith("right")) {
+                  displayDynamicAlert(
+                    "This action impact the gdpr compliance level"
                   );
-                  console.log("Meta from remove",event);
-                  editMetaInfo("B", setJsonData("No", new_meta));
+                  const splittedNameRight = name.split("_");
+                  const suffixLength =
+                    splittedNameRight[splittedNameRight.length - 1].length + 1;
+                  const newName =
+                    splittedNameRight[splittedNameRight.length - 1] ==
+                      "start" ||
+                    splittedNameRight[splittedNameRight.length - 1] == "end"
+                      ? name.substring(0, name.length - suffixLength)
+                      : name;
+                  switch (newName) {
+                    case "right_to_access":
+                      const questionC = response["questionC"];
+                      if (questionC != null) {
+                        editMetaInfo("C", null);
+                        removeStartEnd(name);
+                      }
+                      break;
+
+                    case "right_to_portability":
+                      const questionD = response["questionD"];
+                      if (questionD != null) {
+                        editMetaInfo("D", null);
+                        removeStartEnd(name);
+                      }
+                      break;
+
+                    case "right_to_rectify":
+                      const questionE = response["questionE"];
+                      if (questionE != null) {
+                        editMetaInfo("E", null);
+                        removeStartEnd(name);
+                      }
+                      break;
+
+                    case "right_to_object":
+                      const questionF = response["questionF"];
+                      if (questionF != null) {
+                        editMetaInfo("F", null);
+                        removeStartEnd(name);
+                      }
+                      break;
+
+                    case "right_to_object_to_automated_processing":
+                      const questionG = response["questionG"];
+                      if (questionG != null) {
+                        editMetaInfo("G", null);
+                        removeStartEnd(name);
+                      }
+                      break;
+
+                    case "right_to_restrict_processing":
+                      const questionH = response["questionH"];
+                      if (questionH != null) {
+                        editMetaInfo("H", null);
+                        removeStartEnd(name);
+                      }
+                      break;
+
+                    case "right_to_be_forgotten":
+                      const questionI = response["questionI"];
+                      if (questionI != null) {
+                        editMetaInfo("I", null);
+                        removeStartEnd(name);
+                      }
+                      break;
+
+                    case "right_to_be_informed_of_data_breaches":
+                      const questionL = response["questionL"];
+                      if (questionL != null) {
+                        editMetaInfo("L", null);
+                        removeStartEnd(name);
+                      }
+                      break;
+                    default:
+                      break;
+                  }
                 }
-              }
-
-              if (name.startsWith("right")) {
-                displayDynamicAlert(
-                  "This action impact the gdpr compliance level"
-                );
-                const splittedNameRight = name.split("_");
-                const suffixLength =
-                  splittedNameRight[splittedNameRight.length - 1].length + 1;
-                const newName =
-                  splittedNameRight[splittedNameRight.length - 1] == "start" ||
-                  splittedNameRight[splittedNameRight.length - 1] == "end"
-                    ? name.substring(0, name.length - suffixLength)
-                    : name;
-                switch (newName) {
-                  case "right_to_access":
-                    const questionC = response["questionC"];
-                    if (questionC != null) {
-                      editMetaInfo("C", null);
-                      removeStartEnd(name);
-                    }
-                    break;
-
-                  case "right_to_portability":
-                    const questionD = response["questionD"];
-                    if (questionD != null) {
-                      editMetaInfo("D", null);
-                      removeStartEnd(name);
-                    }
-                    break;
-
-                  case "right_to_rectify":
-                    const questionE = response["questionE"];
-                    if (questionE != null) {
-                      editMetaInfo("E", null);
-                      removeStartEnd(name);
-                    }
-                    break;
-
-                  case "right_to_object":
-                    const questionF = response["questionF"];
-                    if (questionF != null) {
-                      editMetaInfo("F", null);
-                      removeStartEnd(name);
-                    }
-                    break;
-
-                  case "right_to_object_to_automated_processing":
-                    const questionG = response["questionG"];
-                    if (questionG != null) {
-                      editMetaInfo("G", null);
-                      removeStartEnd(name);
-                    }
-                    break;
-
-                  case "right_to_restrict_processing":
-                    const questionH = response["questionH"];
-                    if (questionH != null) {
-                      editMetaInfo("H", null);
-                      removeStartEnd(name);
-                    }
-                    break;
-
-                  case "right_to_be_forgotten":
-                    const questionI = response["questionI"];
-                    if (questionI != null) {
-                      editMetaInfo("I", null);
-                      removeStartEnd(name);
-                    }
-                    break;
-
-                  case "right_to_be_informed_of_data_breaches":
-                    const questionL = response["questionL"];
-                    if (questionL != null) {
-                      editMetaInfo("L", null);
-                      removeStartEnd(name);
-                    }
-                    break;
-                  default:
-                    break;
-                }
-                
-              }
-              //reorderDiagram();
-            });
-
+                //reorderDiagram();
+              });
             }
           } catch (e) {
             console.error("error in shape.removed");
@@ -404,75 +410,81 @@ async function loadDiagram(diagram) {
         console.log("eventBus", eventBus);
 
         eventBus.on("element.click", handleClick);
-        
 
         eventBus.on("element.changed", function (event) {
-            const element = event.element; //sequence flow element
-            if (element && element.type === "bpmn:SequenceFlow") {
-              const source = element.source; //la sorgente della freccia
-              if (source != null) {
-                const newEnd = element.target; //dove punta la freccia nuova
-                const idSplitted = source.id.split("_");
-                const activityIdInConsent = idSplitted[1] + "_" + idSplitted[2];
-                const target = elementRegistry.get(activityIdInConsent); //activity that generated the Call Activity
-                var hasStillConsent = false;
-                var isTheSameActivity = false;
-                if(target && target.incoming){
-                  const set = target.incoming; //le frecce entranti nell'attività generatrici del consent
-                  for(var i=0; i< set.length ; i++){
-                    const sourceTarget = (set[i].source) ? set[i].source.id.split("_")[0] : false;
-                    if(sourceTarget =="consent") {
-                      hasStillConsent = true; //l'attività vecchia ha ancora un collegamento ad un consent
-                      if(set[i].source == source) isTheSameActivity=true;
-                      break;
-                    }
-                  };
-                } 
-                
-                if (idSplitted[0] == "consent") { //se la source è una consent activity 
+          const element = event.element; //sequence flow element
+          if (element && element.type === "bpmn:SequenceFlow") {
+            const source = element.source; //la sorgente della freccia
+            if (source != null) {
+              const newEnd = element.target; //dove punta la freccia nuova
+              const idSplitted = source.id.split("_");
+              const activityIdInConsent = idSplitted[1] + "_" + idSplitted[2];
+              const target = elementRegistry.get(activityIdInConsent); //activity that generated the Call Activity
+              var hasStillConsent = false;
+              var isTheSameActivity = false;
+              if (target && target.incoming) {
+                const set = target.incoming; //le frecce entranti nell'attività generatrici del consent
+                for (var i = 0; i < set.length; i++) {
+                  const sourceTarget = set[i].source
+                    ? set[i].source.id.split("_")[0]
+                    : false;
+                  if (sourceTarget == "consent") {
+                    hasStillConsent = true; //l'attività vecchia ha ancora un collegamento ad un consent
+                    if (set[i].source == source) isTheSameActivity = true;
+                    break;
+                  }
+                }
+              }
 
-                  if (target.id != newEnd.id) {
-                    //se la nuova attività è diversa da quella che ha generato il gdpr path
-                    //const newEnd = elementRegistry.get(element.businessObject.targetRef.id);
-                    if (newEnd.type != "bpmn:StartEvent" && newEnd.type != "bpmn:startEvent" &&  newEnd.type != "bpmn:EndEvent" && newEnd.type != "bpmn:endEvent") {
-                      if(isTheSameActivity == false){
-                        const new_id = "consent_" + newEnd.id + "_" + idSplitted[3];
-                        modeling.updateProperties(source, {
-                          id: new_id,
-                        });
-                    }
-                      //qui faccio l'edit di quello che c'è in questionB per eliminare eventualmente il vecchio collegamento 
-                      //e inserire quello nuovo 
-                      //controllare che la vecchia non sia legata magari ad un altro consent
+              if (idSplitted[0] == "consent") {
+                //se la source è una consent activity
 
-                      const newSetQuestionB = new Array();
-                      getAnswerQuestionX("questionB").then((response) => {
-                        response.forEach((q) => {
-                          if (q.id == target.id) {
-                            newSetQuestionB.push({
-                              id: newEnd.id,
-                              value: newEnd.businessObject.name,
-                            });
-                          if(hasStillConsent) newSetQuestionB.push(q);
-
-                          } else {
-                            newSetQuestionB.push(q);
-                          }
-                        });
-                        editMetaInfo("B", setJsonData("No", newSetQuestionB));
+                if (target.id != newEnd.id) {
+                  //se la nuova attività è diversa da quella che ha generato il gdpr path
+                  //const newEnd = elementRegistry.get(element.businessObject.targetRef.id);
+                  if (
+                    newEnd.type != "bpmn:StartEvent" &&
+                    newEnd.type != "bpmn:startEvent" &&
+                    newEnd.type != "bpmn:EndEvent" &&
+                    newEnd.type != "bpmn:endEvent"
+                  ) {
+                    if (isTheSameActivity == false) {
+                      const new_id =
+                        "consent_" + newEnd.id + "_" + idSplitted[3];
+                      modeling.updateProperties(source, {
+                        id: new_id,
                       });
                     }
-                    else{
-                      modeling.removeConnection(element);
-                    }
-                    //TODO:
-                    /*else{
+                    //qui faccio l'edit di quello che c'è in questionB per eliminare eventualmente il vecchio collegamento
+                    //e inserire quello nuovo
+                    //controllare che la vecchia non sia legata magari ad un altro consent
+
+                    const newSetQuestionB = new Array();
+                    getAnswerQuestionX("questionB").then((response) => {
+                      response.forEach((q) => {
+                        if (q.id == target.id) {
+                          newSetQuestionB.push({
+                            id: newEnd.id,
+                            value: newEnd.businessObject.name,
+                          });
+                          if (hasStillConsent) newSetQuestionB.push(q);
+                        } else {
+                          newSetQuestionB.push(q);
+                        }
+                      });
+                      editMetaInfo("B", setJsonData("No", newSetQuestionB));
+                    });
+                  } else {
+                    modeling.removeConnection(element);
+                  }
+                  //TODO:
+                  /*else{
                         const newNameUse = idSplitted[0]+"_";
                         modeling.updateProperties(source, {
                           id: newNameUse,
                         });    
                       }*/
-                  } /*else {
+                } /*else {
                     if (bpmnActivityTypes.some((item) => item == newEnd.type)) {
                       const newSetQuestionB = new Array();
                       getAnswerQuestionX("questionB").then((response) => {
@@ -487,67 +499,82 @@ async function loadDiagram(diagram) {
                       });
                     }
                   }*/
-                }
               }
             }
-          });
-        })
-        .catch((error) => {
-          console.error("Errore nell'importazione dell'XML:", error);
+          }
         });
-
+      })
+      .catch((error) => {
+        console.error("Errore nell'importazione dell'XML:", error);
+      });
   } catch (err) {
     console.error("Si è verificato un errore:", err);
   }
 }
 //end function to load the diagram
 
-async function handleClick(event){
+async function handleClick(event) {
   const elementClicked = event.element;
-  const isBOpen = (localStorage.getItem("isOpenB") == null) ? null : (localStorage.getItem("isOpenB") == "true") ? true : false;
+  const isBOpen =
+    localStorage.getItem("isOpenB") == null
+      ? null
+      : localStorage.getItem("isOpenB") == "true"
+      ? true
+      : false;
   const dropDownB = document.getElementById("dropDownB");
-  const collapsed = (dropDownB)? dropDownB.querySelector(".btn") : null;
+  const collapsed = dropDownB ? dropDownB.querySelector(".btn") : null;
 
-  if(dropDownB && collapsed){
+  if (dropDownB && collapsed) {
     const buttonInside = dropDownB.querySelector(".btn-light");
-    const buttonInsideId= (buttonInside) ? buttonInside.id : null;
-    const isDifferent = ( buttonInsideId && buttonInsideId != "yes_dropDownB" && buttonInsideId != "no_dropDownB")  ? true : false;
-    const isCollapsed= (collapsed && collapsed.ariaExpanded == "true" || collapsed.ariaExpanded==null) ? true : false;
-    if(isDifferent && bpmnActivityTypes.some(item=> item == elementClicked.type) && isCollapsed){
-    // if(isBOpen && bpmnActivityTypes.some(item=> item == elementClicked.type)){ //se B è aperto 
-        const check = document.getElementById("checkbox_"+elementClicked.id);
+    const buttonInsideId = buttonInside ? buttonInside.id : null;
+    const isDifferent =
+      buttonInsideId &&
+      buttonInsideId != "yes_dropDownB" &&
+      buttonInsideId != "no_dropDownB"
+        ? true
+        : false;
+    const isCollapsed =
+      (collapsed && collapsed.ariaExpanded == "true") ||
+      collapsed.ariaExpanded == null
+        ? true
+        : false;
+    if (
+      isDifferent &&
+      bpmnActivityTypes.some((item) => item == elementClicked.type) &&
+      isCollapsed
+    ) {
+      // if(isBOpen && bpmnActivityTypes.some(item=> item == elementClicked.type)){ //se B è aperto
+      const check = document.getElementById("checkbox_" + elementClicked.id);
 
-        if(elementClicked.di.stroke == null){//se non è già selezionato
-          modeling.setColor([elementClicked], {
-            stroke: 'rgb(44, 169, 18)',
-          })
-          if(check) check.checked=true;
-        }
-        else{ 
-          modeling.setColor([elementClicked], null);
-          if(check) check.checked=false;
-        }
+      if (elementClicked.di.stroke == null) {
+        //se non è già selezionato
+        modeling.setColor([elementClicked], {
+          stroke: "rgb(44, 169, 18)",
+        });
+        if (check) check.checked = true;
+      } else {
+        modeling.setColor([elementClicked], null);
+        if (check) check.checked = false;
+      }
     }
-
   }
-
-} 
+}
 
 //function to edit the metas of B
 //idActivity: id of the activity that was conneted to the consent path
-async function editMetaB(idActivity){
-  console.log("editMetaB")
-  elementRegistry=viewer.get("elementRegistry");
+async function editMetaB(idActivity) {
+  console.log("editMetaB");
+  elementRegistry = viewer.get("elementRegistry");
   var questionB = await getAnswerQuestionX("questionB");
-  var result= new Array();
-  if(idActivity && questionB.length > 1){
-    questionB = questionB.filter(item => item.id != idActivity);
-    questionB.forEach(item =>{
-      const activity= elementRegistry.get(item.id);
-      if(!result.some(element=> element.id == activity.id)){
-        result.push({id:activity.id, value: activity.businessObject.id});
+  var result = new Array();
+  if (idActivity && questionB.length > 1) {
+    questionB = questionB.filter((item) => item.id != idActivity);
+    questionB.forEach((item) => {
+      const activity = elementRegistry.get(item.id);
+      if (!result.some((element) => element.id == activity.id)) {
+        result.push({ id: activity.id, value: activity.businessObject.id });
       }
-    })
+    });
     editMetaInfo("B", setJsonData("No", result));
   }
 }
@@ -586,6 +613,8 @@ function backArrowSubProcess() {
     loadDiagram(current_diagram);
     over_canvas.removeChild(closeBtn);
     gdpr_button.disabled = false;
+    removeChatGPTTipFromAll();
+    decolorEverySelected();
   });
 }
 //
@@ -599,51 +628,63 @@ function removeStartEnd(name) {
   if (
     nameSplitted[nameSplitted.length - 1] != "start" &&
     nameSplitted[nameSplitted.length - 1] != "end"
-  ) 
-  {
+  ) {
     const start = elementRegistry.get(name + "_start");
     const end = elementRegistry.get(name + "_end");
     const thisAct = elementRegistry.get(name);
 
-    if(thisAct) {modeling.removeShape(thisAct);}
-    if(end) {modeling.removeShape(end);}
-    if(start) {modeling.removeShape(start);}
-
+    if (thisAct) {
+      modeling.removeShape(thisAct);
+    }
+    if (end) {
+      modeling.removeShape(end);
+    }
+    if (start) {
+      modeling.removeShape(start);
+    }
   } else if (nameSplitted[nameSplitted.length - 1] == "start") {
-
     const nameWithoutEnd = name.substring(0, name.length - 6);
     const start = elementRegistry.get(nameWithoutEnd);
     const end = elementRegistry.get(nameWithoutEnd + "_end");
     const thisAct = elementRegistry.get(name);
 
-    if (start) {modeling.removeShape(start);}
-    if (end) {modeling.removeShape(end);}
-    if(thisAct) {modeling.removeShape(thisAct);}
-
+    if (start) {
+      modeling.removeShape(start);
+    }
+    if (end) {
+      modeling.removeShape(end);
+    }
+    if (thisAct) {
+      modeling.removeShape(thisAct);
+    }
   } else if (nameSplitted[nameSplitted.length - 1] == "end") {
-
     const nameWithoutEnd = name.substring(0, name.length - 4);
     const end = elementRegistry.get(nameWithoutEnd);
     const start = elementRegistry.get(nameWithoutEnd + "_start");
     const thisAct = elementRegistry.get(name);
 
-    if (end) {modeling.removeShape(end);}
-    if (start) {modeling.removeShape(start);}
-    if(thisAct) {modeling.removeShape(thisAct);}
-
-  }
-  const all= elementRegistry.getAll();
-  var exists = false;
-
-  for(var i=0; i < all.length; i++) {
-    if(rights.some(item => item == all[i].id)){
-        exists=true;
-        break;
+    if (end) {
+      modeling.removeShape(end);
+    }
+    if (start) {
+      modeling.removeShape(start);
+    }
+    if (thisAct) {
+      modeling.removeShape(thisAct);
     }
   }
-  if(exists==false){
+  const all = elementRegistry.getAll();
+  var exists = false;
+
+  for (var i = 0; i < all.length; i++) {
+    if (rights.some((item) => item == all[i].id)) {
+      exists = true;
+      break;
+    }
+  }
+  if (exists == false) {
     const groupName = elementRegistry.get("GdprGroup");
-    if(groupName) modeling.removeShape(groupName);
+    if (groupName) modeling.removeShape(groupName);
   }
 }
 
@@ -924,12 +965,12 @@ import_button.addEventListener("click", () => {
 //end import handler
 
 //a function to deselect every element selected before
-export function cleanSelection(){
+export function cleanSelection() {
   const selection = viewer.get("selection");
-  const setSelected= selection.get();
-  setSelected.forEach(selectedElement =>{
+  const setSelected = selection.get();
+  setSelected.forEach((selectedElement) => {
     selection.deselect(selectedElement);
-  })
+  });
 }
 //
 
@@ -942,6 +983,7 @@ async function handleClickOnGdprButton() {
   const sidebarColumn = document.querySelector(".sidebar-column");
   const canvasRaw = document.querySelector("#canvas-raw");
   const spaceBetween = document.querySelector(".space-between");
+  //this part generate the space for the side bar
   if (!document.getElementById("survey_area")) {
     // Aggiorna le larghezze delle colonne
     mainColumn.style.width = "74.8%";
@@ -957,6 +999,7 @@ async function handleClickOnGdprButton() {
     survey_area.id = "survey_area";
     survey_col.appendChild(survey_area);
 
+    //create the close button to close the side bar
     const close_survey = document.createElement("span");
     close_survey.classList.add("close-btn");
     close_survey.textContent = "X";
@@ -967,7 +1010,7 @@ async function handleClickOnGdprButton() {
       closeSideBarSurvey();
       handleSideBar(false);
       decolorEverySelected();
-      localStorage.setItem("isOpenB",false);
+      localStorage.setItem("isOpenB", false);
     });
 
     survey_area.appendChild(close_survey);
@@ -1016,76 +1059,77 @@ async function handleClickOnGdprButton() {
 }
 //
 
-//function to get back the xml of the current diagram 
-export async function getXMLOfTheCurrentBpmn(){
+//function to get back the xml of the current diagram
+export async function getXMLOfTheCurrentBpmn() {
   return new Promise((resolve, reject) => {
-    viewer.saveXML({ format: true }).then(({ xml, error }) => {
-      if (error) {
+    viewer
+      .saveXML({ format: true })
+      .then(({ xml, error }) => {
+        if (error) {
+          console.log(error);
+          reject(error);
+        } else {
+          resolve(xml);
+        }
+      })
+      .catch((error) => {
         console.log(error);
         reject(error);
-      } else {
-        resolve(xml);
-      }
-    }).catch((error) => {
-      console.log(error);
-      reject(error);
-    });
+      });
   });
 }
 //
-
-
 
 //function to handle the undo of everything we made for the gdpr compliance
 //i have to edit the meta info
 //to remove every path added
 function handleUndoGdpr() {
   elementRegistry = viewer.get("elementRegistry");
-  displayDynamicPopUp("Are you sure?").then(conferma =>{
-    if(conferma){
-    getMetaInformationResponse().then((response) => {
-      for (let question in response) {
-        if (response[question] != null) {
-          switch (question) {
-            case "gdpr_compliant":
-              editMetaInfo("gdpr", false);
-              break;
-            case "questionA":
-              editMetaInfo("A", null);
-            case "questionB":
-              response[question].forEach((element) => {
-                if (element.id != "response") {
-                  const activity = elementRegistry.get(element.id);
-                  removeConsentFromActivity(activity, "consent_");
-                }
-              });
-              break;
+  displayDynamicPopUp("Are you sure?").then((conferma) => {
+    if (conferma) {
+      getMetaInformationResponse().then((response) => {
+        for (let question in response) {
+          if (response[question] != null) {
+            switch (question) {
+              case "gdpr_compliant":
+                editMetaInfo("gdpr", false);
+                break;
+              case "questionA":
+                editMetaInfo("A", null);
+              case "questionB":
+                response[question].forEach((element) => {
+                  if (element.id != "response") {
+                    const activity = elementRegistry.get(element.id);
+                    removeConsentFromActivity(activity, "consent_");
+                  }
+                });
+                break;
 
-            case "questionC":
-            case "questionD":
-            case "questionE":
-            case "questionF":
-            case "questionG":
-            case "questionH":
-            case "questionI":
-            case "questionL":
-              const id = questionToId(question);
-              deleteGdprPath(id);
-              break;
-            default:
-              break;
+              case "questionC":
+              case "questionD":
+              case "questionE":
+              case "questionF":
+              case "questionG":
+              case "questionH":
+              case "questionI":
+              case "questionL":
+                const id = questionToId(question);
+                deleteGdprPath(id);
+                break;
+              default:
+                break;
+            }
           }
         }
-      }
-      const group = elementRegistry.get("GdprGroup");
-      if (group) {
-        modeling.removeShape(group);
-      }
-      closeSideBarSurvey();
-      handleSideBar(false);
-      viewer.get("canvas").zoom("fit-viewport");
-    });
-    /*const allElements = elementRegistry.getAll();
+        const group = elementRegistry.get("GdprGroup");
+        if (group) {
+          modeling.removeShape(group);
+        }
+        closeSideBarSurvey();
+        handleSideBar(false);
+        viewer.get("canvas").zoom("fit-viewport");
+      });
+      /*const allElements = elementRegistry.getAll();
     allElements.forEach((item) => {
       const name = item.id.split("_");
       if (name[0] == "consent") {
@@ -1100,7 +1144,7 @@ function handleUndoGdpr() {
         //modeling.removeShape(item);
       }
     });*/
-  }
+    }
   });
   setGdprButtonCompleted(false);
   decolorEverySelected();
@@ -1148,8 +1192,8 @@ gdpr_button.addEventListener("click", handleClickOnGdprButton);
 
 //function to generete the right questions dropdown
 async function checkQuestion() {
-  try {  
-    const response = await getMetaInformationResponse();   
+  try {
+    const response = await getMetaInformationResponse();
     questions_answers = response;
     if (questions_answers["questionA"] === null) {
       createWithOnlyQuestionXExpandable("A", questions_answers);
@@ -1388,7 +1432,7 @@ function getPreviousElement(referenceElement) {
     incoming.forEach((element) => {
       const previousE = element.businessObject.sourceRef.id;
       const prev = elementRegistry.get(previousE);
-      if(prev.type!=" bpmn:Participant") {
+      if (prev.type != " bpmn:Participant") {
         res.push(prev);
       }
     });
@@ -1418,7 +1462,12 @@ function addActivityBetweenTwoElements(
   secondElement,
   newElement
 ) {
-  console.log("addActivityBetweenTwoElements", firstElement, secondElement,newElement);
+  console.log(
+    "addActivityBetweenTwoElements",
+    firstElement,
+    secondElement,
+    newElement
+  );
   const modeling = viewer.get("modeling");
   const getBoundsNew = newElement.di.bounds;
 
@@ -1454,12 +1503,15 @@ function addActivityBetweenTwoElements(
           firstElement.type == "bpmn:Gateway"
         ? secondElement.y
         : firstElement.y;
-        
+
     const outgoingFlow = firstElement.outgoing;
 
     if (outgoingFlow.length > 0) {
       outgoingFlow.forEach((outgoingElem) => {
-        if (outgoingElem.type!= "bpmn:MessageFlow" && outgoingElem.businessObject.targetRef.id === secondElement.id) {
+        if (
+          outgoingElem.type != "bpmn:MessageFlow" &&
+          outgoingElem.businessObject.targetRef.id === secondElement.id
+        ) {
           modeling.removeConnection(outgoingElem);
         }
       });
@@ -1508,11 +1560,11 @@ function getOrderedSub() {
   var starts = allElements.filter((element) =>
     allBpmnElements.some((item) => item === element.type)
   );
-  console.log("starts: ",starts)
+  console.log("starts: ", starts);
   let iterations = 0;
   while (starts[0]) {
     //vedo se c'è uno start e prendo il primo
-    if(iterations > 10) break;
+    if (iterations > 10) break;
     iterations++;
     const exist = starts.filter(
       (element) =>
@@ -1527,11 +1579,16 @@ function getOrderedSub() {
 
     //start diventa il nostro punto di partenza
     var first = start;
-    console.log("while has outgoing",hasOutgoing(first),"\n considering ",first)
-    let it=0;
+    console.log(
+      "while has outgoing",
+      hasOutgoing(first),
+      "\n considering ",
+      first
+    );
+    let it = 0;
     while (hasOutgoing(first)) {
       it++;
-      if(it > 10) break;
+      if (it > 10) break;
       //finchè c'è un ramo uscente prendi l'elemento collegato al ramo ed aggiungilo
       const next_to_add = hasOutgoing(first); //prendo riferimento
       const next = elementRegistry.get(next_to_add.businessObject.targetRef.id); //il riferimento diventa il mio nuovo next
@@ -1578,7 +1635,7 @@ function hasOutgoing(element) {
     outgoingSet.forEach((outgoing) => {
       const target = outgoing.businessObject.targetRef.id;
       const targetRef = elementRegistry.get(target);
-      if(target.type!="bpmn:Participant") set.push(targetRef);
+      if (target.type != "bpmn:Participant") set.push(targetRef);
     });
 
     outgoingSet.sort(compareByX);
@@ -1635,12 +1692,15 @@ export function reorderDiagram() {
                 toAddAgain.push(source);
                 //modeling.removeConnection(item);
               });*/
-              const newPositionX= element.x + add;
-              const newPositionY= element.y + addY;
+              const newPositionX = element.x + add;
+              const newPositionY = element.y + addY;
               modeling.moveShape(element, { x: add, y: addY });
               const newWaypoints = [
-                { x: previousElement.x + previousElement.width , y: previousElement.y + previousElement.height / 2 },
-                { x: newPositionX, y: newPositionY + element.height / 2 }
+                {
+                  x: previousElement.x + previousElement.width,
+                  y: previousElement.y + previousElement.height / 2,
+                },
+                { x: newPositionX, y: newPositionY + element.height / 2 },
               ];
               modeling.updateWaypoints(incomingElement, newWaypoints);
               const exist_label = elementRegistry.get(element.id + "_label");
@@ -1733,13 +1793,17 @@ export function removeConsentFromActivity(activity, type) {
     var name = type + activity.id + "_" + i;
     var toRemove = elementRegistry.get(name);
     while (toRemove) {
-      commandStack.execute('shape.delete', {
-        shape: toRemove
-      }, {
+      commandStack.execute(
+        "shape.delete",
+        {
+          shape: toRemove,
+        },
+        {
           context: {
-              autoExecute: false
-          }
-      });
+            autoExecute: false,
+          },
+        }
+      );
       i++;
       var name = type + activity.id + "_" + i;
       toRemove = elementRegistry.get(name);
@@ -1752,17 +1816,24 @@ export function removeConsentFromActivity(activity, type) {
         var incoming_elem = incomingSet[i];
         const source = incoming_elem.source;
         const splitted = source.id.split("_");
-        console.log("remove connection",incoming_elem,"\n source",source,"\nsplitted",splitted)
+        console.log(
+          "remove connection",
+          incoming_elem,
+          "\n source",
+          source,
+          "\nsplitted",
+          splitted
+        );
         if (splitted[0] == "consent" && type == "consent_") {
           try {
-            commandStack.execute('connection.delete', {
-              connection: incoming_elem
+            commandStack.execute("connection.delete", {
+              connection: incoming_elem,
             });
-            console.log('Connection removed successfully');
+            console.log("Connection removed successfully");
           } catch (error) {
-            console.error('Error removing connection:', error);
+            console.error("Error removing connection:", error);
           }
-      }
+        }
       }
     }
     reorderDiagram();
@@ -1777,32 +1848,33 @@ function getStartFirst(parent) {
   elementRegistry = viewer.get("elementRegistry");
   const allElements = parent.children;
   var result = null;
-  for(var i=0;i < allElements.length; i++){ 
-    if (allElements[i].type == "bpmn:StartEvent" || allElements[i].type == "bpmn:startEvent"){
+  for (var i = 0; i < allElements.length; i++) {
+    if (
+      allElements[i].type == "bpmn:StartEvent" ||
+      allElements[i].type == "bpmn:startEvent"
+    ) {
       result = allElements[i];
       break;
     }
-  };
+  }
   console.log("Start event result:", result);
   return result;
 }
 //
 
-function getParticipantFromCollaboration(collaboration){
-  var parentRoot=collaboration;
-  if(parentRoot.children[0].type=="bpmn:Participant"){
+function getParticipantFromCollaboration(collaboration) {
+  var parentRoot = collaboration;
+  if (parentRoot.children[0].type == "bpmn:Participant") {
     parentRoot = parentRoot.children[0];
-  }
-  else{
-    for(var i=0; i <parentRoot.children.length; i++) {
-      if(parentRoot.children[i].type=="bpmn:Participant"){
+  } else {
+    for (var i = 0; i < parentRoot.children.length; i++) {
+      if (parentRoot.children[i].type == "bpmn:Participant") {
         parentRoot = parentRoot.children[i];
         break;
       }
     }
   }
   return parentRoot;
-
 }
 
 //function to add the group where i'm going to insert the path for gdpr compliance
@@ -1812,10 +1884,14 @@ export function createAGroup() {
   var parentRoot = canvas_ref.getRootElement();
   var oldP = null;
 
-  if (parentRoot.type=="bpmn:Collaboration") {
-    parentRoot=getParticipantFromCollaboration(parentRoot);
-    oldP= { x: parentRoot.x, y: parentRoot.y, width: parentRoot.width * 1.5, height: parentRoot.height*1.5};
-
+  if (parentRoot.type == "bpmn:Collaboration") {
+    parentRoot = getParticipantFromCollaboration(parentRoot);
+    oldP = {
+      x: parentRoot.x,
+      y: parentRoot.y,
+      width: parentRoot.width * 1.5,
+      height: parentRoot.height * 1.5,
+    };
   }
   const start = getStartFirst(parentRoot);
 
@@ -1836,11 +1912,10 @@ export function createAGroup() {
   groupShape.id = "GdprGroup";
   groupShape.businessObject.id = "GdprGroup";
   groupShape.businessObject.name = "Achieve Gdpr Compliance";
-  try{
-    modeling.createShape(groupShape, { x: x - 300, y: y - 300}, parentRoot);
-    if(oldP) modeling.resizeShape(parentRoot, oldP);
-  }
-  catch(error){
+  try {
+    modeling.createShape(groupShape, { x: x - 300, y: y - 300 }, parentRoot);
+    if (oldP) modeling.resizeShape(parentRoot, oldP);
+  } catch (error) {
     console.error("error in creating/resizing group");
   }
 
@@ -1915,16 +1990,16 @@ export async function addSubEvent(
 
   const gdpr = elementRegistry.get("GdprGroup");
   if (!gdpr) {
-    console.error('GdprGroup not found in element registry');
+    console.error("GdprGroup not found in element registry");
     return;
   }
 
-  var parent = viewer.get('canvas').getRootElement();//= gdpr.parent;
-  if(parent.type=="bpmn:Collaboration") {
+  var parent = viewer.get("canvas").getRootElement(); //= gdpr.parent;
+  if (parent.type == "bpmn:Collaboration") {
     parent = getParticipantFromCollaboration(parent);
   }
   if (!parent) {
-    console.error('Parent of GdprGroup is undefined');
+    console.error("Parent of GdprGroup is undefined");
     return;
   }
 
@@ -1942,7 +2017,7 @@ export async function addSubEvent(
   start_event.businessObject.id = path_name + "_start";
 
   try {
-    modeling.createShape(start_event, { x: gdpr.x + 70, y: y}, parent);
+    modeling.createShape(start_event, { x: gdpr.x + 70, y: y }, parent);
     /*modeling.resizeShape(start_event, {
       x: gdpr.x + 70,
       y: y,
@@ -1950,7 +2025,7 @@ export async function addSubEvent(
       height: start_event.height,
     });*/
   } catch (error) {
-    console.error('Error creating or resizing start_event:', error);
+    console.error("Error creating or resizing start_event:", error);
     return;
   }
 
@@ -1966,14 +2041,14 @@ export async function addSubEvent(
 
   try {
     modeling.createShape(end_event, { x: gdpr.x + 350, y: y }, parent);
-   /* modeling.resizeShape(end_event, {
+    /* modeling.resizeShape(end_event, {
       x: gdpr.x + 350,
       y: y,
       width: end_event.width,
       height: end_event.height,
     });*/
   } catch (error) {
-    console.error('Error creating or resizing end_event:', error);
+    console.error("Error creating or resizing end_event:", error);
     return;
   }
 
@@ -1996,21 +2071,21 @@ export async function addSubEvent(
       end_event
     );
   } catch (error) {
-    console.error('Error generating subprocess:', error);
+    console.error("Error generating subprocess:", error);
     return;
   }
 
   try {
     await addActivityBetweenTwoElements(start_event, end_event, subprocess);
   } catch (error) {
-    console.error('Error adding activity between elements:', error);
+    console.error("Error adding activity between elements:", error);
     return;
   }
 
   try {
     reorderDiagram();
   } catch (error) {
-    console.error('Error reordering diagram:', error);
+    console.error("Error reordering diagram:", error);
   }
 }
 
@@ -2061,35 +2136,33 @@ export async function getAnswerQuestionX(question) {
 }
 //
 
-export function decolorEverySelected(){
+export function decolorEverySelected() {
   elementRegistry = viewer.get("elementRegistry");
-  const all= elementRegistry.getAll();
-  all.forEach(item =>{
-    if(item.di.stroke == "#2ca912"){
+  const all = elementRegistry.getAll();
+  all.forEach((item) => {
+    if (item.di.stroke == "#2ca912") {
       modeling.setColor(item, null);
     }
-  })
+  });
 }
 
-export function colorActivity(activityId){
+export function colorActivity(activityId) {
   const activity = elementRegistry.get(activityId);
   modeling.setColor([activity], {
-    stroke: 'rgb(44, 169, 18)',
-  })
+    stroke: "rgb(44, 169, 18)",
+  });
 }
 
-export function decolorActivity(activityId){
+export function decolorActivity(activityId) {
   const activity = elementRegistry.get(activityId);
-  modeling.setColor([activity],null);
+  modeling.setColor([activity], null);
 }
 
-
-//possibile primo prompt 
+//possibile primo prompt
 /*Given this process bpmn generate for me a definition of how it works in 20 lines maximum, 
 no lists or anything. Just a description of what the process does and its purpose.*/
 
-
-//secondo prompt 
+//secondo prompt
 /*Given a bpmn process of which this is the description: {} 
 Given the definition of consent: "Consent to Use the Data: when retrieving personal data, the Data Controller needs 
 to ask the Data Subject for consent and to provide the Data Subject with information about the intentions on how to use and/or process the data."
