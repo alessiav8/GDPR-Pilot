@@ -1633,6 +1633,7 @@ function hasOutgoing(element) {
 
 function isInRange(number, min) {
   const max = min + 70;
+  console.log("isInRange?", number >= min && number <= max);
   return number >= min && number <= max;
 }
 
@@ -1671,9 +1672,16 @@ export function reorderDiagram() {
 
 function reOrderSubSet(sub) {
   sub.forEach((element) => {
+    //get the set of elements that precede the element
     const previousElementSet = getPreviousElement(element);
+
+    console.log("previousElementSet", previousElementSet);
+
     if (previousElementSet.length > 0) {
+      //se ci sono elementi prima
       previousElementSet.forEach((previousElement) => {
+        //per ogni elemento
+        //assegnamo una distanza fissa in base a quanto è largo ogni elemento
         const compare =
           previousElement.width == 36
             ? 90
@@ -1681,36 +1689,31 @@ function reOrderSubSet(sub) {
             ? 150
             : 150;
         const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
-        var add = compare - diff;
+        var add = compare - diff; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
         if (
           !(
             isInRange(previousElement.y, element.y) ||
             isInRange(element.y, previousElement.y)
-          )
+          ) //se non rispetta i range fissati per distanza y
         ) {
-          addY = 150 - (element.y - previousElement.y);
+          addY = 150 - (element.y - previousElement.y); //aggiusta y ma non muovere x
           add = 0;
         }
-        const incomingElementSet = element.incoming;
+        var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
+        incomingElementSet = incomingElementSet.filter(
+          (elem) =>
+            elem.type != "bpmn:MessageFlow" && elem.type !== "bpmn:messageFlow"
+        );
         if (incomingElementSet.length > 0) {
           for (var i = 0; i < incomingElementSet.length; i++) {
             var incomingElement = incomingElementSet[i]; //freccia entrante corrente
             if (
-              incomingElement.businessObject.sourceRef.id == previousElement.id
+              incomingElement.businessObject.sourceRef.id == previousElement.id //se stiamo considerando la freccia che parte dall'elemento precedente
             ) {
-              const setToDelete = element.incoming;
-              var toAddAgain = new Array();
-
-              /*setToDelete.forEach((item) => {
-                const source = elementRegistry.get(
-                  item.businessObject.sourceRef.id
-                );
-                toAddAgain.push(source);
-                //modeling.removeConnection(item);
-              });*/
               const newPositionX = element.x + add;
               const newPositionY = element.y + addY;
+
               modeling.moveShape(element, { x: add, y: addY });
               const newWaypoints = [
                 {
@@ -1720,21 +1723,12 @@ function reOrderSubSet(sub) {
                 { x: newPositionX, y: newPositionY + element.height / 2 },
               ];
               modeling.updateWaypoints(incomingElement, newWaypoints);
+
+              //if the object i'm moving has a label, move the label too
               const exist_label = elementRegistry.get(element.id + "_label");
               if (exist_label) {
                 modeling.moveShape(exist_label, { x: add, y: addY });
               }
-              const newSequenceFlowAttrsIncoming = {
-                type: "bpmn:SequenceFlow",
-              };
-              /*toAddAgain.forEach((item) => {
-                modeling.createConnection(
-                  item,
-                  element,
-                  newSequenceFlowAttrsIncoming,
-                  element.parent
-                );
-              });*/
             }
           }
         }
