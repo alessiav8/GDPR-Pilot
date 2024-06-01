@@ -1462,12 +1462,6 @@ function addActivityBetweenTwoElements(
   secondElement,
   newElement
 ) {
-  console.log(
-    "addActivityBetweenTwoElements",
-    firstElement,
-    secondElement,
-    newElement
-  );
   const modeling = viewer.get("modeling");
   const getBoundsNew = newElement.di.bounds;
 
@@ -1491,7 +1485,7 @@ function addActivityBetweenTwoElements(
       secondElement.parent
     );
   } else {
-    const newX = firstElement.x + newElement.width;
+    const newX = (secondElement.x + firstElement.x) / 2;
     var newY =
       firstElement.type == "bpmn:StartEvent" ||
       firstElement.type == "bpmn:EndEvent" ||
@@ -1546,6 +1540,7 @@ function addActivityBetweenTwoElements(
       secondElement.parent
     );
   }
+  alienator.trigger([firstElement, newElement, secondElement], "middle");
   reorderDiagram();
 }
 //
@@ -1621,7 +1616,6 @@ function hasOutgoing(element) {
       outgoing.type == "bpmn:SequenceFlow" ||
       outgoing.type == "bpmn:sequenceFlow"
   );
-  console.log("outgoingSet", outgoingSet);
 
   const set = new Array();
   if (outgoingSet.length > 0) {
