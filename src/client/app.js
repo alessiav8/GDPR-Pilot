@@ -204,7 +204,7 @@ export async function callChatGpt(message) {
     const response = await axios.get(url, {
       params: {
         message:
-          "Consider to be a GDPR(General Data Protection Regulation) expert that have to analyze how much a process is GDPR compliant." +
+          "Consider to be a GDPR(General Data Protection Regulation) expert that have to analyze how much a process is GDPR compliant. When I talk about different participant, you have to find in the xml different tags '<bpmn:Participant>' that communicates with message flow between them self. The activities named 'Right to be Informed and to consent' must be taken into account just for the right to consent analysis, if i provide some other definition, like 'Right to access' or 'Right to Object' ecc.. please ignore those activities. " +
           message,
       },
     });
@@ -1692,15 +1692,15 @@ function reOrderSubSet(sub) {
         const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
         var add = compare - diff; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
-        if (
+        /* if (
           !(
             isInRange(previousElement.y, element.y) ||
             isInRange(element.y, previousElement.y)
-          ) //se non rispetta i range fissati per distanza y
+          ) //se non rispetta i range fissati per distanza y non muovere x
         ) {
           addY = 150 - (element.y - previousElement.y); //aggiusta y ma non muovere x
           add = 0;
-        }
+        }*/
         var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
         incomingElementSet = incomingElementSet.filter(
           (elem) =>
