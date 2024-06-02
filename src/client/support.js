@@ -161,17 +161,47 @@ async function predictionChatGPT(id) {
             description +
             "and the provided XML of the process:" +
             currentXML +
-            ".\n\nDefinition of Right to Access: At any moment, the Data Subject (the person the data is about) can request access to their personal data from the Data Controller (the entity that collects and processes the data). The Data Controller must satisfy these requests.\n\nTask: Check if there is an activity where the Data Subject requests access to their personal data from the Data Controller. This request must be initiated by the Data Subject and addressed to the Data Controller, not the other way around.\n\nInstructions:\n1. Identify if there is an activity where the Data Subject requests their personal data from the Data Controller.\n2. Check if this activity involves two different participants: the Data Subject and the Data Controller. They must be different participants in the BPMN model (tagged as 'bpmn:Participant').\n3. Ensure that the sequence flow indicates the request originates from the Data Subject to the Data Controller, not the reverse.\n4. If you find such an activity, reply 'Yes'.\n5. If you do not find such an activity or if the process does not contain participants, reply 'No'.\n\nMotivation: Explain your answer briefly. Ensure that the activity you identify clearly shows a request from the Data Subject to the Data Controller and involves separate participants."
+            ".\n\nDefinition of Right to Access: At any moment, the Data Subject (the person the data is about) can request access and rectify to their personal data from the Data Controller (the entity that collects and processes the data). The Data Controller must satisfy these requests.\n\nTask: Check if there is an activity where the Data Subject requests access to their personal data from the Data Controller. This request must be initiated by the Data Subject and addressed to the Data Controller, not the other way around.\n\nInstructions:\n1. Identify if there is an activity where the Data Subject requests their personal data from the Data Controller.\n2. Check if this activity involves two different participants: the Data Subject and the Data Controller. They must be different participants in the BPMN model (tagged as 'bpmn:Participant').\n3. Ensure that the sequence flow indicates the request originates from the Data Subject to the Data Controller, not the reverse.\n4. If you find such an activity, reply 'Yes'.\n5. If you do not find such an activity or if the process does not contain participants, reply 'No'.\n\nMotivation: Explain your answer briefly. Ensure that the activity you identify clearly shows a request from the Data Subject to the Data Controller and involves separate participants."
         );
         const hasRightToAccess = hasRightToAccessReq.content;
         console.log("Has Right To access?", hasRightToAccess);
         addTextBelowButton(id, hasRightToAccess);
         break;
       case "dropDownD":
+        const hasRightOfPortabilityReq = await callChatGpt(
+          "Analyze the given BPMN process described below:" +
+            description +
+            "this is the XML of the process where you can analyze every connection and every activity. Make the analysis of the process considering the name of the activities you find in the process and by considering the logic behind the process itself." +
+            currentXML +
+            ".\n\nDefinition of Right of Portability: At any moment, the Data Subject (the person the data is about) can ask for the portability of the data associated with her to third parties and the Data Controller (the entity that collects the data of the subject) has the obligation to satisfy this request.\n\nTask: Check if there is a clearly separation between the data controller and the data subject, they should be impersonated by two different participant (xml tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject requests the portability of its personal data to the Data controller. The request must be started by the data subject and must arrive at the Data Controller, check the Message Flow in the xml. If this is the case, print just 'Yes' as answer. If this is not the case, search for an activity which from the name, makes you guess that it handles the user's right of portability. an example of a name might be 'Right of portability handler' or 'Right of Portability'. If there aren't two different participant that can impersonate Data Subject and Data controller, just search for an activity which from the name, makes you guess that it handles the user's right of portability,like in the previous case. If you find it print just 'Yes' as answer, otherwise, print just 'No' as answer.\n Another case in which you can print 'Yes' as answer is when there is an activity in which tis requested the permission to port the data (data portability) and the process has a gateway for which the data portability proceeds if and only if the permission is granted. \n2. In every other case, or in case of insecurity, print 'No' as answer, give a brief motivation for you answer "
+        );
+        const hasRightOfPortability = hasRightOfPortabilityReq.content;
+        console.log("hasRightOfPortabilityReq?", hasRightOfPortability);
+        addTextBelowButton(id, hasRightOfPortability);
         break;
       case "dropDownE":
+        const hasRightToRectifyReq = await callChatGpt(
+          "Analyze the given BPMN process described below:" +
+            description +
+            "and the provided XML of the process:" +
+            currentXML +
+            ".\n\nDefinition of Right to Rectify: At any moment, the Data Subject (the person the data is about) can request rectify her personal data to the Data Controller (the entity that collects and processes the data). The Data Controller must satisfy these requests.\n\nTask: Check if there is an activity where the Data Subject requests a modification of her personal data to the Data Controller. This request must be initiated by the Data Subject and addressed to the Data Controller, not the other way around, check the Message Flow in the xml.\n\nInstructions:\n1. Identify if there is a clearly separation between the data subject and the data controller, they must be two different participants (xml tag 'bpmn:Participant' or 'bpmnio:Participant')and if exists an activity where the Data Subject requests their personal data from the Data Controller. If there is, print 'Yes' as answer.\n2 If you do not find such an activity or if the process does not contain participants, check if in the xml exists an event in which arrive a request of rectification and if it is satisfied, you can print 'Yes' otherwise, also in case of insecurity, just print 'No' .\n\nMotivation: Explain your answer briefly. Ensure that the activity you identify clearly shows a request from the Data Subject to the Data Controller and involves separate participants."
+        );
+        const hasRightToRectify = hasRightToRectifyReq.content;
+        console.log("Has Right To access?", hasRightToRectify);
+        addTextBelowButton(id, hasRightToRectify);
         break;
       case "dropDownF":
+        const hasRightToObjectReq = await callChatGpt(
+          "Analyze the given BPMN process described below:" +
+            description +
+            "this is the XML of the process where you can analyze every connection and every activity. Make the analysis of the process considering the name of the activities you find in the process and by considering the logic behind the process itself." +
+            currentXML +
+            ".\n\nDefinition of Right to Object: At any moment, the Data Subject (the person the data is about) has the right to object to certain types of data processing such as direct marketing.The Data Controller (the entity that collects the data of the subject) shall no longer process the personal data unless she demonstrates compelling legitimate grounds for the processing that override the interests and rights of the Data Subject.\n\nTask: Check if there is a clearly separation between the data controller and the data subject, they should be impersonated by two different participant (xml tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicate her will to object to a certain data processing, also check if the data controller welcomes the request of the data subject and stop that processing. If you find this behavior print 'Yes' as answer. If the Data controller does not welcomes the request of the data subject print 'No' as answer.If there aren't two different participant in the xml, check if there is the request of consent if there is some activity that by the name indicates some kind of data processing and check if the behavior depends on the answer received and so, if there is a gateway, for which if the data processing is allowed, the activity in which is executed is runned, otherwise is stopped. If you find this condition, you can print 'Yes' as answer in every other case, also in case of insecurity, print 'No' as answer. "
+        );
+        const hasRightToObject = hasRightToObjectReq.content;
+        console.log("hasRightToObject?", hasRightToObject);
+        addTextBelowButton(id, hasRightToObject);
         break;
       case "dropDownG":
         break;
@@ -539,7 +569,7 @@ async function createUlandSelectActivities(
           c1.className = "col-1";
 
           const c2 = document.createElement("div");
-          c2.className = "col-6";
+          c2.className = "col-7";
 
           var c3 = null;
 
@@ -584,7 +614,7 @@ async function createUlandSelectActivities(
               c3 = document.createElement("div");
               c3.id = "c3_checkbox_" + activity.id;
               c3.innerHTML = "Suggested by OpenAI";
-              c3.className = "col-3 checkbox-suggested";
+              c3.className = "col-2 checkbox-suggested";
               c3.style.marginTop = "2%";
             }
           }

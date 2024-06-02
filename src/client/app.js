@@ -1105,6 +1105,7 @@ function handleUndoGdpr() {
                     removeConsentFromActivity(activity, "consent_");
                   }
                 });
+                editMetaInfo("B", null);
                 break;
 
               case "questionC":
@@ -1117,6 +1118,8 @@ function handleUndoGdpr() {
               case "questionL":
                 const id = questionToId(question);
                 deleteGdprPath(id);
+                const letter = question[question.length - 1];
+                editMetaInfo(letter, null);
                 break;
               default:
                 break;

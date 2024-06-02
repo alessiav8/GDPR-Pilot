@@ -461,8 +461,8 @@ export function createWithOnlyQuestionXExpandable(letter, questions) {
         createDropDown(
           "dropDownF",
           false,
-          "Withdraw the consent",
-          "Do you allow users to withdraw the consent?",
+          "Consent to data processing",
+          "Do you allow users to object to data processing?",
           disabled,
           value
         );
@@ -476,8 +476,8 @@ export function createWithOnlyQuestionXExpandable(letter, questions) {
         createDropDown(
           "dropDownG",
           false,
-          "Access to automated processing ",
-          "Do you allow users to access to object to automated processing?",
+          "Consent to automated processing",
+          "Do you allow users to object to automated processing?",
           disabled,
           value
         );
