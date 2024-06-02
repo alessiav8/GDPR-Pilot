@@ -578,7 +578,8 @@ async function createUlandSelectActivities(
             );
             if (
               activitySuggested &&
-              activitySuggested.some((act) => act === activity.id)
+              activitySuggested.some((act) => act === activity.id) &&
+              !document.getElementById("c3_checkbox_" + activity.id)
             ) {
               c3 = document.createElement("div");
               c3.id = "c3_checkbox_" + activity.id;

@@ -169,7 +169,7 @@ export async function nodropDownA() {
 
 //handle click no for question B
 export async function nodropDownB(activities_already_selected, isLast) {
-  //editMetaInfo("B", setJsonData("No", []));
+  editMetaInfo("B", setJsonData("No", false));
   await createUlandSelectActivities(
     "#dropDownB",
     "Select the activities where you request personal data for the first time",
