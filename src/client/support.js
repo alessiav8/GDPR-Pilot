@@ -204,12 +204,64 @@ async function predictionChatGPT(id) {
         addTextBelowButton(id, hasRightToObject);
         break;
       case "dropDownG":
+        const hasRightToObjectAutomatedProcessingReq = await callChatGpt(
+          "Analyze the given BPMN process described below:" +
+            description +
+            "this is the XML of the process where you can analyze every connection and every activity. Make the analysis of the process considering the name of the activities you find in the process and by considering the logic behind the process itself." +
+            currentXML +
+            ".\n\nDefinition of Right to Object to Automated Processing: At any moment, the Data Subject (the person the data is about) has the right to a decision based solely on automated processing, and that may significantly affect the Data Subject's freedoms, such as profiling.The Data Controller (the entity that collects the data of the subject) should implement suitable measure to safeguard the data subject's right and, if needed, stop the automated processing of personal data.\n\nTask: Check if there is a clearly separation between the data controller and the data subject, they should be impersonated by two different participant (xml tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicate her will to object to automated processing, also check if the data controller welcomes the request of the data subject and stop that automated processing or if it implements suitable measures to safeguard the data subject. If you find this behavior print 'Yes' as answer. If the Data controller does not welcomes the request of the data subject or if it does nothing after the arrive of the request,print 'No' as answer.If there aren't two different participant in the xml, check if there is the some event that report a request to stop/object the automated processing and if there is a gateway, for which if the automated processing request was welcomed, the activity in which is executed is run, otherwise is stopped. If you find this condition, you can print 'Yes' as answer. You can also print 'Yes' if you fins some activity that by the name indicates some kind of right to object to automated processing handler. in every other case, also in case of insecurity, print 'No' as answer. "
+        );
+        const hasRightToObjectAutomatedProcessing =
+          hasRightToObjectAutomatedProcessingReq.content;
+        console.log(
+          "hasRightToObjectAutomatedProcessing?",
+          hasRightToObjectAutomatedProcessing
+        );
+        addTextBelowButton(id, hasRightToObjectAutomatedProcessing);
         break;
       case "dropDownH":
+        const hasRightToRestrictProcessingReq = await callChatGpt(
+          "Analyze the given BPMN process described below:" +
+            description +
+            "this is the XML of the process where you can analyze every connection and every activity. Make the analysis of the process considering the name of the activities you find in the process and by considering the logic behind the process itself." +
+            currentXML +
+            ".\n\nDefinition of Right to Restrict Processing:It gives a Data Subject (the person the data is about) the right to limit the way an organization(data controller) uses her personal data, rather than requesting erasure.\n\nTask: Check if there is a clearly separation between the data controller and the data subject, they should be impersonated by two different participant (xml tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicate her will to restrict the processing of her data, also check if the data controller welcomes the request of the data subject and restrict the data for which the processing is allowed. If you find this behavior print 'Yes' as answer. If the Data controller does not welcomes the request of the data subject or if it does nothing after the arrive of the request,print 'No' as answer. If there aren't two different participant in the xml, check if there is some event that report a request to restrict the processing of the data and if there is a gateway, for which if the restrict processing request was welcomed, there is some activity for which the name indicates some restriction begin executed on the data of the subject processed. If you find this condition, you can print 'Yes' as answer. You can also print 'Yes' if you fins some activity that by the name indicates some kind of right to restrict processing handler. in every other case, also in case of insecurity, print 'No' as answer. "
+        );
+        const hasRightToRestrictProcessing =
+          hasRightToRestrictProcessingReq.content;
+        console.log(
+          "hasRightToRestrictProcessing?",
+          hasRightToRestrictProcessing
+        );
+        addTextBelowButton(id, hasRightToRestrictProcessing);
         break;
       case "dropDownI":
+        const hasRightToBeForgottenReq = await callChatGpt(
+          "Analyze the given BPMN process described below:" +
+            description +
+            "this is the XML of the process where you can analyze every connection and every activity. Make the analysis of the process considering the name of the activities you find in the process and by considering the logic behind the process itself." +
+            currentXML +
+            ".\n\nDefinition of Right to be Forgotten:If the Data Subject (the person the data is about) wants her data to be deleted, the Data controller has the obligation to satisfy this request.\n\nTask: Check if there is a clearly separation between the data controller and the data subject, they should be impersonated by two different participant (xml tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicate her will to be forgotten or where requesting the deletion of its data, also check if the data controller welcomes the request of the data subject and delete the data of the data subject. If you find this behavior print 'Yes' as answer. If the Data controller does not welcomes the request of the data subject or if it don't do anything the arrive of the request,print 'No' as answer. If there aren't two different participant in the xml, check if there is some event that report a request of the data subject to delete/remove her data  and if there is a gateway, for which if the deletion data request was welcomed, there is some activity for which the name indicates the deletion of the data was executed . If you find this condition, you can print 'Yes' as answer. You can also print 'Yes' if you fins some activity that by the name indicates some kind of right to be forgotten handler. in every other case, also in case of insecurity, print 'No' as answer. "
+        );
+        const hasRightToBeForgotten = hasRightToBeForgottenReq.content;
+        console.log("hasRightToBeForgotten?", hasRightToBeForgotten);
+        addTextBelowButton(id, hasRightToBeForgotten);
         break;
       case "dropDownL":
+        const hasRightToBeInformedAboutDataBreachesReq = await callChatGpt(
+          "Analyze the given BPMN process described below:" +
+            description +
+            "this is the XML of the process where you can analyze every connection and every activity. Make the analysis of the process considering the name of the activities you find in the process and by considering the logic behind the process itself." +
+            currentXML +
+            ".\n\nDefinition of Right to be Informed about data breaches :In case of data breach the Data controller has to communicate it within 72 hours to the National Authority as well as to the Data Subject. This constraint is not subject to any de minimis standard ,thus any data breach,regardless of its magnitude, needs to be always communicated along with the actions that will be performed to limit the damage.The only exception is the case in which the stolen data is not usable (ex encrypted).However,also in this case, the National Authority can force the Data Controller to communicate the breach to the data Subject.\n\nTask: Check if there is a clearly separation between the data controller, the national authority and the data subject, they should be impersonated by three different participant (xml tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Controller communicate the data breaches to the national authority and to the data subject. If you find this behavior print 'Yes' as answer. If there aren't three different participant in the xml, check if there is some events that trigger the send of a message to the national authority and to the data subject, to inform them about the data breaches,in that case, you can print 'Yes' as response.  You can also print 'Yes' if you fins some activity that by the name indicates some kind of data breach handler. in every other case, also in case of insecurity, print 'No' as answer. "
+        );
+        const hasRightToBeInformedAboutDataBreaches =
+          hasRightToBeInformedAboutDataBreachesReq.content;
+        console.log(
+          "hasRightToBeForgotten?",
+          hasRightToBeInformedAboutDataBreaches
+        );
+        addTextBelowButton(id, hasRightToBeInformedAboutDataBreaches);
         break;
     }
   } catch (e) {
