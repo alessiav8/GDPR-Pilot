@@ -84,17 +84,24 @@ export async function openDrop(drop, type, open) {
 
 function addTextBelowButton(Id, answer) {
   var buttonId;
-  if (answer.includes("yes") || answer.includes("Yes")) {
-    buttonId = "yes_" + Id;
-  } else if (answer.includes("No") || answer.includes("no")) {
+  if (answer.match(/\[.*?\]/)) {
     buttonId = "no_" + Id;
-  } else {
-    let array = JSON.parse(answer) ? JSON.parse(answer) : null;
-    if (array) {
-      buttonId = "no_" + Id;
-      console.log("Array of activities", array);
-      localStorage.setItem("activities_suggested", JSON.stringify(array));
+    const arrayMatch = answer.match(/\[.*?\]/);
+    if (arrayMatch) {
+      try {
+        const array = JSON.parse(arrayMatch);
+        if (array) {
+          console.log("Array of activities", array);
+          localStorage.setItem("activities_suggested", JSON.stringify(array));
+        }
+      } catch (e) {
+        console.error("Errore nel parsing dell'array:", e);
+      }
     }
+  } else if (answer.includes("yes") || answer.includes("Yes")) {
+    buttonId = "yes_" + Id;
+  } else {
+    buttonId = "no_" + Id;
   }
   const button = document.getElementById(buttonId);
   if (button && !document.getElementById("p_" + button)) {
@@ -125,7 +132,7 @@ async function predictionChatGPT(id) {
             description +
             " and the xml",
           +currentXML,
-          " an example of activities that involves personal data are: Request personal data, request name and surname, request phone number ecc..."
+          " an example of activities that involves personal data are: Request personal data, request name and surname, request phone number ecc... the answer should be or ['Activity_id_1',...] or [] no one world more"
         );
         const hasPersonalData = hasPersonalDataReq.content;
         console.log("Prediction", hasPersonalData);
@@ -134,23 +141,27 @@ async function predictionChatGPT(id) {
         break;
       case "dropDownB":
         const hasConsentReq = await callChatGpt(
-          "Given a bpmn process of which this is the description:" +
+          "Analyze the given BPMN process described below:" +
             description +
-            "Given the definition of Consent to Use the Data: when retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If you ask the consent for a certain set of data you can use them without asking the consent again. Considering that,the consent must be asked just for handle personal data of the user not anything else!and personal data are the information that identifies or makes identifiable, directly. Particularly important are:- data that allow direct identification-such as biographical data (for example: first and last names), pictures, etc. - and data that allow indirect identification-such as an identification number (e.g., social security number, IP address, license plate number);- data falling into special categories: these are the so-called sensitive data, i.e., data revealing racial or ethnic origin, religious or philosophical beliefs, political opinions, trade union membership, relating to health or sex life. Regulation  also included genetic data, biometric data, and data relating to sexual orientation in the notion;- data relating to criminal convictions and offenses: these are so-called judicial data, i.e., those that may reveal the existence of certain judicial measures subject to entry in the criminal record (e.g., final criminal convictions, conditional release, prohibition or obligation to stay, alternative measures to detention) or the quality of defendant or suspect.The activity must directly involve some personal data to be considered in the answer  and for those data must miss the request of consent if some activity in a previous moment has requested for consent i don't need to request the consent again. Which activities require the request for consent before being executed among the one that are in this list:" +
+            "and the provided XML of the process:" +
+            currentXML +
+            ".\n\nDefinition of Consent to Use the Data: When retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If consent has already been obtained for a certain set of data, it is not necessary to ask for consent again. Consent is required only for handling personal data. Personal data includes:\n- Biographical data (e.g., first and last names, pictures)\n- Identification numbers (e.g., social security number, IP address, license plate number)\n- Sensitive data (e.g., racial or ethnic origin, religious beliefs, political opinions, trade union membership, health or sex life)\n- Genetic, biometric data, and data related to sexual orientation\n- Judicial data (e.g., criminal convictions and offenses)\n\nTask: Identify which activities require consent before execution based on the provided list of activities. Ensure that the consent is not already present in the process.\n\nInstructions:\n1. Review the provided list of activities:" +
             activitiesSet +
-            ".For the analysis please consider just the name of the activity.  Print just an array with the id (each activity has a name and an id in the list i provide to you) of the activities that requires the consent before and for which this consent is not already present in the process, among the activities in the set. if the consent is not necessary for no activity just print an empty array. If you print an array with more than one activity they had to regard different sets of personal data, otherwise print the first that appears in the process"
+            ".\n2. Determine which activities handle personal data and require consent. This analysis should be based on the name given to the activities and their descriptions. You can find the name in the XML in the businessObject or in the list provided. To consider an activity, the name of the activity must clearly suggest that the activity handles personal data from the data subject.\n3. Ensure that the consent for these activities has not been requested previously in the process.\n4. If multiple activities require consent, only include the first one that appears for each unique set of personal data.\n5. Print an array with the IDs of activities that require consent and for which consent is not already present. Only include IDs from the provided list.\n6. If no activities require consent, print an empty array.\n\nAdditional Instructions:\n- Analyze the names and descriptions of the activities carefully to understand their purpose. Ensure that the activities indeed handle personal data as defined above.\n- Consider the entire process to ensure accuracy.\n\nOutput: Provide a precise answer based on the analysis of the BPMN process and the list of activities. The answer must be or an array with the activities or an empty array [], nothing more" +
+            "\n\n example that could be considered activity that handles personal data from the data subject is like: 'Request Personal Data', 'Request Name and Surname','Request City of provenience, City of Birth' ecc... the name must indicates the request of some personal data directly, you don't have to suppose it, if is not clearly indicated in the name ignore that activity, and before the activity, must miss a consent request in the process "
         );
+
         const hasConsent = hasConsentReq.content;
         console.log("Has Consent?", hasConsent);
         addTextBelowButton(id, hasConsent);
         break;
       case "dropDownC":
         const hasRightToAccessReq = await callChatGpt(
-          "Given a bpmn process of which this is the description:" +
+          "Analyze the given BPMN process described below:" +
             description +
-            "and for which this is the process model" +
+            "and the provided XML of the process:" +
             currentXML +
-            "Given the definition of Right to Access: at any moment, the Data Subject can access the personal data associated to her. As a result, the Data Controller has the obligation to satisfy these requests. And the definition of Data subject that is the person the data is about instead, the data controller collects and stores data from the data subject and that determines the purposes of processing such data (In this sense, is obvious that the data controller will ask the personal data to the subject). Consider carefully who is the data subject and who is the data controller. Is present in the bpmn model an activity in which the data subject request back (the request must be started from the data subject and should arrive to the data controller that should allow this action) its personal data (already requested by the Data controller in a previous moment) or not? Or in the negative case, is present an activity that handle the right to access the data like an event subprocess ? If not reply 'No' and nothing else, otherwise replay 'Yes' and nothing else. if you are not sure just print No. To give a correct answer, analyze also the list of activities present in the process. The presence of the activity in which the data controller ask for the personal data to the data subject, should not be taken into account because you must find some activity that works in the other verse, from the data subject to the data controller and not from the data controller to the data subject. Check the SequenceFlow connected to the activities you think that grant the right to access. Check the source ref and the target ref. The source ref should be the data subject. and check that the activity is not just the response to the request of data initiated by the data controller. give me a motivation for your answer"
+            ".\n\nDefinition of Right to Access: At any moment, the Data Subject (the person the data is about) can request access to their personal data from the Data Controller (the entity that collects and processes the data). The Data Controller must satisfy these requests.\n\nTask: Check if there is an activity where the Data Subject requests access to their personal data from the Data Controller. This request must be initiated by the Data Subject and addressed to the Data Controller, not the other way around.\n\nInstructions:\n1. Identify if there is an activity where the Data Subject requests their personal data from the Data Controller.\n2. Check if this activity involves two different participants: the Data Subject and the Data Controller. They must be different participants in the BPMN model (tagged as 'bpmn:Participant').\n3. Ensure that the sequence flow indicates the request originates from the Data Subject to the Data Controller, not the reverse.\n4. If you find such an activity, reply 'Yes'.\n5. If you do not find such an activity or if the process does not contain participants, reply 'No'.\n\nMotivation: Explain your answer briefly. Ensure that the activity you identify clearly shows a request from the Data Subject to the Data Controller and involves separate participants."
         );
         const hasRightToAccess = hasRightToAccessReq.content;
         console.log("Has Right To access?", hasRightToAccess);
@@ -433,6 +444,16 @@ export function questionDone(dD) {
 }
 //
 
+function removeC3() {
+  const c3Set = document.querySelectorAll(".checkbox-suggested");
+  if (c3Set.length > 0) {
+    c3Set.forEach((c3) => {
+      c3.remove();
+      c3 = null;
+    });
+  }
+}
+
 //function to create ul and handle activity selection
 async function createUlandSelectActivities(
   dropDownID,
@@ -442,8 +463,9 @@ async function createUlandSelectActivities(
   cleanSelection();
   const dropDown = document.querySelector(dropDownID);
   const space = document.querySelector("#areaDropDowns");
-
+  var activityFromMeta = [];
   const collapse = dropDown.querySelector(".collapse");
+
   if (collapse) {
     while (collapse.firstChild) {
       collapse.removeChild(collapse.firstChild);
@@ -460,6 +482,7 @@ async function createUlandSelectActivities(
         //se il drop di C è aperto
         getAnswerQuestionX("questionB").then((result) => {
           if (result && result.length > 0) {
+            activityFromMeta = result;
             result.forEach((act) => {
               colorActivity(act.id);
             });
@@ -499,7 +522,6 @@ async function createUlandSelectActivities(
 
     try {
       const activities = await getActivities();
-      console.log("activities: ", activities);
       if (activities.length === 0) {
         divActivities.style.display = "flex";
         divActivities.style.justifyContent = "center";
@@ -511,12 +533,15 @@ async function createUlandSelectActivities(
         activities.forEach((activity) => {
           const row = document.createElement("div");
           row.className = "row";
+          row.id = "row_checkbox_" + activity.id;
 
           const c1 = document.createElement("div");
           c1.className = "col-1";
 
           const c2 = document.createElement("div");
-          c2.className = "col-8";
+          c2.className = "col-6";
+
+          var c3 = null;
 
           const label = document.createElement("label");
           label.textContent =
@@ -543,6 +568,27 @@ async function createUlandSelectActivities(
             }
           }
 
+          //if the activity is suggested by AI
+          if (
+            !activities_already_selected ||
+            activities_already_selected.length == 0
+          ) {
+            const activitySuggested = JSON.parse(
+              localStorage.getItem("activities_suggested")
+            );
+            if (
+              activitySuggested &&
+              activitySuggested.some((act) => act === activity.id)
+            ) {
+              c3 = document.createElement("div");
+              c3.id = "c3_checkbox_" + activity.id;
+              c3.innerHTML = "Suggested by OpenAI";
+              c3.className = "col-3 checkbox-suggested";
+              c3.style.marginTop = "2%";
+            }
+          }
+          //
+
           checkbox.addEventListener("click", function (event) {
             if (event.target.checked == true) {
               colorActivity(event.target.value);
@@ -556,6 +602,7 @@ async function createUlandSelectActivities(
 
           row.appendChild(c1);
           row.appendChild(c2);
+          if (c3) row.appendChild(c3);
 
           form.appendChild(row);
         });
@@ -592,6 +639,7 @@ async function createUlandSelectActivities(
 
           // Call the questionDone function
           questionDone("#dropDownB");
+          removeC3();
 
           try {
             // Get the setted activity

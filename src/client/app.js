@@ -203,7 +203,9 @@ export async function callChatGpt(message) {
   try {
     const response = await axios.get(url, {
       params: {
-        message: message,
+        message:
+          "Consider to be a GDPR(General Data Protection Regulation) expert that have to analyze how much a process is GDPR compliant." +
+          message,
       },
     });
     return response.data;
@@ -1633,7 +1635,6 @@ function hasOutgoing(element) {
 
 function isInRange(number, min) {
   const max = min + 70;
-  console.log("isInRange?", number >= min && number <= max);
   return number >= min && number <= max;
 }
 
@@ -1674,9 +1675,6 @@ function reOrderSubSet(sub) {
   sub.forEach((element) => {
     //get the set of elements that precede the element
     const previousElementSet = getPreviousElement(element);
-
-    console.log("previousElementSet", previousElementSet);
-
     if (previousElementSet.length > 0) {
       //se ci sono elementi prima
       previousElementSet.forEach((previousElement) => {
