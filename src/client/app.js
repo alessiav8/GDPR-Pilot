@@ -8,6 +8,7 @@ import BpmnAlignElements from "bpmn-js/lib/features/align-elements/BpmnAlignElem
 import BpmnModdle from "bpmn-moddle";
 import BpmnModeler from "bpmn-js/lib/Modeler";
 import AlignElements from "diagram-js/lib/features/align-elements/AlignElements.js";
+import DistributeElements from "diagram-js/lib/features/distribute-elements/DistributeElements.js";
 
 import { getNewShapePosition } from "bpmn-js/lib/features/auto-place/BpmnAutoPlaceUtil.js";
 import camundaModdle from "camunda-bpmn-moddle/resources/camunda.json";
@@ -107,6 +108,7 @@ var search = new URLSearchParams(window.location.search);
 var browserNavigationInProgress;
 var current_diagram = diagram_two_activities;
 var alienator;
+var distributor;
 
 //gdpr questions
 const YA = document.getElementById("yes_dropDownA");
@@ -268,6 +270,7 @@ async function loadDiagram(diagram) {
             secondViewerOnly
           );
         alienator = new AlignElements(modeling, rules);
+        distributor = new DistributeElements(modeling, rules);
         // changeID();
         checkMetaInfo();
         console.log("elementRegistry: ", elementRegistry);
@@ -1665,10 +1668,12 @@ export function reorderDiagram() {
     has_Collaboration.forEach((part) => {
       const subSet = getOrderedSub(part.children);
       reOrderSubSet(subSet);
+      distributor.trigger(subset, "vertical");
     });
   } else {
     const sub = getOrderedSub(allElements);
     reOrderSubSet(sub);
+    distributor.trigger(sub, "vertical");
   }
   viewer.get("canvas").zoom("fit-viewport");
 }
