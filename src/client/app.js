@@ -1668,12 +1668,12 @@ export function reorderDiagram() {
     has_Collaboration.forEach((part) => {
       const subSet = getOrderedSub(part.children);
       reOrderSubSet(subSet);
-      distributor.trigger(subset, "vertical");
+      //distributor.trigger(subset, "vertical");
     });
   } else {
     const sub = getOrderedSub(allElements);
     reOrderSubSet(sub);
-    distributor.trigger(sub, "vertical");
+    //distributor.trigger(sub, "vertical");
   }
   viewer.get("canvas").zoom("fit-viewport");
 }

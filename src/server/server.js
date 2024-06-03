@@ -1,44 +1,50 @@
-const express = require('express');
-const cors = require('cors'); 
+const express = require("express");
+const cors = require("cors");
 const app = express();
-const axios = require('axios');
-const OpenAI = require('openai');
+const axios = require("axios");
+const OpenAI = require("openai");
 
-app.use(cors({
-  origin: 'http://localhost:8080',
-  methods: ['GET'], 
-  allowedHeaders: ['Content-Type'],
-}));
+app.use(
+  cors({
+    origin: "http://localhost:8080",
+    methods: ["GET"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
 
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3000;
 
-const API_KEY = process.env.API_KEY
+const API_KEY = process.env.API_KEY;
 
 const openai = new OpenAI({
-    apiKey: API_KEY,
+  apiKey: API_KEY,
 });
 
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:8080');
+  res.header("Access-Control-Allow-Origin", "http://localhost:8080");
   next();
 });
 
-app.get('/api/sensitive-data', async (req, res) => {
-
-  const userMessage = req.query.message || 'Hello!';
+app.get("/api/sensitive-data", async (req, res) => {
+  const userMessage = req.query.message || "Hello!";
   try {
     const completion = await openai.chat.completions.create({
-      messages: [
-        { role: "user", content: userMessage }
-      ],
-      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: userMessage }],
+      model: "gpt-3.5-turbo-16k",
     });
 
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080'); // Aggiungi l'header CORS
-    res.json(completion.choices[0].message);  
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:8080"); // Aggiungi l'header CORS
+    res.json(completion.choices[0].message);
   } catch (error) {
-    console.error('Errore durante la richiesta di informazioni sensibili:', error);
-    res.status(500).json({ error: 'Errore durante il recupero delle informazioni sensibili' });
+    console.error(
+      "Errore durante la richiesta di informazioni sensibili:",
+      error
+    );
+    res
+      .status(500)
+      .json({
+        error: "Errore durante il recupero delle informazioni sensibili",
+      });
   }
 });
 
