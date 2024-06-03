@@ -33,18 +33,16 @@ app.get("/api/sensitive-data", async (req, res) => {
       model: "gpt-3.5-turbo-16k",
     });
 
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:8080"); // Aggiungi l'header CORS
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:8080");
     res.json(completion.choices[0].message);
   } catch (error) {
     console.error(
       "Errore durante la richiesta di informazioni sensibili:",
       error
     );
-    res
-      .status(500)
-      .json({
-        error: "Errore durante il recupero delle informazioni sensibili",
-      });
+    res.status(500).json({
+      error: "Errore durante il recupero delle informazioni sensibili",
+    });
   }
 });
 
