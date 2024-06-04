@@ -1,6 +1,6 @@
 #canvas {
   height: 86vh;
-  width: 98.2%;
+  width: 98.3%;
   background-color: #f0f0f0;
   display: flex;
   justify-content: center;
@@ -9,6 +9,38 @@
   margin-left: 3vh;
   margin-right: 3vh;
   border-radius: 4px;
+}
+
+#settings_area {
+  cursor: pointer;
+  width: 97%;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 1vh;
+  margin-left: 3vh;
+  margin-right: 3vh;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
+  gap: 10px;
+}
+
+.status_row {
+  height: 3vh;
+  font-size: 2vh;
+  margin-left: 3vh;
+  margin-right: 3vh;
+  width: 97% !important;
+  background-color: #10ad74;
+  margin-top: 1vh;
+  margin-bottom: 0vh;
+  border-radius: 0.4vh;
+  width: auto;
+  text-align: center;
+  color: white;
+  font-weight: bold;
 }
 
 .canvas-style {
@@ -68,40 +100,8 @@
   height: 100%;
 }
 
-.status_row {
-  height: 3vh;
-  font-size: 2vh;
-  margin-left: 3vh;
-  margin-right: 3vh;
-  width: 97% !important;
-  background-color: #10ad74;
-  margin-top: 1vh;
-  margin-bottom: 0vh;
-  border-radius: 0.4vh;
-  width: auto;
-  text-align: center;
-  color: white;
-  font-weight: bold;
-}
-
 #status_setting {
   margin-left: 2vh;
-}
-
-#settings_area {
-  cursor: pointer;
-  width: 97%;
-  padding: 8px 12px;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  text-align: center;
-  text-decoration: none;
-  margin-top: 1vh;
-  margin-left: 3vh;
-  margin-right: 3vh;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
-  gap: 10px;
 }
 
 .button-icon {
