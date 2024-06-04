@@ -133,7 +133,7 @@ function addTextBelowButton(Id, answer) {
 //function that send the right message to chatGPT in order to get the prediction about the question
 //id: the id of the drop down related to the question ex. dropDownA
 async function predictionChatGPT(id) {
-  try {
+  /*try {
     const currentXML = await getXMLOfTheCurrentBpmn();
     const descriptionReq = await callChatGpt(
       "I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." +
@@ -290,7 +290,7 @@ async function predictionChatGPT(id) {
     }
   } catch (e) {
     console.error("Error in prediction chatGPT", e);
-  }
+  }*/
 }
 
 //function to create a drop down
@@ -391,7 +391,7 @@ async function createDropDown(
     NoButton.style.border = "0.3 solid #10ad74";
   }
 
-  YesButton.addEventListener("click", (event) => {
+  YesButton.addEventListener("click", async function (event) {
     switch (id) {
       case "dropDownA":
         yesdropDownA();
@@ -427,6 +427,11 @@ async function createDropDown(
         break;
     }
 
+    var comp = await checkCompleteness();
+    console.log("Comp", comp);
+    if (comp) {
+      setGdprButtonCompleted(true);
+    }
     if (valueButton == null) {
       openDrop(id, "yes", true);
     } else {
@@ -434,7 +439,7 @@ async function createDropDown(
     }
   });
 
-  NoButton.addEventListener("click", (event) => {
+  NoButton.addEventListener("click", async function (event) {
     switch (id) {
       case "dropDownA":
         nodropDownA();
@@ -532,6 +537,10 @@ async function createDropDown(
         break;
       default:
         break;
+    }
+    var comp2 = await checkCompleteness();
+    if (comp2) {
+      setGdprButtonCompleted(true);
     }
     if (valueButton == null && id != "dropDownB") {
       openDrop(id, "no", true);
@@ -1074,6 +1083,24 @@ export function fromXMLToText(xml) {
   const blob = new Blob([content], { type: "text/plain" });
 }
 //
+
+async function checkCompleteness() {
+  var result = true;
+  try {
+    const responseSet = await getMetaInformationResponse();
+    const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"];
+    for (var i = 0; i < letters.length; i++) {
+      if (responseSet["question" + letters[i]] == null) {
+        result = false;
+        break;
+      }
+    }
+  } catch (error) {
+    console.error("Errore durante il recupero delle informazioni meta:", error);
+    result = false;
+  }
+  return result;
+}
 
 export {
   removeUlFromDropDown,
