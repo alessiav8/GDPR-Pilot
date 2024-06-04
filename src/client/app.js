@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 // end function to load the first diagram
 
-//function to call the AP of chatGPT
+//function to call the API of chatGPT
 //message:the message i want to send to chatGPT
 export async function callChatGpt(message) {
   const url = "http://localhost:3000/api/call_chat_gpt";
@@ -1322,9 +1322,8 @@ async function checkQuestion() {
               "right_to_be_informed_of_data_breaches",
               "bpmn:ErrorEventDefinition",
               "L",
-              "L"
+              null
             );
-            setGdprButtonCompleted(true);
           }
         }
       }
@@ -1956,8 +1955,8 @@ export function createAGroup() {
       height: parentRoot.height * 1.5,
     };
   }
-  const start = getStartFirst(parentRoot);
 
+  const start = getStartFirst(parentRoot);
   var x = 0;
   var y = 0;
 
@@ -1965,6 +1964,7 @@ export function createAGroup() {
     x = start.x - 150;
     y = start.y;
   }
+
   const groupShape = elementFactory.createShape({
     type: "bpmn:Group",
     width: 420,
@@ -1975,13 +1975,15 @@ export function createAGroup() {
   groupShape.id = "GdprGroup";
   groupShape.businessObject.id = "GdprGroup";
   groupShape.businessObject.name = "Achieve Gdpr Compliance";
+
   try {
     modeling.createShape(groupShape, { x: x - 300, y: y - 300 }, parentRoot);
-    if (oldP) modeling.resizeShape(parentRoot, oldP);
+    if (oldP != null) {
+      modeling.resizeShape(parentRoot, oldP);
+    }
   } catch (error) {
     console.error("error in creating/resizing group");
   }
-
   viewer.get("canvas").zoom("fit-viewport");
 }
 //

@@ -525,11 +525,10 @@ async function createDropDown(
           "Data Breach occurred",
           "Data Breach Managed",
           "right_to_be_informed_of_data_breaches",
-          "bpmn:ErrorEventDefinition",
+          "bpmn:MessageEventDefinition",
           "L",
-          "L"
+          null
         );
-        setGdprButtonCompleted(true);
         break;
       default:
         break;

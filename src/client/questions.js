@@ -123,7 +123,7 @@ export function noHandler(
   }
   editYesNoButton("#no_dropDown" + current_letter);
   editMetaInfo(current_letter, setJsonData("No", false));
-  allowOpenNextQuestion(next_letter);
+  if (next_letter) allowOpenNextQuestion(next_letter);
   questionDone("#dropDown" + current_letter);
   removeChatGPTTip("dropDown" + current_letter);
 }
@@ -414,6 +414,7 @@ export function openDropDown(dropdown) {
 //function to check if a group exists or to create it
 async function checkGroupOrCreate() {
   const exist_gdpr = existGdprGroup();
+  console.log("group exists", exist_gdpr);
   if (exist_gdpr == false) {
     createAGroup();
   } else {
