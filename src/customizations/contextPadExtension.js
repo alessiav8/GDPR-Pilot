@@ -67,6 +67,8 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function (
       settings_area.style.display = "none";
       const canvas = document.getElementById("canvas");
       if (canvas) canvas.style.height = "95vh";
+      const mode = document.getElementById("mode");
+      if (mode) mode.innerHTML = "View-only Mode";
     }
 
     viewer.detach();
@@ -132,6 +134,7 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function (
       if (settings_area) {
         settings_area.style.display = "flex";
         if (canvas) canvas.style.height = "86vh";
+        if (mode) mode.innerHTML = "Edit Mode";
       }
       back.style.display = "none";
       separator.style.display = "none";

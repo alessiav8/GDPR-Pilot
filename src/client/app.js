@@ -194,6 +194,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 // end function to load the first diagram
 
 //function to call the AP of chatGPT
+//message:the message i want to send to chatGPT
 export async function callChatGpt(message) {
   const url = "http://localhost:3000/api/call_chat_gpt";
   try {
@@ -212,31 +213,8 @@ export async function callChatGpt(message) {
 }
 //
 
-function createGoBackButton() {
-  var sub = document.getElementById("GoBack");
-  var goBackButton = document.createElement("div");
-  goBackButton.id = "goBack";
-  goBackButton.innerText = "Main Process";
-  goBackButton.style.marginLeft = "47.3%";
-  goBackButton.style.marginTop = "3vh";
-  goBackButton.style.position = "absolute";
-  goBackButton.style.textDecoration = "underline";
-  goBackButton.style.fontWeight = "bold";
-  goBackButton.style.cursor = "pointer";
-  goBackButton.style.zIndex = "1050";
-
-  sub.style.display = "block";
-  sub.appendChild(goBackButton);
-
-  goBackButton.addEventListener("click", function () {
-    viewer.clear();
-    loadDiagram(originalRootElement);
-    sub.style.display = "none";
-    goBackButton.remove();
-  });
-}
-
 //function to load the diagram through importXML
+//diagram: the xml of the diagram i want to import in the canvas
 async function loadDiagram(diagram) {
   try {
     const res = viewer
@@ -265,6 +243,7 @@ async function loadDiagram(diagram) {
           );
         alienator = new AlignElements(modeling, rules);
         distributor = new DistributeElements(modeling, rules);
+
         // changeID();
         checkMetaInfo();
         console.log("elementRegistry: ", elementRegistry);
@@ -1748,6 +1727,7 @@ function reOrderSubSet(sub) {
     //get the set of elements that precede the element
     const previousElementSet = getPreviousElement(element);
     if (previousElementSet.length > 0) {
+      var setVertical = null;
       //se ci sono elementi prima
       previousElementSet.forEach((previousElement) => {
         //per ogni elemento
@@ -1761,15 +1741,16 @@ function reOrderSubSet(sub) {
         const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
         var add = compare - diff; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
-        /* if (
+        if (
           !(
             isInRange(previousElement.y, element.y) ||
             isInRange(element.y, previousElement.y)
           ) //se non rispetta i range fissati per distanza y non muovere x
         ) {
-          addY = 150 - (element.y - previousElement.y); //aggiusta y ma non muovere x
-          add = 0;
-        }*/
+          /*addY = 150 - (element.y - previousElement.y); //aggiusta y ma non muovere x
+          add = 0;*/
+          setVertical = [element, previousElement];
+        }
         var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
         incomingElementSet = incomingElementSet.filter(
           (elem) =>
@@ -1803,6 +1784,9 @@ function reOrderSubSet(sub) {
           }
         }
       });
+    }
+    if (setVertical) {
+      distributor.trigger(setVertical, "vertical");
     }
   });
 }

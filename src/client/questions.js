@@ -107,6 +107,28 @@ export async function nodropDownB(activities_already_selected, isLast) {
 }
 //
 
+//function to handle the click on the No button
+export function noHandler(
+  diagram,
+  start_label,
+  end_label,
+  id,
+  start_type,
+  current_letter,
+  next_letter
+) {
+  checkGroupOrCreate();
+  if (!existsGdprPath(id)) {
+    addSubEvent(diagram, start_label, end_label, id, start_type);
+  }
+  editYesNoButton("#no_dropDown" + current_letter);
+  editMetaInfo(current_letter, setJsonData("No", false));
+  allowOpenNextQuestion(next_letter);
+  questionDone("#dropDown" + current_letter);
+  removeChatGPTTip("dropDown" + current_letter);
+}
+//
+
 //----------------------------END NO HANDLER------------------------------------
 
 //----------------------------START OTHER UTIL FUNCTIONS------------------------------------
@@ -428,28 +450,6 @@ function editYesNoButton(idButton) {
     const other = document.querySelector("#yes_" + other_button_name[1]);
     other.style.border = "0.01vh solid black";
   }
-}
-//
-
-//function to handle the click on the No button
-export function noHandler(
-  diagram,
-  start_label,
-  end_label,
-  id,
-  start_type,
-  current_letter,
-  next_letter
-) {
-  checkGroupOrCreate();
-  if (!existsGdprPath(id)) {
-    addSubEvent(diagram, start_label, end_label, id, start_type);
-  }
-  editYesNoButton("#no_dropDown" + current_letter);
-  editMetaInfo(current_letter, setJsonData("No", false));
-  allowOpenNextQuestion(next_letter);
-  questionDone("#dropDown" + current_letter);
-  removeChatGPTTip("dropDown" + current_letter);
 }
 //
 

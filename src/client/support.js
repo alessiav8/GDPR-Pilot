@@ -77,8 +77,13 @@ export async function openDrop(drop, type, open) {
 }
 //
 
+//function to add the text "Suggested by" under the right button
+//ID: id of the dropDown in which the button is located
+//answer: the result of the prediction
 function addTextBelowButton(Id, answer) {
   var buttonId;
+  var otherP;
+  //if the answer contains an array --> answer related to question B
   if (answer.match(/\[.*?\]/)) {
     buttonId = "no_" + Id;
     const arrayMatch = answer.match(/\[.*?\]/);
@@ -95,11 +100,24 @@ function addTextBelowButton(Id, answer) {
     }
   } else if (answer.includes("yes") || answer.includes("Yes")) {
     buttonId = "yes_" + Id;
+    otherP = "no_" + Id;
   } else {
     buttonId = "no_" + Id;
+    otherP = "p_yes_" + Id;
   }
   const button = document.getElementById(buttonId);
-  if (button && !document.getElementById("p_" + button)) {
+
+  //TODO: check if this resolve the bug
+  //i need to remove some possible p remained
+  /*if (button) {
+    const firstP = document.getElementById("p_" + buttonId);
+    if (firstP) firstP.remove();
+    const secondP = document.getElementById("p_" + otherP);
+    if (otherP) secondP.remove();
+  }*/
+  //
+
+  if (button && !document.getElementById("p_" + buttonId)) {
     button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
     const textElement = document.createElement("p");
     textElement.innerHTML = "Suggested by <br>OpenAI";
@@ -110,7 +128,10 @@ function addTextBelowButton(Id, answer) {
     button.parentNode.insertBefore(textElement, button.nextSibling);
   }
 }
+//
 
+//function that send the right message to chatGPT in order to get the prediction about the question
+//id: the id of the drop down related to the question ex. dropDownA
 async function predictionChatGPT(id) {
   try {
     const currentXML = await getXMLOfTheCurrentBpmn();
@@ -1046,6 +1067,14 @@ export function displayDynamicPopUp(message) {
     });
   });
 }
+
+//function to transform the xml to a text scheme of the process
+export function fromXMLToText(xml) {
+  const filePath = "xml_text_file.txt";
+  const content = "";
+  const blob = new Blob([content], { type: "text/plain" });
+}
+//
 
 export {
   removeUlFromDropDown,
