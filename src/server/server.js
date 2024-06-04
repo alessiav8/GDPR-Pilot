@@ -25,12 +25,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/api/sensitive-data", async (req, res) => {
+app.get("/api/call_chat_gpt", async (req, res) => {
   const userMessage = req.query.message || "Hello!";
   try {
     const completion = await openai.chat.completions.create({
       messages: [{ role: "user", content: userMessage }],
-      model: "gpt-3.5-turbo-16k",
+      model: "gpt-3.5-turbo",
     });
 
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:8080");

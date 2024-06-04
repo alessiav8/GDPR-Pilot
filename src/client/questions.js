@@ -54,96 +54,15 @@ export async function yesdropDownA() {
 }
 //end handle click yes for question A
 
-//handle click yes for question B
-export function yesdropDownB() {
-  //removeUlFromDropDown("#dropDownB");
-  editMetaInfo("B", setJsonData("Yes", false));
-  questionDone("#dropDownB");
-  allowOpenNextQuestion("C");
-  editYesNoButton("#yes_dropDownB");
-  removeChatGPTTip("dropDownB");
-}
-//
-
-//function to handle yes of question C
-export function yesdropDownC() {
-  editMetaInfo("C", setJsonData("Yes", false));
-  questionDone("#dropDownC");
-  allowOpenNextQuestion("D");
-  editYesNoButton("#yes_dropDownC");
-  removeChatGPTTip("dropDownC");
-}
-//
-
-//function to handle yes of question D
-export function yesdropDownD() {
-  editMetaInfo("D", setJsonData("Yes", false));
-  questionDone("#dropDownD");
-  allowOpenNextQuestion("E");
-  editYesNoButton("#yes_dropDownD");
-  removeChatGPTTip("dropDownD");
-}
-//
-
-//function to handle yes of question E
-export function yesdropDownE() {
-  editMetaInfo("E", setJsonData("Yes", false));
-  questionDone("#dropDownE");
-  allowOpenNextQuestion("F");
-  editYesNoButton("#yes_dropDownE");
-  removeChatGPTTip("dropDownE");
-}
-//
-
-//function to handle yes of question F
-export function yesdropDownF() {
-  editMetaInfo("F", setJsonData("Yes", false));
-  questionDone("#dropDownF");
-  allowOpenNextQuestion("G");
-  editYesNoButton("#yes_dropDownF");
-  removeChatGPTTip("dropDownF");
-}
-//
-
-//function to handle yes of question G
-export function yesdropDownG() {
-  editMetaInfo("G", setJsonData("Yes", false));
-  questionDone("#dropDownG");
-  allowOpenNextQuestion("H");
-  editYesNoButton("#yes_dropDownG");
-  removeChatGPTTip("dropDownG");
-}
-//
-
-//function to handle yes of question H
-export function yesdropDownH() {
-  editMetaInfo("H", setJsonData("Yes", false));
-  questionDone("#dropDownH");
-  allowOpenNextQuestion("I");
-  editYesNoButton("#yes_dropDownH");
-  removeChatGPTTip("dropDownH");
-}
-//
-
-//function to handle yes of question I
-export function yesdropDownI() {
-  editMetaInfo("I", setJsonData("Yes", false));
-  questionDone("#dropDownI");
-  allowOpenNextQuestion("L");
-  editYesNoButton("#yes_dropDownI");
-  removeChatGPTTip("dropDownI");
-}
-//
-
-//function to handle yes of question L
-export function yesdropDownL() {
-  editMetaInfo("L", setJsonData("Yes", false));
-  questionDone("#dropDownL");
-  setGdprButtonCompleted(true);
-  handleSideBar(false);
-  editMetaInfo("gdpr", true);
-  editYesNoButton("#yes_dropDownL");
-  removeChatGPTTip("dropDownL");
+//generic yes handler
+//currentLetter:the letter i'm currently considering
+//nextLetter: if any, is the letter of the drop i need to open after this
+export function yesHandler(currentLetter, nextLetter) {
+  editMetaInfo(currentLetter, setJsonData("Yes", false));
+  questionDone("#dropDown" + currentLetter);
+  if (nextLetter) allowOpenNextQuestion(nextLetter);
+  editYesNoButton("#yes_dropDown" + currentLetter);
+  removeChatGPTTip("dropDown" + currentLetter);
 }
 //
 
@@ -187,103 +106,6 @@ export async function nodropDownB(activities_already_selected, isLast) {
   allowOpenNextQuestion("C");
 }
 //
-
-export function nodropDownC() {
-  handleNoClick(
-    right_to_access,
-    "Access Request Received",
-    "Access Request fulfilled",
-    "right_to_access",
-    "bpmn:MessageEventDefinition",
-    "C",
-    "D"
-  );
-}
-
-export async function nodropDownD() {
-  handleNoClick(
-    right_to_portability,
-    "Portability Request Received",
-    "Portability Request fulfilled",
-    "right_to_portability",
-    "bpmn:MessageEventDefinition",
-    "D",
-    "E"
-  );
-}
-
-export function nodropDownE() {
-  handleNoClick(
-    right_to_rectify,
-    "Rectification Request Received",
-    "Rectification Request fulfilled",
-    "right_to_rectify",
-    "bpmn:MessageEventDefinition",
-    "E",
-    "F"
-  );
-}
-
-export function nodropDownF() {
-  handleNoClick(
-    right_to_object,
-    "Objection Request Received",
-    "Objection Request fulfilled",
-    "right_to_object",
-    "bpmn:MessageEventDefinition",
-    "F",
-    "G"
-  );
-}
-
-export function nodropDownG() {
-  handleNoClick(
-    right_to_object_to_automated_processing,
-    "Objection to Automated Processing Request Received",
-    "Objection to Automated Processing Request fulfilled",
-    "right_to_object_to_automated_processing",
-    "bpmn:MessageEventDefinition",
-    "G",
-    "H"
-  );
-}
-
-export function nodropDownH() {
-  handleNoClick(
-    right_to_restrict_processing,
-    "Processing Restriction Request Received",
-    "Processing Restrict Request fulfilled",
-    "right_to_restrict_processing",
-    "bpmn:MessageEventDefinition",
-    "H",
-    "I"
-  );
-}
-
-export function nodropDownI() {
-  handleNoClick(
-    right_to_be_forgotten,
-    "Request to be Forgotten Received",
-    "Request to be Forgotten fulfilled",
-    "right_to_be_forgotten",
-    "bpmn:MessageEventDefinition",
-    "I",
-    "L"
-  );
-}
-
-export function nodropDownL() {
-  handleNoClick(
-    right_to_be_informed_of_data_breaches,
-    "Data Breach occurred",
-    "Data Breach Managed",
-    "right_to_be_informed_of_data_breaches",
-    "bpmn:ErrorEventDefinition",
-    "L",
-    "L"
-  );
-  setGdprButtonCompleted(true);
-}
 
 //----------------------------END NO HANDLER------------------------------------
 
@@ -610,7 +432,7 @@ function editYesNoButton(idButton) {
 //
 
 //function to handle the click on the No button
-function handleNoClick(
+export function noHandler(
   diagram,
   start_label,
   end_label,

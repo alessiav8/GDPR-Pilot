@@ -22,31 +22,25 @@ import DisabledTypeChangeContextPadProvider from "../customizations/contextPadEx
 
 import diagram from "../../resources/diagram.bpmn";
 import diagram_two_activities from "../../resources/diagram_two_activities.bpmn";
-import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
 import confirmForGDPRPath from "../customizations/confirm";
 import diagram_to_test_part from "../../resources/diagram_to_test_part.bpmn";
+
+import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
+import right_to_access from "../../resources/right_to_be_consent.bpmn";
+import right_to_portability from "../../resources/right_of_portability.bpmn";
+import right_to_rectify from "../../resources/right_to_rectify.bpmn";
+import right_to_object from "../../resources/right_to_object.bpmn";
+import right_to_object_to_automated_processing from "../../resources/right_to_object_to_automated_processing.bpmn";
+import right_to_restrict_processing from "../../resources/right_to_restrict_processing.bpmn";
+import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
+import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
 
 import {
   yesdropDownA,
   nodropDownA,
-  yesdropDownB,
   nodropDownB,
-  yesdropDownC,
-  nodropDownC,
-  yesdropDownD,
-  nodropDownD,
-  yesdropDownE,
-  nodropDownE,
-  yesdropDownF,
-  nodropDownF,
-  yesdropDownG,
-  nodropDownG,
-  yesdropDownH,
-  nodropDownH,
-  yesdropDownI,
-  nodropDownI,
-  yesdropDownL,
-  nodropDownL,
+  yesHandler,
+  noHandler,
   createWithOnlyQuestionXExpandable,
   getLastAnswered,
   removeChatGPTTipFromAll,
@@ -201,7 +195,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 //function to call the AP of chatGPT
 export async function callChatGpt(message) {
-  const url = "http://localhost:3000/api/sensitive-data";
+  const url = "http://localhost:3000/api/call_chat_gpt";
   try {
     const response = await axios.get(url, {
       params: {
@@ -832,6 +826,7 @@ export_button.addEventListener("click", function () {
     closeSideBarSurvey();
     handleSideBar(false);
     decolorEverySelected();
+    removeChatGPTTipFromAll();
   } catch (e) {
     console.log("Error", e);
   }
@@ -963,6 +958,7 @@ import_button.addEventListener("click", () => {
     closeSideBarSurvey();
     handleSideBar(false);
     decolorEverySelected();
+    removeChatGPTTipFromAll();
   } catch (e) {
     console.log("Error", e);
   }
@@ -1015,6 +1011,7 @@ async function handleClickOnGdprButton() {
       closeSideBarSurvey();
       handleSideBar(false);
       decolorEverySelected();
+      removeChatGPTTipFromAll();
       localStorage.setItem("isOpenB", false);
     });
 
@@ -1135,6 +1132,8 @@ function handleUndoGdpr() {
         }
         closeSideBarSurvey();
         handleSideBar(false);
+        removeChatGPTTipFromAll();
+        decolorEverySelected();
         viewer.get("canvas").zoom("fit-viewport");
       });
       /*const allElements = elementRegistry.getAll();
@@ -1220,7 +1219,7 @@ async function checkQuestion() {
         } else if (key === "questionB" && questions_answers[key] !== null) {
           const risp = questions_answers["questionB"][0].value;
           if (risp === "Yes") {
-            yesdropDownB();
+            yesHandler("B", "C");
           } else {
             var B = questions_answers.questionB;
             B = B.filter((item) => item.value !== "No");
@@ -1230,58 +1229,123 @@ async function checkQuestion() {
         } else if (key === "questionI" && questions_answers[key] !== null) {
           const risp = questions_answers["questionI"][0].value;
           if (risp === "Yes") {
-            yesdropDownI();
+            yesHandler("I", "L");
           } else {
-            nodropDownI();
+            noHandler(
+              right_to_be_forgotten,
+              "Request to be Forgotten Received",
+              "Request to be Forgotten fulfilled",
+              "right_to_be_forgotten",
+              "bpmn:MessageEventDefinition",
+              "I",
+              "L"
+            );
           }
         } else if (key === "questionH" && questions_answers[key] !== null) {
           const risp = questions_answers["questionH"][0].value;
           if (risp === "Yes") {
-            yesdropDownH();
+            yesHandler("H", "I");
           } else {
-            nodropDownH();
+            noHandler(
+              right_to_restrict_processing,
+              "Processing Restriction Request Received",
+              "Processing Restrict Request fulfilled",
+              "right_to_restrict_processing",
+              "bpmn:MessageEventDefinition",
+              "H",
+              "I"
+            );
           }
         } else if (key === "questionG" && questions_answers[key] !== null) {
           const risp = questions_answers["questionG"][0].value;
           if (risp === "Yes") {
-            yesdropDownG();
+            yesHandler("G", "H");
           } else {
-            nodropDownG();
+            noHandler(
+              right_to_object_to_automated_processing,
+              "Objection to Automated Processing Request Received",
+              "Objection to Automated Processing Request fulfilled",
+              "right_to_object_to_automated_processing",
+              "bpmn:MessageEventDefinition",
+              "G",
+              "H"
+            );
           }
         } else if (key === "questionF" && questions_answers[key] !== null) {
           const risp = questions_answers["questionF"][0].value;
           if (risp === "Yes") {
-            yesdropDownF();
+            yesHandler("F", "G");
           } else {
-            nodropDownF();
+            noHandler(
+              right_to_object,
+              "Objection Request Received",
+              "Objection Request fulfilled",
+              "right_to_object",
+              "bpmn:MessageEventDefinition",
+              "F",
+              "G"
+            );
           }
         } else if (key === "questionE" && questions_answers[key] !== null) {
           const risp = questions_answers["questionE"][0].value;
           if (risp === "Yes") {
-            yesdropDownE();
+            yesHandler("E", "F");
           } else {
-            nodropDownE();
+            noHandler(
+              right_to_rectify,
+              "Rectification Request Received",
+              "Rectification Request fulfilled",
+              "right_to_rectify",
+              "bpmn:MessageEventDefinition",
+              "E",
+              "F"
+            );
           }
         } else if (key === "questionD" && questions_answers[key] !== null) {
           const risp = questions_answers["questionD"][0].value;
           if (risp === "Yes") {
-            yesdropDownD();
+            yesHandler("D", "E");
           } else {
-            nodropDownD();
+            noHandler(
+              right_to_portability,
+              "Portability Request Received",
+              "Portability Request fulfilled",
+              "right_to_portability",
+              "bpmn:MessageEventDefinition",
+              "D",
+              "E"
+            );
           }
         } else if (key === "questionC" && questions_answers[key] !== null) {
           const risp = questions_answers["questionC"][0].value;
           if (risp === "Yes") {
-            yesdropDownC();
+            yesHandler("C", "D");
           } else {
-            nodropDownC();
+            noHandler(
+              right_to_access,
+              "Access Request Received",
+              "Access Request fulfilled",
+              "right_to_access",
+              "bpmn:MessageEventDefinition",
+              "C",
+              "D"
+            );
           }
         } else if (key === "questionL" && questions_answers[key] !== null) {
           const risp = questions_answers["questionL"][0].value;
           if (risp === "Yes") {
-            yesdropDownL();
+            yesHandler("L", null);
           } else {
-            nodropDownL();
+            noHandler(
+              right_to_be_informed_of_data_breaches,
+              "Data Breach occurred",
+              "Data Breach Managed",
+              "right_to_be_informed_of_data_breaches",
+              "bpmn:ErrorEventDefinition",
+              "L",
+              "L"
+            );
+            setGdprButtonCompleted(true);
           }
         }
       }

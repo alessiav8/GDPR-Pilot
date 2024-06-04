@@ -1,28 +1,13 @@
 //-----------------------------SUPPORTS FUNCTIONS-----------------------------------
 import {
   yesdropDownA,
-  yesdropDownB,
-  yesdropDownC,
-  yesdropDownD,
-  yesdropDownE,
-  yesdropDownF,
-  yesdropDownG,
-  yesdropDownH,
-  yesdropDownI,
-  yesdropDownL,
   nodropDownA,
   nodropDownB,
-  nodropDownC,
-  nodropDownD,
-  nodropDownE,
-  nodropDownF,
-  nodropDownG,
-  nodropDownH,
-  nodropDownI,
-  nodropDownL,
   addBPath,
   openDropDown,
   removeChatGPTTip,
+  yesHandler,
+  noHandler,
 } from "./questions.js";
 import {
   getDiagram,
@@ -37,6 +22,16 @@ import {
   callChatGpt,
   getXMLOfTheCurrentBpmn,
 } from "./app.js";
+
+import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
+import right_to_access from "../../resources/right_to_be_consent.bpmn";
+import right_to_portability from "../../resources/right_of_portability.bpmn";
+import right_to_rectify from "../../resources/right_to_rectify.bpmn";
+import right_to_object from "../../resources/right_to_object.bpmn";
+import right_to_object_to_automated_processing from "../../resources/right_to_object_to_automated_processing.bpmn";
+import right_to_restrict_processing from "../../resources/right_to_restrict_processing.bpmn";
+import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
+import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
 
 //close sideBarSurvey
 function closeSideBarSurvey() {
@@ -381,31 +376,31 @@ async function createDropDown(
         yesdropDownA();
         break;
       case "dropDownB":
-        yesdropDownB();
+        yesHandler("B", "C");
         break;
       case "dropDownC":
-        yesdropDownC();
+        yesHandler("C", "D");
         break;
       case "dropDownD":
-        yesdropDownD();
+        yesHandler("D", "E");
         break;
       case "dropDownE":
-        yesdropDownE();
+        yesHandler("E", "F");
         break;
       case "dropDownF":
-        yesdropDownF();
+        yesHandler("F", "G");
         break;
       case "dropDownG":
-        yesdropDownG();
+        yesHandler("G", "H");
         break;
       case "dropDownH":
-        yesdropDownH();
+        yesHandler("H", "I");
         break;
       case "dropDownI":
-        yesdropDownI();
+        yesHandler("I", "L");
         break;
       case "dropDownL":
-        yesdropDownL();
+        yesHandler("L", null);
         break;
       default:
         break;
@@ -427,28 +422,93 @@ async function createDropDown(
         nodropDownB(false);
         break;
       case "dropDownC":
-        nodropDownC();
+        noHandler(
+          right_to_access,
+          "Access Request Received",
+          "Access Request fulfilled",
+          "right_to_access",
+          "bpmn:MessageEventDefinition",
+          "C",
+          "D"
+        );
         break;
       case "dropDownD":
-        nodropDownD();
+        noHandler(
+          right_to_portability,
+          "Portability Request Received",
+          "Portability Request fulfilled",
+          "right_to_portability",
+          "bpmn:MessageEventDefinition",
+          "D",
+          "E"
+        );
         break;
       case "dropDownE":
-        nodropDownE();
+        noHandler(
+          right_to_rectify,
+          "Rectification Request Received",
+          "Rectification Request fulfilled",
+          "right_to_rectify",
+          "bpmn:MessageEventDefinition",
+          "E",
+          "F"
+        );
         break;
       case "dropDownF":
-        nodropDownF();
+        noHandler(
+          right_to_object,
+          "Objection Request Received",
+          "Objection Request fulfilled",
+          "right_to_object",
+          "bpmn:MessageEventDefinition",
+          "F",
+          "G"
+        );
         break;
       case "dropDownG":
-        nodropDownG();
+        noHandler(
+          right_to_object_to_automated_processing,
+          "Objection to Automated Processing Request Received",
+          "Objection to Automated Processing Request fulfilled",
+          "right_to_object_to_automated_processing",
+          "bpmn:MessageEventDefinition",
+          "G",
+          "H"
+        );
         break;
       case "dropDownH":
-        nodropDownH();
+        noHandler(
+          right_to_restrict_processing,
+          "Processing Restriction Request Received",
+          "Processing Restrict Request fulfilled",
+          "right_to_restrict_processing",
+          "bpmn:MessageEventDefinition",
+          "H",
+          "I"
+        );
         break;
       case "dropDownI":
-        nodropDownI();
+        noHandler(
+          right_to_be_forgotten,
+          "Request to be Forgotten Received",
+          "Request to be Forgotten fulfilled",
+          "right_to_be_forgotten",
+          "bpmn:MessageEventDefinition",
+          "I",
+          "L"
+        );
         break;
       case "dropDownL":
-        nodropDownL();
+        noHandler(
+          right_to_be_informed_of_data_breaches,
+          "Data Breach occurred",
+          "Data Breach Managed",
+          "right_to_be_informed_of_data_breaches",
+          "bpmn:ErrorEventDefinition",
+          "L",
+          "L"
+        );
+        setGdprButtonCompleted(true);
         break;
       default:
         break;
