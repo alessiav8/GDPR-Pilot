@@ -1075,15 +1075,6 @@ export function displayDynamicPopUp(message) {
   });
 }
 
-//function to transform the xml to a text scheme of the process
-export function fromXMLToText(xml) {
-  //creo un blob (file txt) dove andrò ad inserire la descrizione testuale del processo.
-  const content = "";
-  const blob = new Blob([content], { type: "text/plain" });
-  // Usa FileReader per leggere il contenuto del Blob
-}
-//
-
 function readBlob(blob) {
   const reader = new FileReader();
 

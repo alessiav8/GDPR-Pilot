@@ -165,6 +165,15 @@ const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:IntermediateThrowEvent",
 ]);
 const gdprActivityQuestionsPrefix = ["consent"];
+
+const GatewayTypes = [
+  "bpmn:ExclusiveGateway",
+  "bpmn:InclusiveGateway",
+  "bpmn:ParallelGateway",
+  "bpmn:ComplexGateway",
+  "bpmn:EventBasedGateway",
+  "bpmn:ExclusiveEventBasedGateway",
+];
 //
 
 //this function returns true to me if there is an extended element that has a meta tag in it
@@ -247,6 +256,7 @@ async function loadDiagram(diagram) {
         // changeID();
         checkMetaInfo();
         console.log("elementRegistry: ", elementRegistry);
+        fromXMLToText(right_to_object);
 
         //this prevent the modification of the id when someone change the type of something
         eventBus.on("element.updateId", function (event) {
@@ -1482,7 +1492,7 @@ function getPreviousElement(referenceElement) {
     incoming.forEach((element) => {
       const previousE = element.businessObject.sourceRef.id;
       const prev = elementRegistry.get(previousE);
-      if (prev.type != " bpmn:Participant") {
+      if (prev && prev.type && prev.type != " bpmn:Participant") {
         res.push(prev);
       }
     });
@@ -1706,16 +1716,27 @@ export function reorderDiagram() {
   const allElements = elementRegistry.getAll();
   //has some collaboration inside it?
   const has_Collaboration = hasCollaboration();
+  var distribute;
   if (has_Collaboration) {
     has_Collaboration.forEach((part) => {
       const subSet = getOrderedSub(part.children);
       reOrderSubSet(subSet);
-      //distributor.trigger(subset, "vertical");
+      distribute = subSet.filter(
+        (element) =>
+          element.type != "bpmn:Group" &&
+          (!element.id.includes("right") || element.id.includes("consent"))
+      );
+      distributor.trigger(distribute, "vertical");
     });
   } else {
     const sub = getOrderedSub(allElements);
     reOrderSubSet(sub);
-    //distributor.trigger(sub, "vertical");
+    distribute = sub.filter(
+      (element) =>
+        element.type != "bpmn:Group" &&
+        (!element.id.includes("right") || element.id.includes("consent"))
+    );
+    distributor.trigger(distribute, "vertical");
   }
   viewer.get("canvas").zoom("fit-viewport");
 }
@@ -1740,7 +1761,7 @@ function reOrderSubSet(sub) {
         const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
         var add = compare - diff; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
-        if (
+        /*if (
           !(
             isInRange(previousElement.y, element.y) ||
             isInRange(element.y, previousElement.y)
@@ -1748,8 +1769,8 @@ function reOrderSubSet(sub) {
         ) {
           /*addY = 150 - (element.y - previousElement.y); //aggiusta y ma non muovere x
           add = 0;*/
-          setVertical = [element, previousElement];
-        }
+        /*setVertical = true;
+        }*/
         var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
         incomingElementSet = incomingElementSet.filter(
           (elem) =>
@@ -1783,9 +1804,6 @@ function reOrderSubSet(sub) {
           }
         }
       });
-    }
-    if (setVertical) {
-      distributor.trigger(setVertical, "vertical");
     }
   });
 }
@@ -1926,17 +1944,19 @@ function getStartFirst(parent) {
 
 function getParticipantFromCollaboration(collaboration) {
   var parentRoot = collaboration;
-  if (parentRoot.children[0].type == "bpmn:Participant") {
-    parentRoot = parentRoot.children[0];
-  } else {
-    for (var i = 0; i < parentRoot.children.length; i++) {
-      if (parentRoot.children[i].type == "bpmn:Participant") {
-        parentRoot = parentRoot.children[i];
-        break;
+  var numChild = 0;
+  var result;
+
+  for (var i = 0; i < parentRoot.children.length; i++) {
+    if (parentRoot.children[i].type == "bpmn:Participant") {
+      if (numChild < parentRoot.children[i].children.length) {
+        numChild = parentRoot.children[i].children.length;
+        result = parentRoot.children[i];
       }
     }
   }
-  return parentRoot;
+
+  return result;
 }
 
 //function to add the group where i'm going to insert the path for gdpr compliance
@@ -2243,6 +2263,161 @@ Which activities require the request for consent before being executed? The list
 */
 //
 
+//function to get the origins of the message
+//set: the set of incoming / outgoing sequence flow
+//type: is outgoing sequence (out) or incoming sequence (in)
+function getOrigin(set, type) {
+  var result = new Array();
+  if (set.length == 0) {
+    return result;
+  } else {
+    if (type == "out") {
+      //cerco nel target ref
+      set.forEach((o) => {
+        if (o.type == "bpmn:MessageFlow") {
+          const object = o.target ? elementRegistry.get(o.target.id) : null;
+
+          const nameObject =
+            object && object.businessObject.name
+              ? object.businessObject.name
+              : object.type + object.id;
+
+          if (nameObject) {
+            result.push(nameObject);
+          }
+        }
+      });
+    } else if ((type = "in")) {
+      set.forEach((o) => {
+        if (o.type == "bpmn:MessageFlow") {
+          const object = o.source ? elementRegistry.get(o.source.id) : null;
+          const nameObject = object
+            ? object.businessObject.name
+              ? object.businessObject.name
+              : object.type + object.id
+            : null;
+          if (nameObject) {
+            result.push(nameObject);
+          }
+        }
+      });
+    }
+    return result;
+  }
+}
+//
+
+//function to transform the xml to a text scheme of the process
+export function fromXMLToText(xml) {
+  //creo un blob (file txt) dove andrò ad inserire la descrizione testuale del processo.
+  var content = "";
+  elementRegistry = viewer.get("elementRegistry");
+  const allElements = elementRegistry.getAll();
+  const sub = allElements.filter(
+    (element) =>
+      element.type == "bpmn:Participant" || element.type == "bpmn:participant"
+  );
+  if (sub.length > 0) {
+    //ci sono delle partecipazioni
+    sub.forEach((subset) => {
+      const partecipant_name = subset.businessObject.name
+        ? subset.businessObject.name
+        : subset.id;
+      const childToIterate = subset.children;
+      if (childToIterate.length > 0) {
+        content = content + "{ Start Participant: " + partecipant_name + "\n";
+
+        childToIterate.forEach((child) => {
+          if (child.type != "bpmn:Group") {
+            if (
+              bpmnActivityTypes.some((item) => item == child.type) ||
+              child.type == "bpmn:StartEvent" ||
+              child.type == "bpmn:EndEvent" ||
+              child.type == "bpmn:IntermediateCatchEvent" ||
+              child.type == "bpmn:IntermediateThrowEvent"
+            ) {
+              //activities handler
+              const name = child.businessObject.name
+                ? child.businessObject.name
+                : child.type;
+              content =
+                content +
+                "\n Activity: " +
+                name +
+                " of type: " +
+                child.type +
+                " "; //ci aggiungiamo il nome di ogni attività
+              //ci sono delle frecce dalla partecipazione considerata ad un altra?
+              const sendMessageSet = child.outgoing.filter(
+                (element) => element.type == "bpmn:MessageFlow"
+              );
+              //ci sono delle frecce da un altra partecipazione a quella considerata ?
+              const receiveMessageSet = child.incoming.filter(
+                (element) => element.type == "bpmn:MessageFlow"
+              );
+
+              const sent = getOrigin(sendMessageSet, "out");
+              const received = getOrigin(receiveMessageSet, "in");
+
+              if (sendMessageSet.length > 0 && receiveMessageSet.length > 0) {
+                //manda e riceve messaggi
+                if (sent == received) {
+                  content =
+                    content +
+                    " Send a message and receives a response from partecipation: " +
+                    sent.join(" ") +
+                    " ";
+                } else {
+                  content =
+                    content +
+                    " Send a message to partecipation: " +
+                    sent.join(" ") +
+                    " and receives a response from partecipation: " +
+                    received.join(" ") +
+                    " ";
+                }
+              } else if (sendMessageSet.length > 0) {
+                content =
+                  content +
+                  " Send a message to partecipation " +
+                  sent.join(" ") +
+                  " ";
+              } else if (receiveMessageSet.length > 0) {
+                content =
+                  content +
+                  " Receive a message from partecipation " +
+                  sent.join(" ") +
+                  " ";
+              }
+            } else if (GatewayTypes.some((item) => item == child.type)) {
+              switch (child.type) {
+                case "bpmn:ExclusiveGateway":
+                  const outGateway = getOrigin(child.outgoing, "out");
+                  console.log("Gateway: ", outGateway);
+                  content = content + " Exclusive Gateway between: " + "";
+                  break;
+                default:
+                  break;
+              }
+            }
+          }
+        });
+        content = content + "\n End Participant: " + partecipant_name + "}\n\n";
+      } else {
+        content =
+          content +
+          "\n Participant: " +
+          partecipant_name +
+          " (empty pool) \n\n";
+      }
+      console.log("Content: " + content);
+    });
+  } else {
+    //non ci sono partecipazioni
+  }
+  const blob = new Blob([content], { type: "text/plain" });
+}
+//
 export {
   getDiagram,
   editMetaInfo,
