@@ -34,6 +34,7 @@ import right_to_object_to_automated_processing from "../../resources/right_to_ob
 import right_to_restrict_processing from "../../resources/right_to_restrict_processing.bpmn";
 import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
 import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
+import diagram_to_test_text_generation from "../../resources/diagram_to_test_text_generation.bpmn";
 
 import {
   yesdropDownA,
@@ -197,7 +198,7 @@ function getExtension(element, type) {
 
 //function that loads the first diagram displayed at every load
 document.addEventListener("DOMContentLoaded", async function () {
-  await loadDiagram(diagram_two_activities);
+  await loadDiagram(diagram_to_test_text_generation);
   localStorage.setItem("popUpVisualized", false);
 });
 // end function to load the first diagram
@@ -2307,114 +2308,250 @@ function getOrigin(set, type) {
 }
 //
 
+function addActivityInText(child, content) {
+  const name = child.businessObject.name
+    ? child.businessObject.name
+    : child.type;
+  content = content + "\n<" + child.type + " Name: " + name; //ci aggiungiamo il nome di ogni attività
+  //ci sono delle frecce dalla partecipazione considerata ad un altra?
+  const sendMessageSet = child.outgoing.filter(
+    (element) => element.type == "bpmn:MessageFlow"
+  );
+  //ci sono delle frecce da un altra partecipazione a quella considerata ?
+  const receiveMessageSet = child.incoming.filter(
+    (element) => element.type == "bpmn:MessageFlow"
+  );
+
+  const sent = getOrigin(sendMessageSet, "out");
+  const received = getOrigin(receiveMessageSet, "in");
+
+  if (sendMessageSet.length > 0 && receiveMessageSet.length > 0) {
+    //manda e riceve messaggi
+    if (sent == received) {
+      content =
+        content +
+        " Send a message and receives a response from partecipation: " +
+        sent.join(" ") +
+        " >";
+    } else {
+      content =
+        content +
+        " Send a message to partecipation: " +
+        sent.join(" ") +
+        " and receives a response from partecipation: " +
+        received.join(" ") +
+        " >";
+    }
+  } else if (sendMessageSet.length > 0) {
+    content =
+      content + " Send a message to partecipation " + sent.join(" ") + " >";
+  } else if (receiveMessageSet.length > 0) {
+    content =
+      content +
+      " Receive a message from partecipation " +
+      received.join(" ") +
+      " >";
+  } else {
+    content =
+      content + " no exchange of messages with other participants" + " >";
+  }
+  return content;
+}
+
+function addGatewayInText(child, content, setOfElements) {
+  var first;
+  //get the gateway condition
+  const GatewayCondition = child.businessObject.name
+    ? child.businessObject.name
+    : " No condition specified";
+
+  //get the gateway outgoings
+  const outGateway = child.outgoing;
+
+  //Change behavior in base to the type of gateway
+  switch (child.type) {
+    case "bpmn:ExclusiveGateway":
+      content =
+        content +
+        "\n[Start Exclusive Gateway (only one of the path can be taken)" +
+        " condition to check in order to proceed with the right path '" +
+        GatewayCondition +
+        "' different paths: " +
+        " \n";
+
+      if (outGateway) {
+        //if we have some outgoing flows
+        for (var i = 0; i < outGateway.length; i++) {
+          //itero su ogni ramo
+          const path_name = outGateway[i].businessObject.name
+            ? outGateway[i].businessObject.name
+            : "no path condition specified";
+          content = content + "\nPath taken if: '" + path_name + "' ";
+          var targetFlow = outGateway[i]; //primo ramo considerato
+          var targetRef; //la prima activity che incontro nel mio path
+          var target;
+          var target_name;
+          var int = 0;
+          while (targetFlow && int <= 10) {
+            int++;
+            targetRef = targetFlow.target;
+            console.log(
+              "targetFlow considered",
+              targetFlow,
+              "target from targetFlow",
+              targetRef
+            );
+            if (targetRef) {
+              target = elementRegistry.get(targetRef.id);
+              console.log("This is the target", target);
+            }
+            if (
+              target &&
+              (target.type != "bpmn:ExclusiveGateway" ||
+                (target.type == "bpmn:ExclusiveGateway" &&
+                  target.outgoing.length > 1)) //se è un exlcusive allora se ha 1 solo ramo uscente => che è di chiusura
+            ) {
+              var retSet;
+              var toPass = [target];
+              [content, retSet] = iterateSetOfElementsToTranslate(
+                toPass,
+                content,
+                null
+              );
+
+              setOfElements.filter((item) => item.id != target.id);
+              console.log("TARGET", target.outgoing);
+              if (target.outgoing.length > 1) {
+                targetFlow = target.outgoing.filter(
+                  (item) => item.type == "bpmn:SequenceFlow"
+                );
+                targetFlow = targetFlow[0];
+              } else if (target.outgoing.length == 1)
+                targetFlow = target.outgoing[0];
+              else {
+                targetFlow = false;
+              }
+            } else {
+              targetFlow = false;
+              if (
+                target.type == "bpmn:ExclusiveGateway" &&
+                target.outgoing.length <= 1
+              ) {
+                if (target.outgoing.length != 0) {
+                  const endP = target.outgoing[0];
+                  if (endP && endP.target) {
+                    first = elementRegistry.get(endP.target.id);
+                  } else first = null;
+                }
+              }
+            }
+          }
+        }
+        content = content + " End ExclusiveGateway]\n";
+      }
+
+      break;
+    default:
+      break;
+  }
+  return [content, setOfElements, first];
+}
+
+//function to call in a recursive manner
+//set: the set of element i need to translate into text
+//content; the content (the current written text)
+function iterateSetOfElementsToTranslate(set, content, firstPassed) {
+  var first = firstPassed;
+  // se ci sono elementi nel set che gli passo
+  var inte = 0;
+  while (set.length > 0 && inte <= 10) {
+    var next = null;
+    inte++;
+    if (first == null) first = set[0]; //se non gli ho passato un inizio
+    set = set.filter((item) => item.id != first.id); //tolgo l'elemento considerato dal set
+    console.log("first considered ", first, " \n set considered", set);
+
+    //è una attività?
+    if (
+      bpmnActivityTypes.some(
+        (item) =>
+          item == first.type ||
+          first.type == "bpmn:StartEvent" ||
+          first.type == "bpmn:EndEvent" ||
+          first.type == "bpmn:IntermediateCatchEvent" ||
+          first.type == "bpmn:IntermediateThrowEvent"
+      )
+    ) {
+      content = addActivityInText(first, content);
+    }
+    //oppure è un gateway
+    else if (GatewayTypes.some((item) => item == first.type)) {
+      [content, set, next] = addGatewayInText(first, content, set);
+      console.log("From gateway ", content, set, next);
+    }
+
+    if (next == null) {
+      const getAttached = first.outgoing.filter(
+        //prendo il riferimento dell'attività attaccata a quella che sto considerando
+        (out) => out.type == "bpmn:SequenceFlow"
+      );
+      console.log("getAttached", getAttached, "\n outgoing", first.outgoing);
+      if (getAttached.length > 0) {
+        next = elementRegistry.get(getAttached[0].target.id);
+      }
+    }
+    first = next ? next : null;
+
+    console.log("End first ", first);
+  }
+  return [content, set];
+}
+//
+
 //function to transform the xml to a text scheme of the process
 export function fromXMLToText(xml) {
   //creo un blob (file txt) dove andrò ad inserire la descrizione testuale del processo.
   var content = "";
   elementRegistry = viewer.get("elementRegistry");
-  const allElements = elementRegistry.getAll();
+  const allElements = elementRegistry.getAll(); //prendo tutti gli elementi che ho nel diagramma
+
   const sub = allElements.filter(
     (element) =>
       element.type == "bpmn:Participant" || element.type == "bpmn:participant"
-  );
+  ); //filtro il set per avere solo le partecipazioni
+
   if (sub.length > 0) {
     //ci sono delle partecipazioni
     sub.forEach((subset) => {
+      //itero su ogni partecipazione
       const partecipant_name = subset.businessObject.name
         ? subset.businessObject.name
-        : subset.id;
-      const childToIterate = subset.children;
+        : subset.id; //prendo il nome della partecipazione
+
+      var childToIterate = subset.children; //prendo tutti gli elementi appartenenti alla partecipazione
+
       if (childToIterate.length > 0) {
-        content = content + "{ Start Participant: " + partecipant_name + "\n";
-
-        childToIterate.forEach((child) => {
-          if (child.type != "bpmn:Group") {
-            if (
-              bpmnActivityTypes.some((item) => item == child.type) ||
-              child.type == "bpmn:StartEvent" ||
-              child.type == "bpmn:EndEvent" ||
-              child.type == "bpmn:IntermediateCatchEvent" ||
-              child.type == "bpmn:IntermediateThrowEvent"
-            ) {
-              //activities handler
-              const name = child.businessObject.name
-                ? child.businessObject.name
-                : child.type;
-              content =
-                content +
-                "\n Activity: " +
-                name +
-                " of type: " +
-                child.type +
-                " "; //ci aggiungiamo il nome di ogni attività
-              //ci sono delle frecce dalla partecipazione considerata ad un altra?
-              const sendMessageSet = child.outgoing.filter(
-                (element) => element.type == "bpmn:MessageFlow"
-              );
-              //ci sono delle frecce da un altra partecipazione a quella considerata ?
-              const receiveMessageSet = child.incoming.filter(
-                (element) => element.type == "bpmn:MessageFlow"
-              );
-
-              const sent = getOrigin(sendMessageSet, "out");
-              const received = getOrigin(receiveMessageSet, "in");
-
-              if (sendMessageSet.length > 0 && receiveMessageSet.length > 0) {
-                //manda e riceve messaggi
-                if (sent == received) {
-                  content =
-                    content +
-                    " Send a message and receives a response from partecipation: " +
-                    sent.join(" ") +
-                    " ";
-                } else {
-                  content =
-                    content +
-                    " Send a message to partecipation: " +
-                    sent.join(" ") +
-                    " and receives a response from partecipation: " +
-                    received.join(" ") +
-                    " ";
-                }
-              } else if (sendMessageSet.length > 0) {
-                content =
-                  content +
-                  " Send a message to partecipation " +
-                  sent.join(" ") +
-                  " ";
-              } else if (receiveMessageSet.length > 0) {
-                content =
-                  content +
-                  " Receive a message from partecipation " +
-                  sent.join(" ") +
-                  " ";
-              }
-            } else if (GatewayTypes.some((item) => item == child.type)) {
-              switch (child.type) {
-                case "bpmn:ExclusiveGateway":
-                  const outGateway = getOrigin(child.outgoing, "out");
-                  console.log("Gateway: ", outGateway);
-                  content = content + " Exclusive Gateway between: " + "";
-                  break;
-                default:
-                  break;
-              }
-            }
-          }
-        });
-        content = content + "\n End Participant: " + partecipant_name + "}\n\n";
+        // se ha degli elementi allora
+        content = content + "\n{Participant: " + partecipant_name + "\n";
+        var first = childToIterate[0]; //prendo il primo elemento della partecipazione
+        [content, childToIterate] = iterateSetOfElementsToTranslate(
+          childToIterate,
+          content,
+          first
+        ); //invio chiamata ricorsiva su primo elemento
+        content = content + "\nEnd Participant: " + partecipant_name + "}\n";
       } else {
         content =
           content +
-          "\n Participant: " +
+          "\n{ Participant: " +
           partecipant_name +
-          " (empty pool) \n\n";
+          " (empty pool) }\n";
       }
-      console.log("Content: " + content);
     });
   } else {
     //non ci sono partecipazioni
   }
+  console.log("Content\n", content);
   const blob = new Blob([content], { type: "text/plain" });
 }
 //
