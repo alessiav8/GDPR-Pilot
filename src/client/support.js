@@ -133,7 +133,7 @@ function addTextBelowButton(Id, answer) {
 //function that send the right message to chatGPT in order to get the prediction about the question
 //id: the id of the drop down related to the question ex. dropDownA
 async function predictionChatGPT(id) {
-  /*try {
+  try {
     const currentXML = await getXMLOfTheCurrentBpmn();
     const descriptionReq = await callChatGpt(
       "I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." +
@@ -146,9 +146,9 @@ async function predictionChatGPT(id) {
         const hasPersonalDataReq = await callChatGpt(
           "Given the description of a bpmn process that i will provide to you, are you able to say if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no. The description you have to analyze" +
             description +
-            " and the xml",
-          +currentXML,
-          "an example of activities that involves personal data are: Request personal data, request name and surname, request phone number ecc... "
+            " and the xml" +
+            currentXML,
+          " an example of activities that involves personal data are: Request personal data, request name and surname, request phone number ecc... "
         );
         const hasPersonalData = hasPersonalDataReq.content;
         console.log("Prediction", hasPersonalData);
@@ -290,7 +290,7 @@ async function predictionChatGPT(id) {
     }
   } catch (e) {
     console.error("Error in prediction chatGPT", e);
-  }*/
+  }
 }
 
 //function to create a drop down
@@ -715,11 +715,15 @@ async function createUlandSelectActivities(
 
           const c1 = document.createElement("div");
           c1.className = "col-1";
+          c1.id = "col_checkbox_" + activity.id;
 
           const c2 = document.createElement("div");
           c2.className = "col-7";
 
           var c3 = null;
+
+          const checkmark = document.createElement("span");
+          checkmark.className = "checkmark";
 
           const label = document.createElement("label");
           label.textContent =
@@ -728,12 +732,15 @@ async function createUlandSelectActivities(
             activity.name != ""
               ? activity.name
               : activity.id;
+          label.id = "label:" + activity.id;
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.name = "activity";
           checkbox.value = activity.id;
           checkbox.id = "checkbox_" + activity.id;
+          checkbox.style.backgroundColor = "white";
+          checkbox.style.border = " 0.1em solid black";
           if (activities_already_selected) {
             if (
               activities_already_selected.some(
@@ -764,6 +771,8 @@ async function createUlandSelectActivities(
               c3.innerHTML = "Suggested by OpenAI";
               c3.className = "col-2 checkbox-suggested";
               c3.style.marginTop = "2%";
+              checkbox.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
+              checkbox.style.border = " 0.1em solid #2ca912";
             }
           }
           //
@@ -773,6 +782,19 @@ async function createUlandSelectActivities(
               colorActivity(event.target.value);
             } else {
               decolorActivity(event.target.value);
+            }
+          });
+
+          label.addEventListener("click", function (event) {
+            const id = label.id.split(":")[1];
+            const checkbox = document.getElementById("checkbox_" + id);
+            if (checkbox) {
+              checkbox.checked = !checkbox.checked;
+              if (checkbox.checked) {
+                colorActivity(checkbox.value);
+              } else {
+                decolorActivity(checkbox.value);
+              }
             }
           });
 
@@ -804,7 +826,9 @@ async function createUlandSelectActivities(
         submitButton.addEventListener("click", async function (event) {
           // Prevent the default form submission behavior
           event.preventDefault();
-
+          if (activitySuggested) {
+            localStorage.remove("activities_suggested");
+          }
           // Get the selected activities
           const selectedActivities = Array.from(
             form.querySelectorAll("input[name='activity']:checked")

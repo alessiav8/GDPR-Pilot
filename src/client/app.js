@@ -213,12 +213,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 //message:the message i want to send to chatGPT
 export async function callChatGpt(message) {
   const url = "http://localhost:3000/api/call_chat_gpt";
+
   try {
     const response = await axios.get(url, {
       params: {
         message:
-          "Consider to be a GDPR(General Data Protection Regulation) expert that have to analyze how much a process is GDPR compliant. When I talk about different participant, you have to find in the xml different tags '<bpmn:Participant>' that communicates with message flow between them self. The activities named 'Right to be Informed and to consent' must be taken into account just for the right to consent analysis, if i provide some other definition, like 'Right to access' or 'Right to Object' ecc.. please ignore those activities. " +
+          "Consider to be a GDPR(General Data Protection Regulation) expert that have to analyze how much a process is GDPR compliant. When I talk about different participant, you have to find in the text different {Participant} inside of each of theme there are different processes and they can communicate. The activities named 'Right to be Informed and to consent' must be taken into account just for the right to consent analysis, if i provide some other definition, like 'Right to access' or 'Right to Object' ecc.. please ignore those activities. " +
           message,
+        withCredentials: true,
+      },
+
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
     });
     return response.data;
@@ -227,7 +234,7 @@ export async function callChatGpt(message) {
     throw error;
   }
 }
-//
+//export API_KEY=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©
 
 //function to load the diagram through importXML
 //diagram: the xml of the diagram i want to import in the canvas
