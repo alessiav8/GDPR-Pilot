@@ -2314,15 +2314,15 @@ function getOrigin(set, type) {
 }
 //
 
-function addActivityInText(child, content) {
+function addActivityInText(child, content, connected = true) {
   const name = child.businessObject.name
     ? child.businessObject.name
     : child.type;
   content =
     content +
-    "\n<Activity name: " +
+    "<Activity name: " +
     name +
-    " type: " +
+    " \nType: " +
     child.type.split(":")[1]; //ci aggiungiamo il nome di ogni attività
   //ci sono delle frecce dalla partecipazione considerata ad un altra?
   const sendMessageSet = child.outgoing.filter(
@@ -2341,33 +2341,38 @@ function addActivityInText(child, content) {
     if (sent == received) {
       content =
         content +
-        " \nExchanges with other partecipations:\n Send a message and receives a response from: " +
+        " \nExchanges with other partecipations: Send a message and receives a response from: " +
         sent.join(" ") +
-        " >";
+        " />";
     } else {
       content =
         content +
-        " \nExchange with other partecipations:\n Send a message to: " +
+        " \nExchange with other partecipations: Send a message to: " +
         sent.join(" ") +
         " and receives a response from: " +
         received.join(" ") +
-        " >";
+        " />";
     }
   } else if (sendMessageSet.length > 0) {
     content =
       content +
-      " \nExchange with other partecipations:\n Send a message to " +
+      " \nExchange with other partecipations: Send a message to " +
       sent.join(" ") +
-      " >";
+      " />";
   } else if (receiveMessageSet.length > 0) {
     content =
       content +
-      " \nExchange with other partecipations:\n Receive a message from " +
+      " \nExchange with other partecipations: Receive a message from " +
       received.join(" ") +
-      " >";
+      " />";
   } else {
     content =
-      content + " \nExchange with other partecipations:\n no exchanges" + " >";
+      content + " \nExchange with other partecipations: no exchanges" + " />";
+  }
+  if (child.type != "bpmn:EndEvent" && connected) {
+    content += " linked to: \n";
+  } else {
+    content += "\n";
   }
   return content;
 }
@@ -2387,33 +2392,39 @@ function addGatewayInText(child, content, setOfElements) {
         ? child.businessObject.name
         : " No condition specified";
       content =
-        content + "\n[ " + isClosureGateway + " Exclusive Gateway " + child.id;
+        content + "\n[" + isClosureGateway + " Exclusive Gateway " + child.id;
       if (isClosureGateway == "Start") {
         content =
           content +
           " (only one of the path can be taken)" +
-          " condition to check in order to proceed with the right path '" +
+          " \ncondition to check in order to proceed with the right path '" +
           GatewayCondition +
-          "' different paths: " +
-          " \n";
+          "' different paths: ";
       }
-      pathSentence = "\n\nPath of " + child.id + " taken if: '";
+      pathSentence = "\nPath of " + child.id + " taken if: '";
       break;
     case "bpmn:ParallelGateway":
-      content = content + "\n [" + isClosureGateway + " Parallel Gateway ";
+      content =
+        content +
+        "\n[" +
+        isClosureGateway +
+        " Parallel Gateway " +
+        child.id +
+        " ";
       if (isClosureGateway == "Start") {
         content =
           content +
           child.id +
           "(all the path will be taken)" +
-          "' different paths: " +
-          " \n";
+          "' different paths: ";
       }
-      pathSentence = "\n\n Path of  " + child.id + " number: ";
+      pathSentence = "\nPath of  " + child.id + " number: ";
       break;
     default:
       break;
   }
+  if (isClosureGateway == "Closure") content += "] linked to: \n";
+
   if (outGateway && outGateway.length > 1) {
     //if we have some outgoing flows
 
@@ -2435,6 +2446,7 @@ function addGatewayInText(child, content, setOfElements) {
       var targetRef; //la prima activity che incontro nel mio path
       var target;
       var target_name;
+      var times = 0;
 
       while (targetFlow) {
         targetRef = targetFlow.target.id ? targetFlow.target.id : false;
@@ -2446,14 +2458,10 @@ function addGatewayInText(child, content, setOfElements) {
               (target.type == typeOfGateway && target.outgoing.length > 1)) && //se è un exlcusive allora se ha 1 solo ramo uscente => che è di chiusura
             setOfElements.some((e) => e.id == target.id) //se non c'è l'ho giù analizzato
           ) {
-            console.log(
-              "first if",
-              target.type != typeOfGateway,
-              target.type == (typeOfGateway && target.outgoing.length > 1),
-              !setOfElements.some((e) => e.id == target.id)
-            );
             var retSet;
             var toPass = [target];
+            if (times == 0) content = content + " linked to\n ";
+            times++;
             [content, retSet] = iterateSetOfElementsToTranslate(
               toPass,
               content,
@@ -2473,43 +2481,24 @@ function addGatewayInText(child, content, setOfElements) {
             else {
               targetFlow = false;
             }
-            console.log(
-              "iterate over target resulting set",
-              setOfElements,
-              "resulting targetFlow",
-              targetFlow
-            );
           } else {
-            console.log(
-              "Else of the first if",
-              target.type == typeOfGateway && target.outgoing.length <= 1
-            );
             targetFlow = false;
             if (
               target &&
               target.type == typeOfGateway &&
               target.outgoing.length <= 1
             ) {
-              setOfElements = setOfElements.filter(
-                (item) => item.id != target.id
-              ); //lo tolgo dal set
+              const nameLastTarget = target.id ? target.id : " ";
+              content += " \nlinked to " + nameLastTarget + " ";
+
               //se sto chiudendo il gateway
               if (target.outgoing.length != 0) {
-                const endP = target.outgoing[0];
-                if (endP && endP.target) {
-                  targetFlow = null;
-                  first = endP.target;
-                } else targetFlow = null;
+                targetFlow = null;
+                first = target;
               }
             } else {
               targetFlow = false;
             }
-            console.log(
-              "resulting target flow else ",
-              targetFlow,
-              "\n set of elements",
-              setOfElements
-            );
           }
         }
       }
@@ -2530,20 +2519,16 @@ function addGatewayInText(child, content, setOfElements) {
 //content; the content (the current written text)
 function iterateSetOfElementsToTranslate(set, content, firstPassed) {
   var first = firstPassed;
+  var connected = true;
+  var hasBoundaryAttached = false;
   // se ci sono elementi nel set che gli passo
   while (set.length > 0) {
     var next = null;
-    if (first == null) first = set[0]; //se non gli ho passato un inizio
+    if (first == null) {
+      first = set[0]; //se non gli ho passato un inizio
+      connected = first.type == "bpmn:StartEvent" ? true : false;
+    }
     set = set.filter((item) => item.id != first.id); //tolgo l'elemento considerato dal set
-    console.log("first considered ", first, " \n set considered", set);
-
-    //è una attività?
-    console.log(
-      "first",
-      first,
-      first.type,
-      bpmnActivityTypes.filter((item) => item == first.type)
-    );
     if (
       bpmnActivityTypes.some(
         (item) =>
@@ -2555,15 +2540,26 @@ function iterateSetOfElementsToTranslate(set, content, firstPassed) {
           first.type == "bpmn:BoundaryEvent"
       )
     ) {
-      content = addActivityInText(first, content);
+      if (first.type == "bpmn:SubProcess") {
+        [content, set] = procedureSubProcess(first, set, content);
+      }
+      [hasBoundaryAttached, content, set] = procedureHasBoundary(
+        first,
+        set,
+        content
+      );
+      if (hasBoundaryAttached == false) {
+        content = addActivityInText(first, content, connected);
+      }
+      connected = true;
     }
     //oppure è un gateway
     else if (GatewayTypes.some((item) => item == first.type)) {
       [content, set, next] = addGatewayInText(first, content, set);
-      console.log("From gateway ", content, set, next);
     }
 
     if (next == null) {
+      console.log("First", first);
       const getAttached = first.outgoing.filter(
         //prendo il riferimento dell'attività attaccata a quella che sto considerando
         (out) => out.type == "bpmn:SequenceFlow"
@@ -2573,11 +2569,126 @@ function iterateSetOfElementsToTranslate(set, content, firstPassed) {
       }
     }
     first = next ? next : null;
-    console.log("End first ", first);
   }
   return [content, set];
 }
 //
+
+//function that handle the case in which the activity has a boundary activity attached
+//idActivity the Id of the activity i want to check the attachment of
+function procedureHasBoundary(ActivityToCheck, setOfElements, content) {
+  var result = false;
+  var boundaryActivity;
+  var firstTarget;
+  var activityName = ActivityToCheck.businessObject.name
+    ? ActivityToCheck.businessObject.name
+    : ActivityToCheck.id;
+  elementRegistry = viewer.get("elementRegistry");
+  const allElements = elementRegistry.getAll();
+  const boundary = allElements.filter(
+    (item) => item.type == "bpmn:BoundaryEvent"
+  );
+  if (boundary && boundary.length > 0) {
+    for (var i = 0; i < boundary.length; i++) {
+      const refBoundary = boundary[i].businessObject.attachedToRef
+        ? boundary[i].businessObject.attachedToRef
+        : false;
+      if (refBoundary && refBoundary.id == ActivityToCheck.id) {
+        result = true;
+        boundaryActivity = boundary[i];
+        break;
+      }
+    }
+  }
+  if (result) {
+    const boundaryHasLin = boundaryActivity.outgoing.length > 0 ? true : false; //è connessa ad altro?
+
+    content = addActivityInText(ActivityToCheck, content, false);
+    content = content + " { " + activityName + " has a boundary activity: \n";
+
+    setOfElements = setOfElements.filter(
+      (item) => item.id != boundaryActivity.id
+    ); //tolgo la boundary dal set
+
+    content = addActivityInText(boundaryActivity, content, boundaryHasLin);
+
+    if (boundaryHasLin) {
+      const setOfLinkFromBoundary = boundaryActivity.outgoing.filter(
+        (item) => item.type == "bpmn:SequenceFlow"
+      );
+      //devo gestire l'aggiunta di ogni elemento connesso alla boundary fino al termine
+      setOfLinkFromBoundary.forEach((first) => {
+        //devo iterare su tutti i rami uscenti di boundary
+        firstTarget = first.target; //prendo il primo
+        while (firstTarget) {
+          //finchè ha un collegamento
+          var connected = firstTarget.type == "bpmn:EndEvent" ? true : false; //ne ha un altro ?
+          content = addActivityInText(firstTarget, content, connected); //aggiungilo al text
+          setOfElements = setOfElements.filter(
+            //elimino dll'insieme degli elementi
+            (item) => item.id != firstTarget.id
+          );
+          const set =
+            firstTarget.outgoing.length > 0
+              ? firstTarget.outgoing.filter(
+                  (item) => item.type == "bpmn:SequenceFlow"
+                )
+              : false;
+          firstTarget = set ? set[0].target : false;
+        }
+      });
+    }
+    content =
+      content +
+      " end boundary path} \n The activity " +
+      activityName +
+      " is linked to:\n";
+  }
+
+  return [result, content, setOfElements];
+}
+//
+
+function procedureSubProcess(ActivityToCheck, setOfElements, content) {
+  var activityName = ActivityToCheck.businessObject.name
+    ? ActivityToCheck.businessObject.name
+    : ActivityToCheck.id;
+  var setOfChildren = ActivityToCheck.businessObject.flowElements;
+
+  setOfChildren = setOfChildren.filter(
+    (item) =>
+      item.$type != "bpmn:DataInputAssociatio" &&
+      item.$type != "bpmn:DataStoreReference" &&
+      item.$type != "bpmn:Group" &&
+      item.$type != "bpmn:MessageFlow" &&
+      item.$type != "bpmn:SequenceFlow" &&
+      item.$type != "label" &&
+      item.$type != "bpmn:DataObjectReference" &&
+      item.$type != "bpmn:DataObjectAssociation"
+  );
+  if (setOfChildren.length > 0) {
+    setOfElements = setOfElements.filter(
+      (item) => !setOfChildren.some((c) => c.id == item.id)
+    );
+    content =
+      content +
+      " activity " +
+      activityName +
+      " is a Sub Process the process inside it is: {\n ";
+    const setToPass = new Array();
+    setOfChildren.forEach((child) => {
+      setToPass.push(elementRegistry.get(child.id));
+    });
+    [content, setOfChildren] = iterateSetOfElementsToTranslate(
+      setToPass,
+      content,
+      null
+    );
+    content = content + " end subprocess}\n ";
+  }
+
+  return [content, setOfElements];
+}
 
 //function to transform the xml to a text scheme of the process
 export function fromXMLToText(xml) {
