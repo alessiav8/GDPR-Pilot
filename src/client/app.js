@@ -164,12 +164,12 @@ const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:ErrorEventDefinition",
   "bpmn:IntermediateCatchEvent",
   "bpmn:BoundaryEvent",
-  "bpmn:DataInputAssociation",
   "bpmn:DataStoreReference",
-  "bpmn:Group",
-  "label",
   "bpmn:DataObjectReference",
   "bpmn:DataObjectAssociation",
+  "bpmn:DataInputAssociation",
+  "bpmn:Group",
+  "label",
 ]);
 const gdprActivityQuestionsPrefix = ["consent"];
 
@@ -962,6 +962,7 @@ import_button.addEventListener("click", () => {
     handleSideBar(false);
     decolorEverySelected();
     removeChatGPTTipFromAll();
+    setGdprButtonCompleted(false);
   } catch (e) {
     console.log("Error", e);
   }
@@ -1092,6 +1093,8 @@ function handleUndoGdpr() {
   elementRegistry = viewer.get("elementRegistry");
   displayDynamicPopUp("Are you sure?").then((conferma) => {
     if (conferma) {
+      setGdprButtonCompleted(false);
+
       getMetaInformationResponse().then((response) => {
         for (let question in response) {
           if (response[question] != null) {
@@ -1154,6 +1157,7 @@ function handleUndoGdpr() {
         //modeling.removeShape(item);
       }
     });*/
+      reorderDiagram();
     }
   });
   setGdprButtonCompleted(false);
@@ -1504,7 +1508,9 @@ function getPreviousElement(referenceElement) {
   var res = new Array();
   if (incoming[0]) {
     incoming.forEach((element) => {
-      const previousE = element.businessObject.sourceRef.id;
+      const previousE = element.businessObject.sourceRef
+        ? element.businessObject.sourceRef.id
+        : null;
       const prev = elementRegistry.get(previousE);
       if (prev && prev.type && prev.type != " bpmn:Participant") {
         res.push(prev);
@@ -1726,29 +1732,44 @@ function hasCollaboration() {
 
 //function to reorder the diagram
 export function reorderDiagram() {
+  //prendo tutti gli elementi del processo
   elementRegistry = viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
+
   //has some collaboration inside it?
   const has_Collaboration = hasCollaboration();
+
   var distribute;
+
   if (has_Collaboration) {
+    //ha delle collaborazioni => ci sono diversi partecipanti
     has_Collaboration.forEach((part) => {
-      const subSet = getOrderedSub(part.children);
+      //prendi ogni partecipazione
+      const subSet = getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
       reOrderSubSet(subSet);
       distribute = subSet.filter(
         (element) =>
-          element.type != "bpmn:Group" &&
-          (!element.id.includes("right") || element.id.includes("consent"))
+          element.type != "bpmn:Group" && !element.id.includes("right")
       );
-      distributor.trigger(distribute, "vertical");
+      if (distribute.length > 0) distributor.trigger(distribute, "vertical");
+      reorderPools();
     });
   } else {
-    const sub = getOrderedSub(allElements);
+    var sub = getOrderedSub(allElements);
+    sub = sub.filter(
+      (item) =>
+        item.type != "bpmn:MessageFlow" &&
+        item.type != "bpmn:Group" &&
+        item.type != "bpmn:DataInputAssociation" &&
+        item.type != "bpmn:DataStoreReference" &&
+        item.type != "bpmn:DataObjectReference" &&
+        item.type != "bpmn:DataObjectAssociation"
+    );
     reOrderSubSet(sub);
     distribute = sub.filter(
       (element) =>
         element.type != "bpmn:Group" &&
-        (!element.id.includes("right") || element.id.includes("consent"))
+        !(element.id.includes("right") || element.id.includes("consent"))
     );
     distributor.trigger(distribute, "vertical");
   }
@@ -1773,7 +1794,7 @@ function reOrderSubSet(sub) {
             ? 150
             : 150;
         const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
-        var add = compare - diff; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
+        var add = compare - diff > 0 ? compare - diff : 0; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
         /*if (
           !(
@@ -1787,8 +1808,7 @@ function reOrderSubSet(sub) {
         }*/
         var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
         incomingElementSet = incomingElementSet.filter(
-          (elem) =>
-            elem.type != "bpmn:MessageFlow" && elem.type !== "bpmn:messageFlow"
+          (elem) => elem.type == "bpmn:SequenceFlow"
         );
         if (incomingElementSet.length > 0) {
           for (var i = 0; i < incomingElementSet.length; i++) {
@@ -1820,6 +1840,126 @@ function reOrderSubSet(sub) {
       });
     }
   });
+}
+
+function reorderPools() {
+  const elementRegistry = viewer.get("elementRegistry");
+  const pools = elementRegistry.filter(
+    (element) => element.type === "bpmn:Participant"
+  );
+  // Ordina i pool in base alla coordinata y
+  const sortedPools = pools.sort((a, b) => a.y - b.y);
+
+  sortedPools.forEach((pool) => {
+    const children = pool.children.filter(
+      (item) =>
+        item.type != "bpmn:SequenceFlow" &&
+        item.type != "bpmn:MessageFlow" &&
+        item.type != "bpmn:DataObjectAssociation" &&
+        item.type != "bpmn:DataInputAssociation"
+    );
+
+    if (children.length > 0) {
+      var newBounds = {
+        x: pool.x,
+        y: pool.y,
+        width: pool.width,
+        height: pool.height,
+      };
+
+      // Sort children by Y coordinate
+      const sortedByY = sortByY(children);
+      const firstY = sortedByY[0]; // Element with smallest Y
+      const lastY = sortedByY[sortedByY.length - 1]; // Element with largest Y
+
+      // Adjust Y and height
+      if (firstY.y < pool.y) {
+        newBounds.y = firstY.y - 20; // Adjust top boundary with a margin
+        newBounds.height = pool.height + (pool.y - firstY.y) + 40;
+      }
+      if (lastY.y + lastY.height > pool.y + pool.height) {
+        newBounds.height = lastY.y + lastY.height - pool.y + 40; // Adjust bottom boundary with a margin
+      }
+
+      // Sort children by X coordinate
+      const sortedByX = sortByX(children);
+      const firstX = sortedByX[0]; // Element with smallest X
+      const lastX = sortedByX[sortedByX.length - 1]; // Element with largest X
+
+      // Adjust X and width
+      if (firstX.x < pool.x) {
+        newBounds.x = firstX.x - 80; // Adjust left boundary with a margin
+        //newBounds.width = pool.width + (pool.x - firstX.x) + 40;
+      } else if (firstX.x > pool.x) {
+        newBounds.x = firstX.x - 80;
+      }
+      if (lastX.x + lastX.width > pool.x + pool.width) {
+        newBounds.width = lastX.x + lastX.width - pool.x + 80; // Adjust right boundary with a margin
+      } else if (lastX.x + lastX.width < pool.x + pool.width + 80) {
+        newBounds.width = lastX.x + lastX.width - pool.x + 80; // Adjust right boundary with a margin
+      }
+
+      modeling.resizeShape(pool, newBounds);
+    }
+  });
+
+  let prevY = -1;
+  const desiredDistance = 100;
+  const maxDistance = 200;
+
+  sortedPools.forEach((pool) => {
+    if (prevY !== -1) {
+      const currentY = pool.y;
+      const distance = currentY - prevY;
+      if (distance > maxDistance) {
+        const deltaY = prevY + 2 * desiredDistance - currentY;
+        modeling.resizeShape(pool, {
+          x: pool.x,
+          y: pool.y + deltaY,
+          width: pool.width,
+          height: pool.height,
+        });
+
+        pool.y += deltaY;
+      } else if (distance < desiredDistance) {
+        const deltaY = prevY + 2 * desiredDistance - currentY;
+        modeling.resizeShape(pool, {
+          x: pool.x,
+          y: pool.y + deltaY,
+          width: pool.width,
+          height: pool.height,
+        });
+
+        pool.y += deltaY;
+      }
+    }
+    prevY = pool.y + pool.height;
+  });
+}
+
+function sortByY(elements) {
+  var min = elements[0];
+  var max = elements[0];
+  elements.forEach((element) => {
+    if (element.y < min.y) {
+      min = element;
+    } else if (element.y > max.y) {
+      max = element;
+    }
+  });
+  return [min, max];
+}
+function sortByX(elements) {
+  var min = elements[0];
+  var max = elements[0];
+  elements.forEach((element) => {
+    if (element.x < min.x) {
+      min = element;
+    } else if (element.x > max.x) {
+      max = element;
+    }
+  });
+  return [min, max];
 }
 
 //function to get incoming sequence flow element
@@ -1869,7 +2009,10 @@ export async function getActivities() {
       if (bpmnActivityTypes.some((item) => item == element.type)) {
         const id = element.id;
         const name = element.businessObject.name;
-        activities.push({ id, name });
+        const splittedName = id.split("_");
+        if (splittedName[splittedName.length - 1] != "plane") {
+          activities.push({ id, name });
+        }
       }
     });
     return activities;
@@ -1969,7 +2112,6 @@ function getParticipantFromCollaboration(collaboration) {
       }
     }
   }
-
   return result;
 }
 
@@ -1981,28 +2123,36 @@ export function createAGroup() {
   var oldP = null;
 
   if (parentRoot.type == "bpmn:Collaboration") {
+    //se c'è una collaborazione e quindi lo devo andare ad inserire all'interno di una partecipazione
     parentRoot = getParticipantFromCollaboration(parentRoot);
     oldP = {
-      x: parentRoot.x,
+      x: parentRoot.x - 500,
       y: parentRoot.y,
-      width: parentRoot.width * 1.5,
-      height: parentRoot.height * 1.5,
+      width: parentRoot.width + 500,
+      height: parentRoot.height + 200,
     };
+    //mi salvo le coordinate della partecipazione
   }
 
-  const start = getStartFirst(parentRoot);
+  const start = getStartFirst(parentRoot); //mi prendo il primo elemento della partecipazione
   var x = 0;
   var y = 0;
-
   if (start != null) {
-    x = start.x - 150;
-    y = start.y;
+    x = start.x - 650;
+    y = start.y + 200;
+  }
+  if (oldP) {
+    x = x + 200;
+    y = y - 500;
+  } else {
+    x = x + 200;
+    y = y - 300;
   }
 
   const groupShape = elementFactory.createShape({
     type: "bpmn:Group",
-    width: 420,
-    height: 150,
+    width: 400,
+    height: 0,
     id: "GdprGroup",
   });
 
@@ -2011,10 +2161,10 @@ export function createAGroup() {
   groupShape.businessObject.name = "Achieve Gdpr Compliance";
 
   try {
-    modeling.createShape(groupShape, { x: x - 300, y: y - 300 }, parentRoot);
     if (oldP != null) {
       modeling.resizeShape(parentRoot, oldP);
     }
+    modeling.createShape(groupShape, { x: x, y: y }, parentRoot);
   } catch (error) {
     console.error("error in creating/resizing group");
   }
@@ -2056,13 +2206,14 @@ async function findFreeY(y_ex, max_height) {
       y = y + 120;
     }
   });
-  if (max_height < max_height + 120) {
+  if (max_height < y + 120) {
     const group = elementRegistry.get("GdprGroup");
-    modeling.resizeShape(group, {
+    console.log("to add", y, max_height, y + 120 - max_height);
+    const add = modeling.resizeShape(group, {
       x: group.x,
       y: group.y,
       width: group.width,
-      height: group.height + 110,
+      height: group.height + (y + 120 - max_height),
     });
     //modeling.updateProperties(group, { height: max_height + 120 });
   }
@@ -2116,13 +2267,7 @@ export async function addSubEvent(
   start_event.businessObject.id = path_name + "_start";
 
   try {
-    modeling.createShape(start_event, { x: gdpr.x + 70, y: y }, parent);
-    /*modeling.resizeShape(start_event, {
-      x: gdpr.x + 70,
-      y: y,
-      width: start_event.width,
-      height: start_event.height,
-    });*/
+    modeling.createShape(start_event, { x: gdpr.x + 50, y: y }, parent);
   } catch (error) {
     console.error("Error creating or resizing start_event:", error);
     return;
@@ -2139,13 +2284,7 @@ export async function addSubEvent(
   end_event.businessObject.name = end_event_title;
 
   try {
-    modeling.createShape(end_event, { x: gdpr.x + 350, y: y }, parent);
-    /* modeling.resizeShape(end_event, {
-      x: gdpr.x + 350,
-      y: y,
-      width: end_event.width,
-      height: end_event.height,
-    });*/
+    modeling.createShape(end_event, { x: gdpr.x + 300, y: y }, parent);
   } catch (error) {
     console.error("Error creating or resizing end_event:", error);
     return;
@@ -2179,12 +2318,6 @@ export async function addSubEvent(
   } catch (error) {
     console.error("Error adding activity between elements:", error);
     return;
-  }
-
-  try {
-    reorderDiagram();
-  } catch (error) {
-    console.error("Error reordering diagram:", error);
   }
 }
 

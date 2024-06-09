@@ -262,27 +262,27 @@ input[type="checkbox"] {
   transform: translateY(-0.075em);
   display: grid;
   place-content: center;
-  position: relative; /* Necessario per il posizionamento della spunta */
+  position: relative;
 }
 
 /* Stile per la spunta */
 input[type="checkbox"]::before {
   content: "";
-  width: 0.65em; /* Modifica la dimensione della spunta */
-  height: 0.65em; /* Modifica la dimensione della spunta */
+  width: 0.65em;
+  height: 0.65em;
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
   transform: scale(0);
   transform-origin: bottom left;
   transition: 120ms transform ease-in-out;
-  background-color: #2ca912; /* Colore della spunta */
-  position: absolute; /* Necessario per il posizionamento della spunta */
-  top: 50%; /* Centra verticalmente la spunta */
-  left: 50%; /* Centra orizzontalmente la spunta */
-  transform: translate(-50%, -50%) scale(0); /* Centra la spunta e scala */
+  background-color: #2ca912;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
   border: none;
 }
 
 /* Stile per il checkbox selezionato */
 input[type="checkbox"]:checked::before {
-  transform: translate(-50%, -50%) scale(1); /* Centra la spunta e scala */
+  transform: translate(-50%, -50%) scale(1);
 }

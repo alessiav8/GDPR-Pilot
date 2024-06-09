@@ -133,7 +133,7 @@ function addTextBelowButton(Id, answer) {
 //function that send the right message to chatGPT in order to get the prediction about the question
 //id: the id of the drop down related to the question ex. dropDownA
 async function predictionChatGPT(id) {
-  try {
+  /*try {
     const currentXML = await getXMLOfTheCurrentBpmn();
     const descriptionReq = await callChatGpt(
       "I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." +
@@ -290,7 +290,7 @@ async function predictionChatGPT(id) {
     }
   } catch (e) {
     console.error("Error in prediction chatGPT", e);
-  }
+  }*/
 }
 
 //function to create a drop down
