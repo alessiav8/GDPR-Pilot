@@ -739,8 +739,7 @@ async function createUlandSelectActivities(
           checkbox.name = "activity";
           checkbox.value = activity.id;
           checkbox.id = "checkbox_" + activity.id;
-          checkbox.style.backgroundColor = "white";
-          checkbox.style.border = " 0.1em solid black";
+
           if (activities_already_selected) {
             if (
               activities_already_selected.some(
@@ -780,6 +779,8 @@ async function createUlandSelectActivities(
           checkbox.addEventListener("click", function (event) {
             if (event.target.checked == true) {
               colorActivity(event.target.value);
+              checkbox.style.backgroundColor = "white";
+              checkbox.style.border = " 0.1em solid black";
             } else {
               decolorActivity(event.target.value);
             }
@@ -826,7 +827,7 @@ async function createUlandSelectActivities(
         submitButton.addEventListener("click", async function (event) {
           // Prevent the default form submission behavior
           event.preventDefault();
-          if (activitySuggested) {
+          if (localStorage.getItem("activity_suggested")) {
             localStorage.remove("activities_suggested");
           }
           // Get the selected activities
