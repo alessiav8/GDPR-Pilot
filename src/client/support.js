@@ -84,45 +84,61 @@ export async function openDrop(drop, type, open) {
 function addTextBelowButton(Id, answer) {
   var buttonId;
   var otherP;
-  //if the answer contains an array --> answer related to question B
-  if (answer.match(/\[.*?\]/)) {
-    buttonId = "no_" + Id;
-    const arrayMatch = answer.match(/\[.*?\]/);
-    if (arrayMatch) {
-      try {
-        const array = JSON.parse(arrayMatch);
-        if (array) {
-          console.log("Array of activities suggested", array);
-          localStorage.setItem("activities_suggested", JSON.stringify(array));
+
+  var yesButton = document.getElementById("yes_" + Id)
+    ? document.getElementById("yes_" + Id)
+    : true;
+  var noButton = document.getElementById("no_" + Id)
+    ? document.getElementById("no_" + Id)
+    : true;
+  if (
+    yesButton &&
+    noButton &&
+    !(
+      yesButton.style.border == "0.3vh solid rgb(16, 173, 116)" ||
+      noButton.style.border == "0.3vh solid rgb(16, 173, 116)"
+    )
+  ) {
+    //if the answer contains an array --> answer related to question B
+    if (answer.match(/\[.*?\]/)) {
+      buttonId = "no_" + Id;
+      const arrayMatch = answer.match(/\[.*?\]/);
+      if (arrayMatch) {
+        try {
+          const array = JSON.parse(arrayMatch);
+          if (array) {
+            console.log("Array of activities suggested", array);
+            localStorage.setItem("activities_suggested", JSON.stringify(array));
+          }
+        } catch (e) {
+          console.error("Errore nel parsing dell'array:", e);
         }
-      } catch (e) {
-        console.error("Errore nel parsing dell'array:", e);
       }
+    } else if (answer.includes("yes") || answer.includes("Yes")) {
+      buttonId = "yes_" + Id;
+      otherP = "no_" + Id;
+    } else {
+      buttonId = "no_" + Id;
+      otherP = "p_yes_" + Id;
     }
-  } else if (answer.includes("yes") || answer.includes("Yes")) {
-    buttonId = "yes_" + Id;
-    otherP = "no_" + Id;
-  } else {
-    buttonId = "no_" + Id;
-    otherP = "p_yes_" + Id;
-  }
-  //in case there is something missing
-  const p1 = document.getElementById("p_" + buttonId);
-  if (p1) p1.remove();
-  const p2 = document.getElementById("p_" + otherP);
-  if (p2) p2.remove();
+    //in case there is something missing
+    const p1 = document.getElementById("p_" + buttonId);
+    if (p1) p1.remove();
+    const p2 = document.getElementById("p_" + otherP);
+    if (p2) p2.remove();
 
-  const button = document.getElementById(buttonId);
+    const button = document.getElementById(buttonId);
 
-  if (button) {
-    button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
-    const textElement = document.createElement("p");
-    textElement.innerHTML = "Suggested by <br>OpenAI";
-    textElement.style.marginTop = "5px";
-    textElement.style.fontSize = "10px";
-    textElement.style.color = "rgba(16, 173, 116)";
-    textElement.id = "p_" + buttonId;
-    button.parentNode.insertBefore(textElement, button.nextSibling);
+    if (button) {
+      button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
+      const textElement = document.createElement("p");
+      textElement.innerHTML = "Suggested by <br>OpenAI";
+      textElement.style.marginTop = "5px";
+      textElement.style.fontSize = "10px";
+      textElement.style.color = "rgba(16, 173, 116)";
+      textElement.id = "p_" + buttonId;
+      button.parentNode.insertBefore(textElement, button.nextSibling);
+    }
   }
 }
 //
@@ -557,6 +573,23 @@ async function createDropDown(
 
   row.appendChild(dropDown);
   space.appendChild(row);
+
+  /*ulContainer.addEventListener("shown.bs.collapse", function (event) {
+    const dropDownId = ulContainer.id.slice(10);
+
+    const yesButtonId = document.getElementById("yes_" + dropDownId);
+    const noButtonId = document.getElementById("no_" + dropDownId);
+    if (
+      yesButtonId &&
+      noButtonId &&
+      (yesButtonId.style.border == " 0.3vh solid rgb(16, 173, 116)" ||
+        noButtonId.style.border == "0.3vh solid rgb(16, 173, 116)")
+    ) {
+      removeChatGPTTip(dropDownId);
+    }
+    {
+    }
+  });*/
   return dropDown;
 }
 //end function create the dropDown
