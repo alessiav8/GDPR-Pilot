@@ -1135,15 +1135,18 @@ function handleUndoGdpr() {
         if (group) {
           modeling.removeShape(group);
         }
-        reorderDiagram();
         closeSideBarSurvey();
         handleSideBar(false);
         removeChatGPTTipFromAll();
         decolorEverySelected();
+        reorderDiagram();
+        reorderDiagram();
+
         viewer.get("canvas").zoom("fit-viewport");
       });
     }
   });
+
   setGdprButtonCompleted(false);
   decolorEverySelected();
 }
@@ -1830,12 +1833,14 @@ function adjustPools(sortedPools) {
   const desiredDistance = 100;
   const maxDistance = 200;
   let prevY = -1;
+  let currentX = -1;
 
   sortedPools.forEach((pool) => {
     if (prevY !== -1) {
       const currentY = pool.y;
       const distance = currentY - prevY;
       let deltaY = 0;
+      let deltaX = 0;
 
       if (distance > maxDistance) {
         deltaY = prevY + desiredDistance - currentY;
@@ -1844,7 +1849,8 @@ function adjustPools(sortedPools) {
       }
 
       if (deltaY !== 0) {
-        modeling.moveElements([pool], { x: 0, y: deltaY });
+        if (pool.x != currentX) deltaX = currentX - pool.x;
+        modeling.moveElements([pool], { x: deltaX, y: deltaY });
         const messageFlows = elementRegistry
           .getAll()
           .filter((element) => element.type === "bpmn:MessageFlow");
@@ -1905,6 +1911,8 @@ function adjustPools(sortedPools) {
       const firstX = sortedByX[0];
       const lastX = sortedByX[sortedByX.length - 1];
 
+      console.log("X", firstX, lastX);
+
       if (firstX.x < pool.x - 50) {
         newBounds.x = firstX.x - 50;
       } else if (firstX.x > pool.x + 50) {
@@ -1925,6 +1933,7 @@ function adjustPools(sortedPools) {
     }
 
     prevY = pool.y + pool.height;
+    currentX = pool.x;
   });
 }
 async function reorderPools() {
