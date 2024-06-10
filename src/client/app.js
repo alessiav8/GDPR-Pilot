@@ -1734,11 +1734,14 @@ export function reorderDiagram() {
       //prendi ogni partecipazione
       const subSet = getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
       reOrderSubSet(subSet);
-      distribute = subSet.filter(
+      distribute = part.children.filter(
         (element) =>
           element.type != "bpmn:Group" && !element.id.includes("right")
       );
-      if (distribute.length > 0) distributor.trigger(distribute, "vertical");
+      if (distribute.length > 0) {
+        distributor.trigger(distribute, "horizontal");
+      }
+
       reorderPools();
     });
   } else {
@@ -1753,12 +1756,10 @@ export function reorderDiagram() {
         item.type != "bpmn:DataObjectAssociation"
     );
     reOrderSubSet(sub);
-    distribute = sub.filter(
-      (element) =>
-        element.type != "bpmn:Group" &&
-        !(element.id.includes("right") || element.id.includes("consent"))
+    distribute = allElements.filter(
+      (element) => element.type != "bpmn:Group" && !element.id.includes("right")
     );
-    distributor.trigger(distribute, "vertical");
+    distributor.trigger(distribute, "horizontal");
   }
   viewer.get("canvas").zoom("fit-viewport");
 }
@@ -1936,13 +1937,13 @@ function adjustPools(sortedPools) {
     currentX = pool.x;
   });
 }
+
 async function reorderPools() {
   const elementRegistry = viewer.get("elementRegistry");
   var pools = elementRegistry.filter(
     (element) => element.type === "bpmn:Participant"
   );
   const sortedPools = pools.sort((a, b) => a.y - b.y);
-  console.log("sorted pools", sortedPools);
   adjustPools(sortedPools);
 }
 
@@ -2146,29 +2147,26 @@ export function createAGroup() {
   const start = getStartFirst(parentRoot); //mi prendo il primo elemento della partecipazione
   var x = 0;
   var y = 0;
-  if (start != null) {
-    x = start.x - 650;
-    y = start.y + 200;
-  }
+
   if (oldP) {
-    x = x + 200;
-    y = y - 500;
+    x = oldP.x + 300;
+    y = oldP.y + 100;
   } else {
-    x = x + 200;
-    y = y - 300;
+    x = x - 200;
+    y = y + 200;
   }
 
   const groupShape = elementFactory.createShape({
     type: "bpmn:Group",
-    width: 400,
-    height: 0,
+    width: 320,
+    height: 200,
     id: "GdprGroup",
   });
 
   groupShape.id = "GdprGroup";
   groupShape.businessObject.id = "GdprGroup";
   groupShape.businessObject.name = "Achieve Gdpr Compliance";
-
+  groupShape.height = 200;
   try {
     if (oldP != null) {
       modeling.resizeShape(parentRoot, oldP);
@@ -2196,10 +2194,14 @@ export function existGdprGroup() {
 //
 
 //function to find a free space in the group
-async function findFreeY(y_ex, max_height) {
+async function findFreeY() {
   elementRegistry = viewer.get("elementRegistry");
+  const group = elementRegistry.get("GdprGroup");
+  var max_height = group.height != 0 ? group.height : 150;
+  const y_ex = group.y;
+  console.log("max_height: " + max_height, "y: " + y_ex);
   var elem;
-  var y = y_ex + 60;
+  var y = y_ex + 20;
   const rights = [
     "right_to_access",
     "right_to_portability",
@@ -2212,12 +2214,22 @@ async function findFreeY(y_ex, max_height) {
   ];
   rights.forEach((right) => {
     if (elementRegistry.get(right)) {
+      console.log("add", right);
       y = y + 120;
     }
   });
-  if (max_height < y + 120) {
-    const group = elementRegistry.get("GdprGroup");
-    console.log("to add", y, max_height, y + 120 - max_height);
+  const limitPoint = y_ex + max_height - 20; //50 è il padding
+  const spaceNeeded = y + 20 + 120;
+  console.log(
+    "Existing",
+    y,
+    "space Needed",
+    spaceNeeded,
+    "space Limit",
+    limitPoint
+  );
+
+  if (spaceNeeded > limitPoint) {
     const add = modeling.resizeShape(group, {
       x: group.x,
       y: group.y,
@@ -2252,6 +2264,7 @@ export async function addSubEvent(
     console.error("GdprGroup not found in element registry");
     return;
   }
+  console.log("GDPR", gdpr);
 
   var parent = viewer.get("canvas").getRootElement(); //= gdpr.parent;
   if (parent.type == "bpmn:Collaboration") {
@@ -2262,7 +2275,7 @@ export async function addSubEvent(
     return;
   }
 
-  const y = await findFreeY(gdpr.y, gdpr.height);
+  const y = await findFreeY();
 
   const start_event = elementFactory.createShape({
     type: "bpmn:StartEvent",
@@ -2276,7 +2289,11 @@ export async function addSubEvent(
   start_event.businessObject.id = path_name + "_start";
 
   try {
-    modeling.createShape(start_event, { x: gdpr.x + 50, y: y }, parent);
+    modeling.createShape(
+      start_event,
+      { x: gdpr.x + 40, y: gdpr.y + y - 70 },
+      parent
+    );
   } catch (error) {
     console.error("Error creating or resizing start_event:", error);
     return;
@@ -2293,7 +2310,7 @@ export async function addSubEvent(
   end_event.businessObject.name = end_event_title;
 
   try {
-    modeling.createShape(end_event, { x: gdpr.x + 300, y: y }, parent);
+    modeling.createShape(end_event, { x: gdpr.x + 200, y: y }, parent);
   } catch (error) {
     console.error("Error creating or resizing end_event:", error);
     return;
