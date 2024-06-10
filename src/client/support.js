@@ -147,13 +147,14 @@ function addTextBelowButton(Id, answer) {
 //id: the id of the drop down related to the question ex. dropDownA
 async function predictionChatGPT(id) {
   try {
-    const currentXML = fromXMLToText();
-    const descriptionReq = await callChatGpt(
-      "I give you the textual description of a bpmn process, can you give me back the description of the objective of this process? Just a brief description of at most 30 lines." +
-        currentXML
+    const currentXML = localStorage.getItem("currentXml");
+    const description = localStorage.getItem("description");
+
+    console.log(
+      "description: " + description,
+      "\ncurrentTransformationDiagram: \n",
+      currentXML
     );
-    const description = descriptionReq.content;
-    console.log("description: " + description);
     const activitiesSet = await getActivities();
     switch (id) {
       case "dropDownA":

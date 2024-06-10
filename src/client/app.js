@@ -1062,6 +1062,18 @@ async function handleClickOnGdprButton() {
     undo_button.addEventListener("click", handleUndoGdpr);
     checkQuestion();
   }
+  try {
+    const currentXML = await fromXMLToText();
+    const descriptionReq = await callChatGpt(
+      "I give you the textual description of a bpmn process, can you give me back the description of the objective of this process? Just a brief description of at most 30 lines." +
+        currentXML
+    );
+    const description = descriptionReq.content;
+    localStorage.setItem("currentXml", currentXML);
+    localStorage.setItem("description", description);
+  } catch (e) {
+    console.error("Error", e);
+  }
 }
 //
 
@@ -1958,8 +1970,6 @@ function adjustPools(sortedPools) {
       const firstX = sortedByX[0];
       const lastX = sortedByX[sortedByX.length - 1];
 
-      console.log("X", firstX, lastX);
-
       if (firstX.x < pool.x - 90) {
         newBounds.x = firstX.x - 90;
       } else if (firstX.x > pool.x + 90) {
@@ -1974,6 +1984,14 @@ function adjustPools(sortedPools) {
         newBounds.width = lastX.x + lastX.width - pool.x + 90;
       } else {
         newBounds.width = pool.width;
+      }
+
+      const gdpr = elementRegistry.get("GdprGroup");
+      if (gdpr) {
+        if (gdpr.y >= pool.y && gdpr.y + gdpr.height > pool.y + pool.height) {
+          // Controlla se il GDPR estende oltre i limiti del pool
+          newBounds.height = gdpr.y + gdpr.height + 20 - pool.y;
+        }
       }
 
       modeling.resizeShape(pool, newBounds);
@@ -2952,6 +2970,7 @@ export function fromXMLToText(xml) {
     //non ci sono partecipazioni
   }
   const blob = new Blob([content], { type: "text/plain" });
+  return content;
 }
 //
 export {
