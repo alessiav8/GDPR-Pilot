@@ -1094,7 +1094,6 @@ function handleUndoGdpr() {
   displayDynamicPopUp("Are you sure?").then((conferma) => {
     if (conferma) {
       setGdprButtonCompleted(false);
-
       getMetaInformationResponse().then((response) => {
         for (let question in response) {
           if (response[question] != null) {
@@ -1136,28 +1135,13 @@ function handleUndoGdpr() {
         if (group) {
           modeling.removeShape(group);
         }
+        reorderDiagram();
         closeSideBarSurvey();
         handleSideBar(false);
         removeChatGPTTipFromAll();
         decolorEverySelected();
         viewer.get("canvas").zoom("fit-viewport");
       });
-      /*const allElements = elementRegistry.getAll();
-    allElements.forEach((item) => {
-      const name = item.id.split("_");
-      if (name[0] == "consent") {
-
-        commandStack.execute('shape.delete', {
-              shape: item
-          }, {
-              context: {
-                  autoExecute: false
-              }
-          });
-        //modeling.removeShape(item);
-      }
-    });*/
-      reorderDiagram();
     }
   });
   setGdprButtonCompleted(false);
@@ -1842,99 +1826,115 @@ function reOrderSubSet(sub) {
   });
 }
 
-function reorderPools() {
-  const elementRegistry = viewer.get("elementRegistry");
-  const pools = elementRegistry.filter(
-    (element) => element.type === "bpmn:Participant"
-  );
-  // Ordina i pool in base alla coordinata y
-  const sortedPools = pools.sort((a, b) => a.y - b.y);
+function adjustPools(sortedPools) {
+  const desiredDistance = 100;
+  const maxDistance = 200;
+  let prevY = -1;
 
   sortedPools.forEach((pool) => {
+    if (prevY !== -1) {
+      const currentY = pool.y;
+      const distance = currentY - prevY;
+      let deltaY = 0;
+
+      if (distance > maxDistance) {
+        deltaY = prevY + desiredDistance - currentY;
+      } else if (distance < desiredDistance) {
+        deltaY = prevY + desiredDistance - currentY;
+      }
+
+      if (deltaY !== 0) {
+        modeling.moveElements([pool], { x: 0, y: deltaY });
+        const messageFlows = elementRegistry
+          .getAll()
+          .filter((element) => element.type === "bpmn:MessageFlow");
+
+        messageFlows.forEach((messageFlow) => {
+          const source = messageFlow.source;
+          const target = messageFlow.target;
+          if (source.parent === pool || target.parent === pool) {
+            const newWaypoints = messageFlow.waypoints.map((waypoint) => {
+              return {
+                x: waypoint.x,
+                y: waypoint.y + deltaY,
+              };
+            });
+            modeling.updateWaypoints(messageFlow, newWaypoints);
+          }
+        });
+      }
+    }
+
     const children = pool.children.filter(
       (item) =>
-        item.type != "bpmn:SequenceFlow" &&
-        item.type != "bpmn:MessageFlow" &&
-        item.type != "bpmn:DataObjectAssociation" &&
-        item.type != "bpmn:DataInputAssociation"
+        item.type !== "bpmn:SequenceFlow" &&
+        item.type !== "bpmn:MessageFlow" &&
+        item.type !== "bpmn:DataObjectAssociation" &&
+        item.type !== "bpmn:DataInputAssociation"
     );
 
     if (children.length > 0) {
-      var newBounds = {
+      const newBounds = {
         x: pool.x,
         y: pool.y,
         width: pool.width,
         height: pool.height,
       };
 
-      // Sort children by Y coordinate
       const sortedByY = sortByY(children);
-      const firstY = sortedByY[0]; // Element with smallest Y
-      const lastY = sortedByY[sortedByY.length - 1]; // Element with largest Y
+      const firstY = sortedByY[0];
+      const lastY = sortedByY[sortedByY.length - 1];
 
-      // Adjust Y and height
-      if (firstY.y < pool.y) {
-        newBounds.y = firstY.y - 20; // Adjust top boundary with a margin
-        newBounds.height = pool.height + (pool.y - firstY.y) + 40;
-      }
-      if (lastY.y + lastY.height > pool.y + pool.height) {
-        newBounds.height = lastY.y + lastY.height - pool.y + 40; // Adjust bottom boundary with a margin
+      if (firstY.y < pool.y - 50) {
+        newBounds.y = firstY.y - 50;
+      } else if (firstY.y > pool.y + 50) {
+        newBounds.y = firstY.y - 50;
+      } else {
+        newBounds.y = pool.y;
       }
 
-      // Sort children by X coordinate
+      if (lastY.y + lastY.height > pool.y + pool.height - 50) {
+        newBounds.height = lastY.y + lastY.height - pool.y + 50;
+      } else if (lastY.y + lastY.height < pool.y + pool.height - 50) {
+        newBounds.height = lastY.y + lastY.height - pool.y + 50;
+      } else {
+        newBounds.height = pool.height;
+      }
+
       const sortedByX = sortByX(children);
-      const firstX = sortedByX[0]; // Element with smallest X
-      const lastX = sortedByX[sortedByX.length - 1]; // Element with largest X
+      const firstX = sortedByX[0];
+      const lastX = sortedByX[sortedByX.length - 1];
 
-      // Adjust X and width
-      if (firstX.x < pool.x) {
-        newBounds.x = firstX.x - 80; // Adjust left boundary with a margin
-        //newBounds.width = pool.width + (pool.x - firstX.x) + 40;
-      } else if (firstX.x > pool.x) {
-        newBounds.x = firstX.x - 80;
+      if (firstX.x < pool.x - 50) {
+        newBounds.x = firstX.x - 50;
+      } else if (firstX.x > pool.x + 50) {
+        newBounds.x = firstX.x - 50;
+      } else {
+        newBounds.x = pool.x;
       }
-      if (lastX.x + lastX.width > pool.x + pool.width) {
-        newBounds.width = lastX.x + lastX.width - pool.x + 80; // Adjust right boundary with a margin
-      } else if (lastX.x + lastX.width < pool.x + pool.width + 80) {
-        newBounds.width = lastX.x + lastX.width - pool.x + 80; // Adjust right boundary with a margin
+
+      if (lastX.x + lastX.width > pool.x + pool.width - 50) {
+        newBounds.width = lastX.x + lastX.width - pool.x + 50;
+      } else if (lastX.x + lastX.width < pool.x + pool.width - 50) {
+        newBounds.width = lastX.x + lastX.width - pool.x + 50;
+      } else {
+        newBounds.width = pool.width;
       }
 
       modeling.resizeShape(pool, newBounds);
     }
-  });
 
-  let prevY = -1;
-  const desiredDistance = 100;
-  const maxDistance = 200;
-
-  sortedPools.forEach((pool) => {
-    if (prevY !== -1) {
-      const currentY = pool.y;
-      const distance = currentY - prevY;
-      if (distance > maxDistance) {
-        const deltaY = prevY + 2 * desiredDistance - currentY;
-        modeling.resizeShape(pool, {
-          x: pool.x,
-          y: pool.y + deltaY,
-          width: pool.width,
-          height: pool.height,
-        });
-
-        pool.y += deltaY;
-      } else if (distance < desiredDistance) {
-        const deltaY = prevY + 2 * desiredDistance - currentY;
-        modeling.resizeShape(pool, {
-          x: pool.x,
-          y: pool.y + deltaY,
-          width: pool.width,
-          height: pool.height,
-        });
-
-        pool.y += deltaY;
-      }
-    }
     prevY = pool.y + pool.height;
   });
+}
+async function reorderPools() {
+  const elementRegistry = viewer.get("elementRegistry");
+  var pools = elementRegistry.filter(
+    (element) => element.type === "bpmn:Participant"
+  );
+  const sortedPools = pools.sort((a, b) => a.y - b.y);
+  console.log("sorted pools", sortedPools);
+  adjustPools(sortedPools);
 }
 
 function sortByY(elements) {
