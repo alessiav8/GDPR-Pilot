@@ -21,6 +21,7 @@ import {
   getAnswerQuestionX,
   callChatGpt,
   getXMLOfTheCurrentBpmn,
+  fromXMLToText,
 } from "./app.js";
 
 import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
@@ -91,7 +92,7 @@ function addTextBelowButton(Id, answer) {
       try {
         const array = JSON.parse(arrayMatch);
         if (array) {
-          console.log("Array of activities", array);
+          console.log("Array of activities suggested", array);
           localStorage.setItem("activities_suggested", JSON.stringify(array));
         }
       } catch (e) {
@@ -105,19 +106,15 @@ function addTextBelowButton(Id, answer) {
     buttonId = "no_" + Id;
     otherP = "p_yes_" + Id;
   }
+  //in case there is something missing
+  const p1 = document.getElementById("p_" + buttonId);
+  if (p1) p1.remove();
+  const p2 = document.getElementById("p_" + otherP);
+  if (p2) p2.remove();
+
   const button = document.getElementById(buttonId);
 
-  //TODO: check if this resolve the bug
-  //i need to remove some possible p remained
-  /*if (button) {
-    const firstP = document.getElementById("p_" + buttonId);
-    if (firstP) firstP.remove();
-    const secondP = document.getElementById("p_" + otherP);
-    if (otherP) secondP.remove();
-  }*/
-  //
-
-  if (button && !document.getElementById("p_" + buttonId)) {
+  if (button) {
     button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
     const textElement = document.createElement("p");
     textElement.innerHTML = "Suggested by <br>OpenAI";
@@ -133,25 +130,27 @@ function addTextBelowButton(Id, answer) {
 //function that send the right message to chatGPT in order to get the prediction about the question
 //id: the id of the drop down related to the question ex. dropDownA
 async function predictionChatGPT(id) {
-  /*try {
-    const currentXML = await getXMLOfTheCurrentBpmn();
+  try {
+    const currentXML = fromXMLToText();
     const descriptionReq = await callChatGpt(
-      "I give you the xml of a bpmn process, can you give me back the description of the objective of this process? No list or other stuff. Just a brief description of at most 30 lines." +
+      "I give you the textual description of a bpmn process, can you give me back the description of the objective of this process? Just a brief description of at most 30 lines." +
         currentXML
     );
     const description = descriptionReq.content;
+    console.log("description: " + description);
     const activitiesSet = await getActivities();
     switch (id) {
       case "dropDownA":
         const hasPersonalDataReq = await callChatGpt(
-          "Given the description of a bpmn process that i will provide to you, are you able to say if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no. The description you have to analyze" +
+          "Given the description of a bpmn process" +
             description +
-            " and the xml" +
+            ", are you able to say if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no." +
+            " the textual description of the process is" +
             currentXML,
-          " an example of activities that involves personal data are: Request personal data, request name and surname, request phone number ecc... "
+          "Check if there are activities that handle personal data. Some examples of activities that involves personal data are: Request personal data, request name and surname, request phone number, request cap of residence ecc... "
         );
         const hasPersonalData = hasPersonalDataReq.content;
-        console.log("Prediction", hasPersonalData);
+        console.log("Personal data", hasPersonalData);
         addTextBelowButton(id, hasPersonalData);
 
         break;
@@ -290,7 +289,7 @@ async function predictionChatGPT(id) {
     }
   } catch (e) {
     console.error("Error in prediction chatGPT", e);
-  }*/
+  }
 }
 
 //function to create a drop down

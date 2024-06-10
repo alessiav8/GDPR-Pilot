@@ -35,7 +35,7 @@ import right_to_restrict_processing from "../../resources/right_to_restrict_proc
 import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
 import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
 import diagram_to_test_text_generation from "../../resources/diagram_to_test_text_generation.bpmn";
-
+import diagram_goal_to_achieve from "../../resources/diagram_goal_to_achieve.bpmn";
 import {
   yesdropDownA,
   nodropDownA,
@@ -204,7 +204,7 @@ function getExtension(element, type) {
 
 //function that loads the first diagram displayed at every load
 document.addEventListener("DOMContentLoaded", async function () {
-  await loadDiagram(diagram_to_test_text_generation);
+  await loadDiagram(diagram_goal_to_achieve);
   localStorage.setItem("popUpVisualized", false);
 });
 // end function to load the first diagram
@@ -1140,8 +1140,7 @@ function handleUndoGdpr() {
         removeChatGPTTipFromAll();
         decolorEverySelected();
         reorderDiagram();
-        reorderDiagram();
-
+        //reorderDiagram();
         viewer.get("canvas").zoom("fit-viewport");
       });
     }
@@ -1612,55 +1611,84 @@ function addActivityBetweenTwoElements(
 }
 //
 
+//function to say if an element has a successor and in the case, return it
+function hasOutgoing(element) {
+  const elementRegistry = viewer.get("elementRegistry");
+  let outgoingSet = element.outgoing;
+
+  outgoingSet = outgoingSet.filter(
+    (outgoing) =>
+      outgoing.type === "bpmn:SequenceFlow" ||
+      outgoing.type === "bpmn:sequenceFlow"
+  );
+
+  if (outgoingSet.length > 0) {
+    outgoingSet.forEach((outgoing) => {
+      const target = outgoing.businessObject.targetRef.id;
+      const targetRef = elementRegistry.get(target);
+      if (targetRef.type !== "bpmn:Participant") outgoing.targetRef = targetRef;
+    });
+
+    outgoingSet.sort(compareByX);
+    return outgoingSet[0];
+  } else {
+    return null;
+  }
+}
+//
+
 //function to get the set of ordered elements, ordered by their sequence flow
 //all the elements but not the sequence flow or partecipant or collaboration
 function getOrderedSub(allElements) {
-  const new_set = new Array();
-  //prendo solo gli elementi che mi interessano
-  var starts = allElements.filter((element) =>
-    allBpmnElements.some((item) => item === element.type)
+  const new_set = [];
+  var exist;
+  // Prendo solo gli elementi che mi interessano
+  let starts = allElements.filter(
+    (element) => element.type == "bpmn:StartEvent"
   );
-  while (starts[0]) {
-    //vedo se c'è uno start e prendo il primo
-    const exist = starts.filter(
-      (element) =>
-        element.type == "bpmn:startEvent" || element.type == "bpmn:StartEvent"
-    )[0];
-    if (exist) starts = starts - exist; //tolgo l'elemento preso dal set
-    const start = exist ? exist : starts.splice(-1, 1)[0];
-    //se non è già presente nel set, aggiungilo
-    if (!new_set.some((item) => item == start)) {
-      new_set.push(start);
+  while (starts.length > 0) {
+    // Vedo se c'è uno start e prendo il primo
+
+    // Se non c'è uno start, prendo l'ultimo elemento
+    exist = starts[0];
+    starts = starts.filter((element) => element.id !== exist.id);
+
+    // Se non è già presente nel set, aggiungilo
+    if (!new_set.some((item) => item === exist)) {
+      new_set.push(exist);
     }
 
-    //start diventa il nostro punto di partenza
-    var first = start;
+    // start diventa il nostro punto di partenza
+    let first = exist;
 
-    while (hasOutgoing(first)) {
-      //finchè c'è un ramo uscente prendi l'elemento collegato al ramo ed aggiungilo
-      const next_to_add = hasOutgoing(first); //prendo riferimento
-      const next = elementRegistry.get(next_to_add.businessObject.targetRef.id); //il riferimento diventa il mio nuovo next
-      if (!new_set.some((item) => item == next)) {
+    while (true) {
+      // Finché c'è un ramo uscente prendi l'elemento collegato al ramo ed aggiungilo
+      const next_to_add = hasOutgoing(first); // Prendo riferimento
+      console.log("first is", first, "\nnext ref", next_to_add);
+
+      if (!next_to_add) break; // Esci dal loop se non c'è un elemento successivo
+
+      const next = elementRegistry.get(next_to_add.businessObject.targetRef.id); // Il riferimento diventa il mio nuovo next
+
+      if (!new_set.some((item) => item === next)) {
         new_set.push(next);
       }
 
       first = next;
     }
   }
-  //to add the non connected ones
-  var last = allElements.filter((element) =>
-    allBpmnElements.some((item) => item == element.type)
-  );
-  last.forEach((element) => {
-    if (!new_set.some((item) => item == element)) {
-      new_set.push(element);
-    }
-  });
-  //
+
+  // Aggiungere gli elementi non connessi
+  allElements
+    .filter((element) => allBpmnElements.some((item) => item === element.type))
+    .forEach((element) => {
+      if (!new_set.some((item) => item === element)) {
+        new_set.push(element);
+      }
+    });
 
   return new_set;
 }
-//
 
 function compareByX(c, d) {
   elementRegistry = viewer.get("elementRegistry");
@@ -1673,30 +1701,44 @@ function compareByX(c, d) {
   }
 }
 
-//function to say if an element has a successor and in the case, return it
-function hasOutgoing(element) {
-  elementRegistry = viewer.get("elementRegistry");
-  var outgoingSet = element.outgoing;
+function getSequenceElements() {
+  const elementRegistry = viewer.get("elementRegistry");
+  const modeling = viewer.get("modeling");
 
-  outgoingSet = outgoingSet.filter(
-    (outgoing) =>
-      outgoing.type == "bpmn:SequenceFlow" ||
-      outgoing.type == "bpmn:sequenceFlow"
+  // Trova tutti gli elementi di tipo 'bpmn:StartEvent'
+  const startEvents = elementRegistry.filter(
+    (element) =>
+      element.type === "bpmn:StartEvent" || element.type === "bpmn:startEvent"
   );
 
-  const set = new Array();
-  if (outgoingSet.length > 0) {
-    outgoingSet.forEach((outgoing) => {
-      const target = outgoing.businessObject.targetRef.id;
-      const targetRef = elementRegistry.get(target);
-      if (target.type != "bpmn:Participant") set.push(targetRef);
-    });
+  const orderedElements = [];
 
-    outgoingSet.sort(compareByX);
-    return outgoingSet[0];
-  } else return false;
+  startEvents.forEach((startEvent) => {
+    // Chiamata ricorsiva per ottenere tutti gli elementi in sequenza partendo dal startEvent
+    addSequence(startEvent, orderedElements, elementRegistry);
+  });
+
+  return orderedElements;
 }
-//
+
+function addSequence(element, orderedElements, elementRegistry) {
+  if (!element || orderedElements.includes(element)) return;
+
+  orderedElements.push(element);
+
+  const outgoing = element.outgoing.filter(
+    (outgoing) =>
+      outgoing.type === "bpmn:SequenceFlow" ||
+      outgoing.type === "bpmn:sequenceFlow"
+  );
+
+  outgoing.forEach((flow) => {
+    const targetId = flow.businessObject.targetRef.id;
+    const targetElement = elementRegistry.get(targetId);
+
+    addSequence(targetElement, orderedElements, elementRegistry);
+  });
+}
 
 function isInRange(number, min) {
   const max = min + 70;
@@ -1706,13 +1748,11 @@ function isInRange(number, min) {
 function hasCollaboration() {
   elementRegistry = viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
-  for (var i = 0; i < allElements.length; i++) {
-    if (allElements[i].type == "bpmn:Collaboration") {
-      const partecipants = allElements[i].children.filter(
-        (child) => child.type == "bpmn:Participant" && child.children.length > 0
-      );
-      return partecipants;
-    }
+  const participants = allElements.filter(
+    (element) => element.type == "bpmn:Participant"
+  );
+  if (participants.length > 0) {
+    return participants;
   }
   return false;
 }
@@ -1729,18 +1769,18 @@ export function reorderDiagram() {
   var distribute;
 
   if (has_Collaboration) {
+    console.log("hasCollaboration", has_Collaboration);
     //ha delle collaborazioni => ci sono diversi partecipanti
     has_Collaboration.forEach((part) => {
       //prendi ogni partecipazione
-      const subSet = getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
+      const subSet = getSequenceElements();
+      console.log("sequ", subSet); //getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
       reOrderSubSet(subSet);
       distribute = part.children.filter(
         (element) =>
           element.type != "bpmn:Group" && !element.id.includes("right")
       );
-      if (distribute.length > 0) {
-        distributor.trigger(distribute, "horizontal");
-      }
+      //distributor.trigger(distribute, "horizontal");
 
       reorderPools();
     });
@@ -1808,6 +1848,18 @@ function reOrderSubSet(sub) {
               const newPositionY = element.y + addY;
 
               modeling.moveShape(element, { x: add, y: addY });
+
+              if (element.attachers.length > 0) {
+                element.attachers.forEach((attached) => {
+                  modeling.moveShape(attached, { x: add, y: addY });
+                });
+              }
+              //if the object i'm moving has a label, move the label too
+              if (element.labels.length > 0) {
+                element.labels.forEach((label) => {
+                  modeling.moveShape(label, { x: add, y: addY });
+                });
+              }
               const newWaypoints = [
                 {
                   x: previousElement.x + previousElement.width,
@@ -1816,12 +1868,6 @@ function reOrderSubSet(sub) {
                 { x: newPositionX, y: newPositionY + element.height / 2 },
               ];
               modeling.updateWaypoints(incomingElement, newWaypoints);
-
-              //if the object i'm moving has a label, move the label too
-              const exist_label = elementRegistry.get(element.id + "_label");
-              if (exist_label) {
-                modeling.moveShape(exist_label, { x: add, y: addY });
-              }
             }
           }
         }
@@ -1892,18 +1938,18 @@ function adjustPools(sortedPools) {
       const firstY = sortedByY[0];
       const lastY = sortedByY[sortedByY.length - 1];
 
-      if (firstY.y < pool.y - 50) {
-        newBounds.y = firstY.y - 50;
-      } else if (firstY.y > pool.y + 50) {
-        newBounds.y = firstY.y - 50;
+      if (firstY.y < pool.y - 90) {
+        newBounds.y = firstY.y - 90;
+      } else if (firstY.y > pool.y + 90) {
+        newBounds.y = firstY.y - 90;
       } else {
         newBounds.y = pool.y;
       }
 
-      if (lastY.y + lastY.height > pool.y + pool.height - 50) {
-        newBounds.height = lastY.y + lastY.height - pool.y + 50;
-      } else if (lastY.y + lastY.height < pool.y + pool.height - 50) {
-        newBounds.height = lastY.y + lastY.height - pool.y + 50;
+      if (lastY.y + lastY.height > pool.y + pool.height - 90) {
+        newBounds.height = lastY.y + lastY.height - pool.y + 90;
+      } else if (lastY.y + lastY.height < pool.y + pool.height - 90) {
+        newBounds.height = lastY.y + lastY.height - pool.y + 90;
       } else {
         newBounds.height = pool.height;
       }
@@ -1914,18 +1960,18 @@ function adjustPools(sortedPools) {
 
       console.log("X", firstX, lastX);
 
-      if (firstX.x < pool.x - 50) {
-        newBounds.x = firstX.x - 50;
-      } else if (firstX.x > pool.x + 50) {
-        newBounds.x = firstX.x - 50;
+      if (firstX.x < pool.x - 90) {
+        newBounds.x = firstX.x - 90;
+      } else if (firstX.x > pool.x + 90) {
+        newBounds.x = firstX.x - 90;
       } else {
         newBounds.x = pool.x;
       }
 
-      if (lastX.x + lastX.width > pool.x + pool.width - 50) {
-        newBounds.width = lastX.x + lastX.width - pool.x + 50;
-      } else if (lastX.x + lastX.width < pool.x + pool.width - 50) {
-        newBounds.width = lastX.x + lastX.width - pool.x + 50;
+      if (lastX.x + lastX.width > pool.x + pool.width - 90) {
+        newBounds.width = lastX.x + lastX.width - pool.x + 90;
+      } else if (lastX.x + lastX.width < pool.x + pool.width - 90) {
+        newBounds.width = lastX.x + lastX.width - pool.x + 90;
       } else {
         newBounds.width = pool.width;
       }
@@ -2145,15 +2191,18 @@ export function createAGroup() {
   }
 
   const start = getStartFirst(parentRoot); //mi prendo il primo elemento della partecipazione
-  var x = 0;
-  var y = 0;
+
+  if (start != null) {
+    var x = 0;
+    var y = start.y;
+  }
 
   if (oldP) {
     x = oldP.x + 300;
     y = oldP.y + 100;
   } else {
     x = x - 200;
-    y = y + 200;
+    y = y + 150;
   }
 
   const groupShape = elementFactory.createShape({
@@ -2199,7 +2248,6 @@ async function findFreeY() {
   const group = elementRegistry.get("GdprGroup");
   var max_height = group.height != 0 ? group.height : 150;
   const y_ex = group.y;
-  console.log("max_height: " + max_height, "y: " + y_ex);
   var elem;
   var y = y_ex + 20;
   const rights = [
@@ -2220,21 +2268,13 @@ async function findFreeY() {
   });
   const limitPoint = y_ex + max_height - 20; //50 è il padding
   const spaceNeeded = y + 20 + 120;
-  console.log(
-    "Existing",
-    y,
-    "space Needed",
-    spaceNeeded,
-    "space Limit",
-    limitPoint
-  );
 
   if (spaceNeeded > limitPoint) {
     const add = modeling.resizeShape(group, {
       x: group.x,
       y: group.y,
       width: group.width,
-      height: group.height + (y + 120 - max_height),
+      height: group.height + (y + 130 - (max_height + y_ex)),
     });
     //modeling.updateProperties(group, { height: max_height + 120 });
   }
@@ -2264,8 +2304,6 @@ export async function addSubEvent(
     console.error("GdprGroup not found in element registry");
     return;
   }
-  console.log("GDPR", gdpr);
-
   var parent = viewer.get("canvas").getRootElement(); //= gdpr.parent;
   if (parent.type == "bpmn:Collaboration") {
     parent = getParticipantFromCollaboration(parent);
@@ -2291,7 +2329,7 @@ export async function addSubEvent(
   try {
     modeling.createShape(
       start_event,
-      { x: gdpr.x + 40, y: gdpr.y + y - 70 },
+      { x: gdpr.x + 40, y: gdpr.y + y - 120 },
       parent
     );
   } catch (error) {
@@ -2310,7 +2348,11 @@ export async function addSubEvent(
   end_event.businessObject.name = end_event_title;
 
   try {
-    modeling.createShape(end_event, { x: gdpr.x + 200, y: y }, parent);
+    modeling.createShape(
+      end_event,
+      { x: gdpr.x + 200, y: gdpr.y + y - 120 },
+      parent
+    );
   } catch (error) {
     console.error("Error creating or resizing end_event:", error);
     return;
@@ -2725,7 +2767,6 @@ function iterateSetOfElementsToTranslate(set, content, firstPassed) {
     }
 
     if (next == null) {
-      console.log("First", first);
       const getAttached = first.outgoing.filter(
         //prendo il riferimento dell'attività attaccata a quella che sto considerando
         (out) => out.type == "bpmn:SequenceFlow"
@@ -2910,7 +2951,6 @@ export function fromXMLToText(xml) {
   } else {
     //non ci sono partecipazioni
   }
-  console.log("Content\n", content);
   const blob = new Blob([content], { type: "text/plain" });
 }
 //
