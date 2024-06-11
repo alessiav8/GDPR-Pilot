@@ -294,7 +294,6 @@ async function loadDiagram(diagram) {
                       (element) =>
                         element.id != "response" && element.id != activity_id
                     );
-                    console.log("Meta from remove", event);
                     editMetaInfo("B", setJsonData("No", new_meta));
                   }
                 }
@@ -564,7 +563,6 @@ async function handleClick(event) {
 //function to edit the metas of B
 //idActivity: id of the activity that was conneted to the consent path
 async function editMetaB(idActivity) {
-  console.log("editMetaB");
   elementRegistry = viewer.get("elementRegistry");
   var questionB = await getAnswerQuestionX("questionB");
   var result = new Array();
@@ -696,7 +694,6 @@ function changeID() {
       return element.type === "bpmn:Process" && element.parent == null;
     })
     .pop();
-  console.log(processElement);
   if (processElement) {
     const newProcessId = "Main_Process";
     modeling.updateProperties(processElement, {
@@ -1402,7 +1399,6 @@ function checkUniqueID(id) {
   try {
     elementRegistry = viewer.get("elementRegistry");
     const uniqueID = elementRegistry.get(id);
-    console.log(" searching for id: ", id, "is unique?", uniqueID);
     if (uniqueID) {
       const parse = id.split("_");
       const name = parse[0];
@@ -1680,7 +1676,6 @@ function getOrderedSub(allElements) {
     while (true) {
       // Finché c'è un ramo uscente prendi l'elemento collegato al ramo ed aggiungilo
       const next_to_add = hasOutgoing(first); // Prendo riferimento
-      console.log("first is", first, "\nnext ref", next_to_add);
 
       if (!next_to_add) break; // Esci dal loop se non c'è un elemento successivo
 
@@ -1802,7 +1797,7 @@ export function reorderDiagram() {
       distribute = part.children.filter(
         (element) => element.id != "GdprGroup" && !element.id.includes("right")
       );
-      //distributor.trigger(distribute, "horizontal");
+      //distributor.trigger(distribute, "vertical");
 
       reorderPools();
     });
@@ -1960,8 +1955,6 @@ function adjustPools(sortedPools) {
       const firstY = sortedByY[0];
       const lastY = sortedByY[sortedByY.length - 1];
 
-      console.log("FIRST LAST Y: ", firstY, lastY);
-      console.log("Children: ", children);
       if (firstY.y < pool.y - 90) {
         newBounds.y = firstY.y - 90;
       } else if (firstY.y > pool.y + 90) {
@@ -2180,14 +2173,7 @@ export function removeConsentFromActivity(activity, type) {
         var incoming_elem = incomingSet[i];
         const source = incoming_elem.source;
         const splitted = source.id.split("_");
-        console.log(
-          "remove connection",
-          incoming_elem,
-          "\n source",
-          source,
-          "\nsplitted",
-          splitted
-        );
+
         if (splitted[0] == "consent" && type == "consent_") {
           try {
             commandStack.execute("connection.delete", {
@@ -2221,7 +2207,6 @@ function getStartFirst(parent) {
       break;
     }
   }
-  console.log("Start event result:", result);
   return result;
 }
 //
