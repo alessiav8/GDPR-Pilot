@@ -91,14 +91,21 @@ function addTextBelowButton(Id, answer) {
   var noButton = document.getElementById("no_" + Id)
     ? document.getElementById("no_" + Id)
     : true;
-  if (
-    yesButton &&
-    noButton &&
-    ((yesButton.style &&
-      !yesButton.style.border == "0.3vh solid rgb(16, 173, 116)") ||
-      (noButton.style &&
-        !noButton.style.border == "0.3vh solid rgb(16, 173, 116)"))
-  ) {
+  if (yesButton) {
+    var HasBorderY =
+      yesButton.style &&
+      !yesButton.style.border == "0.3vh solid rgb(16, 173, 116)"
+        ? true
+        : false;
+  }
+  if (noButton) {
+    var HasBorderN =
+      noButton.style &&
+      !noButton.style.border == "0.3vh solid rgb(16, 173, 116)"
+        ? true
+        : false;
+  }
+  if (yesButton && noButton && !HasBorderY && !HasBorderN) {
     //if the answer contains an array --> answer related to question B
     if (answer.match(/\[.*?\]/)) {
       buttonId = "no_" + Id;
@@ -366,9 +373,15 @@ async function predictionChatGPT(id) {
           const hasRightToBeInformedAboutDataBreachesReq = await callChatGpt(
             "Analyze the provided BPMN process described below: " +
               description +
-              ". This is the XML of the process, where you can analyze every connection and activity. Conduct the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
+              ". This is the textual description of the process, where you can analyze every connection and activity. Conduct the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
               currentXML +
-              ".\n\nDefinition of Right to be Informed about Data Breaches: In the event of a data breach, the Data Controller is required to communicate it within 72 hours to the National Authority as well as to the Data Subject. This constraint is not subject to any de minimis standard; thus, any data breach, regardless of its magnitude, must always be communicated along with the actions that will be taken to limit the damage. The only exception is if the stolen data is not usable (e.g., encrypted). However, even in this case, the National Authority can compel the Data Controller to communicate the breach to the Data Subject.\n\nTask: Check if there is a clear separation between the data controller, the national authority, and the data subject. They should be represented by three different participants (XML tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Controller communicates the data breaches to the national authority and to the data subject. If you find this behavior, print 'Yes' as the answer. If there aren't three different participants in the XML, check if there are any events that trigger the sending of a message to the national authority and to the data subject to inform them about the data breaches. In that case, you can print 'Yes' as the response. You can also print 'Yes' if you find some activity that, by its name, indicates some kind of data breach handling. In every other case, including cases of insecurity, print 'No' as the answer."
+              ".\n\nDefinition of Right to be Informed about Data Breaches: In the event of a data breach, the Data Controller is required to communicate it within 72 hours to the National Authority as well as to the Data Subject. This constraint is not subject to any de minimis standard; thus, any data breach, regardless of its magnitude, must always be communicated along with the actions that will be taken to limit the damage. The only exception is if the stolen data is not usable (e.g., encrypted). However, even in this case, the National Authority can compel the Data Controller to communicate the breach to the Data Subject." +
+              "\n\nTask: Check if there is a clear separation between the data controller, the national authority, and the data subject. They should be represented by three different participants ({Participant } in the textual description)." +
+              "\n\nInstructions:\n1. Identify if there is an activity where the Data Controller communicates the data breaches to the national authority and to the data subject. " +
+              "\nIf you find this behavior, print 'Yes' as the answer." +
+              "\n If there aren't three different participants in the XML, check if there are any events that trigger the sending of a message to the national authority and to the data subject to inform them about the data breaches." +
+              "\n In that case, you can print 'Yes' as the response. You can also print 'Yes' if you find some activity that, by its name, indicates some kind of data breach handling. In every other case, including cases of insecurity, print 'No' as the answer." +
+              "Example of correct process where you have to reply yes: \n { Participant: user (empty pool) } {Participant: Company <Activity name: Check if there are data breaches Type: Task ID: Activity_1jivsdy Exchange with other partecipations: no exchanges /> linked to: [Start Exclusive Gateway Gateway_0p619nk (only one of the path can be taken) condition to check in order to proceed with the right path 'Data breaches?' different paths: Path of Gateway_0p619nk taken if: 'Yes' linked to <Activity name: Inform the subject and the data authority Type: IntermediateThrowEvent ID: Event_0hpdw9n Exchange with other partecipations: Send a message to user National Authority /> linked to Gateway_1dwsutx Path of Gateway_0p619nk taken if: 'no' linked to Gateway_1dwsutx End paths of ExclusiveGateway Gateway_0p619nk ] [Closure Exclusive Gateway Gateway_1dwsutx] linked to: <Activity name: End Type: EndEvent ID: Event_12ew51e Exchange with other partecipations: no exchanges /> <Activity name: start Type: StartEvent ID: Event_0c4vuea Exchange with other partecipations: Receive a message from user /> linked to: End Participant: Company} { Participant: National Authority (empty pool) } "
           );
 
           const hasRightToBeInformedAboutDataBreaches =
