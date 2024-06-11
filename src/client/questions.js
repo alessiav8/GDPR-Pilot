@@ -502,10 +502,12 @@ export function removeChatGPTTip(id) {
   }
   if (id == "dropDownB") {
     letters.forEach((letter) => {
-      var check = document.getElementById("checkbox_dropDown" + letter);
-      if (check) {
-        check.style.backgroundColor = "white";
-        check.style.border = " 0.1em solid black";
+      const checkSet = document.querySelectorAll("input[type='checkbox']");
+      if (checkSet.length > 0) {
+        checkSet.forEach((check) => {
+          check.style.backgroundColor = "white";
+          check.style.border = " 0.1em solid black";
+        });
       }
     });
   }

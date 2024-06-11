@@ -161,179 +161,225 @@ async function predictionChatGPT(id) {
     const currentXML = localStorage.getItem("currentXml");
     const description = localStorage.getItem("description");
 
-    const activitiesSet = await getActivities();
-    switch (id) {
-      case "dropDownA":
-        const hasPersonalDataReq = await callChatGpt(
-          "Given the description of a bpmn process" +
-            description +
-            ", are you able to say if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no." +
-            " the textual description of the process is" +
-            currentXML,
-          "Check if there are activities that handle personal data. Some examples of activities that involves personal data are: Request personal data, request name and surname, request phone number, request cap of residence ecc... "
-        );
-        const hasPersonalData = hasPersonalDataReq.content;
-        console.log("Personal data", hasPersonalData);
-        addTextBelowButton(id, hasPersonalData);
+    if (currentXML != "") {
+      const activitiesSet = await getActivities();
+      switch (id) {
+        case "dropDownA":
+          const hasPersonalDataReq = await callChatGpt(
+            "Given the description of a bpmn process" +
+              description +
+              ", are you able to say if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no." +
+              " the textual description of the process is" +
+              currentXML,
+            "Check if there are activities that handle personal data. Some examples of activities that involves personal data are: Request personal data, request name and surname, request phone number, request cap of residence ecc... "
+          );
+          const hasPersonalData = hasPersonalDataReq.content;
+          console.log("Personal data", hasPersonalData);
+          addTextBelowButton(id, hasPersonalData);
 
-        break;
-      case "dropDownB":
-        const hasConsentReq = await callChatGpt(
-          "Analyze the given BPMN process described below:" +
-            description +
-            "and the provided text description of its XML " +
-            currentXML +
-            ".\n\nDefinition of Consent to Use the Data: When retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If consent has already been obtained for a certain set of data, it is not necessary to ask for consent again. Consent is required only for handling personal data. Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual." +
-            " \n\n General Task: Identify which activities require consent before being executed based on the provided text description of the process. Ensure that the consent is not already present in the process (Ex. already exists an activity that request the consent before requesting the personal data).\n" +
-            ".\n1. Determine which activities handle personal data and require consent. This analysis should be based on the name given to the activities and their meaning (use the description to understand their scope). You can find the names and the ids  in the textual description i provided to you. To consider an activity, the name of the activity must clearly suggest that the activity handles personal data from the data subject." +
-            "\n2. Ensure that the consent for these activities has not been requested previously in the process." +
-            "\n3. If multiple activities require consent, only include the first one that appears for each unique set of personal data." +
-            "\n4. Print an array with the IDs of the activities that require consent before being executed and for which the consent is not already present. Only include IDs of the activities (check the textual description). I must be able to call const arrayMatch = answer.match(/[.*?]/); const array = JSON.parse(arrayMatch); on it" +
-            "+\n5. If no activities require consent, print an empty array []." +
-            +"\n\nAdditional Instructions:\n- Ensure that the activities indeed handle personal data as defined above.\n- Consider the entire process to ensure accuracy.\n\nOutput: Provide a precise answer based on the analysis of the textual description of the process process. The answer must be or an array with the ids of the activities or an empty array [], nothing more" +
-            "\n\n example that could be considered activity that handles personal data from the data subject is like: 'Request Personal Data', 'Request Name and Surname','Request City of provenience, City of Birth' ecc... the name must indicates the request of some personal data directly, you don't have to suppose it, if is not clearly indicated in the name ignore that activity, and before the activity, must miss a consent request in the process." +
-            " The request of data should be considered if and only if is about PERSONAL DATA. The activities you choose should not be about data portability, right to access data, data breaches and the others gdpr requirements must not be taken in consideration " +
-            'An Activity in the textual description is like this one: "<Activity name: 30 Days Type: StartEvent ID: Event_0x64qzk Exchange with other partecipations: no exchanges /> linked to:" so you can find the name, the type of the activity and its ID that is what you have to print if the activity handles personal data like this: ["Event_0x64qzk"]'
-        );
+          break;
+        case "dropDownB":
+          const hasConsentReq = await callChatGpt(
+            "Analyze the given BPMN process described below:" +
+              description +
+              "and the provided text description of its XML " +
+              currentXML +
+              ".\n\nDefinition of Consent to Use the Data: When retrieving personal data, the Data Controller needs to ask the Data Subject for consent. If consent has already been obtained for a certain set of data, it is not necessary to ask for consent again. Consent is required only for handling personal data. Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual." +
+              " \n\n General Task: Identify which activities require consent before being executed based on the provided text description of the process. Ensure that the consent is not already present in the process (Ex. already exists an activity that request the consent before requesting the personal data).\n" +
+              ".\n1. Determine which activities handle personal data and require consent. This analysis should be based on the name given to the activities and their meaning (use the description to understand their scope). You can find the names and the ids  in the textual description i provided to you. To consider an activity, the name of the activity must clearly suggest that the activity handles personal data from the data subject." +
+              "\n2. Ensure that the consent for these activities has not been requested previously in the process." +
+              "\n3. If multiple activities require consent, only include the first one that appears for each unique set of personal data." +
+              "\n4. Print an array with the IDs of the activities that require consent before being executed and for which the consent is not already present. Only include IDs of the activities (check the textual description). I must be able to call const arrayMatch = answer.match(/[.*?]/); const array = JSON.parse(arrayMatch); on it" +
+              "+\n5. If no activities require consent, print an empty array []." +
+              +"\n\nAdditional Instructions:\n- Ensure that the activities indeed handle personal data as defined above.\n- Consider the entire process to ensure accuracy.\n\nOutput: Provide a precise answer based on the analysis of the textual description of the process process. The answer must be or an array with the ids of the activities or an empty array [], nothing more" +
+              "\n\n example that could be considered activity that handles personal data from the data subject is like: 'Request Personal Data', 'Request Name and Surname','Request City of provenience, City of Birth' ecc... the name must indicates the request of some personal data directly, you don't have to suppose it, if is not clearly indicated in the name ignore that activity, and before the activity, must miss a consent request in the process." +
+              " The request of data should be considered if and only if is about PERSONAL DATA. The activities you choose should not be about data portability, right to access data, data breaches and the others gdpr requirements must not be taken in consideration " +
+              'An Activity in the textual description is like this one: "<Activity name: 30 Days Type: StartEvent ID: Event_0x64qzk Exchange with other partecipations: no exchanges /> linked to:" so you can find the name, the type of the activity and its ID that is what you have to print if the activity handles personal data like this: ["Event_0x64qzk"]'
+          );
 
-        const hasConsent = hasConsentReq.content;
-        console.log("Has Consent?", hasConsent);
-        addTextBelowButton(id, hasConsent);
-        break;
-      case "dropDownC":
-        const hasRightToAccessReq = await callChatGpt(
-          "Analyzing the provided BPMN process described below: " +
-            description +
-            ".\nThis is the provided text description of its XML: \n" +
-            currentXML +
-            ".\n\nDefinition of Right to Access: At any moment, the Data Subject (the person the data is about) can request access and rectification to their personal data from the Data Controller (the entity that collects and processes the data). The Data Controller must satisfy these requests.\n\nTask: Check if there is an activity where the Data Subject requests access to her personal data from the Data Controller." +
-            " This request must be initiated by the Data Subject and addressed to the Data Controller, not the other way around." +
-            "\n\nInstructions:\nn1 Identify if there are two different Participant " +
-            "\n If the answer is yes" +
-            ".Identify if there is an activity where the Data Subject (is a participant) requests her personal data from the Data Controller (is another partcipant different from the participant of the data subject)." +
-            "\n. Ensure that the sequence flow indicates the request originates from the Data Subject to the Data Controller, not the opposite." +
-            "An example of this behavior could be: {Participant: Phone Company <Activity name: Request of the user to access its private data Type: StartEvent ID: Event_1n5smga Exchange with other partecipations: Receive a message from User /> linked to: <Activity name: Check Validity of the request Type: Task ID: Activity_170m1gv Exchange with other partecipations: no exchanges /> linked to: [Start Exclusive Gateway Gateway_0iyfbzs (only one of the path can be taken) condition to check in order to proceed with the right path 'is valid?' different paths: Path of Gateway_0iyfbzs taken if: 'yes' linked to <Activity name: allow the user to access their data Type: SendTask ID: Activity_02s2a6z Exchange with other partecipations: Send a message to User /> linked to Gateway_0lujbik Path of Gateway_0iyfbzs taken if: 'no' linked to Gateway_0lujbik End paths of ExclusiveGateway Gateway_0iyfbzs ] [Closure Exclusive Gateway Gateway_0lujbik] linked to: <Activity name: Request fullfield Type: EndEvent ID: Event_1ntbs1m Exchange with other partecipations: no exchanges /> End Participant: Phone Company} { Participant: User (empty pool) }" +
-            "\n. If you find such a behavior, reply 'Yes'." +
-            "\n. If you do not find such an activity or if a request to access stored data of some user is not welcomed without a reason, reply 'No'." +
-            "\nn2 If there aren't two different partecipations, but ONLY IN THIS CASE, if you find two participants that can act Data Subject and data Controller, you have to find the Message Flow between them to consider a request of accessing data as it is, check if still exists this behavior without the two partecipation, taking in consideration the previous case, it could be:" +
-            "{Participant: Phone Company <Activity name: Request of the user to access its private data Type: StartEvent ID: Event_1n5smga Exchange with other partecipations: no exchanges /> linked to: <Activity name: Check Validity of the request Type: Task ID: Activity_170m1gv Exchange with other partecipations: no exchanges /> linked to: [Start Exclusive Gateway Gateway_0iyfbzs (only one of the path can be taken) condition to check in order to proceed with the right path 'is valid?' different paths: Path of Gateway_0iyfbzs taken if: 'yes' linked to <Activity name: allow the user to access their data Type: SendTask ID: Activity_02s2a6z Exchange with other partecipations:no exchanges /> linked to Gateway_0lujbik Path of Gateway_0iyfbzs taken if: 'no' linked to Gateway_0lujbik End paths of ExclusiveGateway Gateway_0iyfbzs ] [Closure Exclusive Gateway Gateway_0lujbik] linked to: <Activity name: Request fullfield Type: EndEvent ID: Event_1ntbs1m Exchange with other partecipations: no exchanges /> End Participant: Phone Company}" +
-            "\n\nMotivation: Briefly explain your answer. If you are not sure about the answer, please answer 'No'"
-        );
+          const hasConsent = hasConsentReq.content;
+          console.log("Has Consent?", hasConsent);
+          addTextBelowButton(id, hasConsent);
+          break;
+        case "dropDownC":
+          const hasRightToAccessReq = await callChatGpt(
+            "Analyzing the provided BPMN process described below: " +
+              description +
+              ".\nThis is the provided text description of its XML: \n" +
+              currentXML +
+              ".\n\nDefinition of Right to Access: At any moment, the Data Subject (the person the data is about) can request access and rectification to their personal data from the Data Controller (the entity that collects and processes the data). The Data Controller must satisfy these requests.\n\nTask: Check if there is an activity where the Data Subject requests access to her personal data from the Data Controller." +
+              " This request must be initiated by the Data Subject and addressed to the Data Controller, not the other way around." +
+              "\n\nInstructions:\nn1 Identify if there are two different Participant " +
+              "\n If the answer is yes" +
+              ".Identify if there is an activity where the Data Subject (is a participant) requests her personal data from the Data Controller (is another partcipant different from the participant of the data subject)." +
+              "\n. Ensure that the sequence flow indicates the request originates from the Data Subject to the Data Controller, not the opposite." +
+              "An example of this behavior could be: {Participant: Phone Company <Activity name: Request of the user to access its private data Type: StartEvent ID: Event_1n5smga Exchange with other partecipations: Receive a message from User /> linked to: <Activity name: Check Validity of the request Type: Task ID: Activity_170m1gv Exchange with other partecipations: no exchanges /> linked to: [Start Exclusive Gateway Gateway_0iyfbzs (only one of the path can be taken) condition to check in order to proceed with the right path 'is valid?' different paths: Path of Gateway_0iyfbzs taken if: 'yes' linked to <Activity name: allow the user to access their data Type: SendTask ID: Activity_02s2a6z Exchange with other partecipations: Send a message to User /> linked to Gateway_0lujbik Path of Gateway_0iyfbzs taken if: 'no' linked to Gateway_0lujbik End paths of ExclusiveGateway Gateway_0iyfbzs ] [Closure Exclusive Gateway Gateway_0lujbik] linked to: <Activity name: Request fullfield Type: EndEvent ID: Event_1ntbs1m Exchange with other partecipations: no exchanges /> End Participant: Phone Company} { Participant: User (empty pool) }" +
+              "\n. If you find such a behavior, reply 'Yes'." +
+              "\n. If you do not find such an activity or if a request to access stored data of some user is not welcomed without a reason, reply 'No'." +
+              "\nn2 If there aren't two different partecipations, but ONLY IN THIS CASE, if you find two participants that can act Data Subject and data Controller, you have to find the Message Flow between them to consider a request of accessing data as it is, check if still exists this behavior without the two partecipation, taking in consideration the previous case, it could be:" +
+              "{Participant: Phone Company <Activity name: Request of the user to access its private data Type: StartEvent ID: Event_1n5smga Exchange with other partecipations: no exchanges /> linked to: <Activity name: Check Validity of the request Type: Task ID: Activity_170m1gv Exchange with other partecipations: no exchanges /> linked to: [Start Exclusive Gateway Gateway_0iyfbzs (only one of the path can be taken) condition to check in order to proceed with the right path 'is valid?' different paths: Path of Gateway_0iyfbzs taken if: 'yes' linked to <Activity name: allow the user to access their data Type: SendTask ID: Activity_02s2a6z Exchange with other partecipations:no exchanges /> linked to Gateway_0lujbik Path of Gateway_0iyfbzs taken if: 'no' linked to Gateway_0lujbik End paths of ExclusiveGateway Gateway_0iyfbzs ] [Closure Exclusive Gateway Gateway_0lujbik] linked to: <Activity name: Request fullfield Type: EndEvent ID: Event_1ntbs1m Exchange with other partecipations: no exchanges /> End Participant: Phone Company}" +
+              "\n\nMotivation: Briefly explain your answer. If you are not sure about the answer, please answer 'No'"
+          );
 
-        const hasRightToAccess = hasRightToAccessReq.content;
-        console.log("Has Right To access?", hasRightToAccess);
-        addTextBelowButton(id, hasRightToAccess);
-        break;
-      case "dropDownD":
-        const hasRightOfPortabilityReq = await callChatGpt(
-          "Analyzing the provided BPMN process described below: " +
-            description +
-            ". This is the textual description of the process: " +
-            currentXML +
-            ".\n\nDefinition of Right of Portability: At any moment, the Data Subject (the person the data is about) can request the portability of the data associated with her to third parties, and the Data Controller (the entity that collects the data of the subject) has the obligation to satisfy this request." +
-            "\n\nTask: \nn1 Check if there is a clear separation between the data controller and the data subject, they should be impersonated by two different participants ({Participant } in the textual representation)." +
-            "\n\nInstructions:\n2. Identify if there is an activity where the Data Subject(a participant different from the participant of the data controller) requests the portability of her personal data to the Data Controller. The request must be initiated by the Data Subject and must arrive at the Data Controller check the exchanges of messages indicated in the textual description." +
-            "If this is the case, print just 'Yes' as the answer. " +
-            "an example of this behavior is " +
-            "{Participant: Data Controller <Activity name: Start process Type: StartEvent ID: Event_099wcs6 Exchange with other partecipations: no exchanges /> linked to: <Activity name: Ask for portability Type: IntermediateThrowEvent ID: Event_1mblmkr Exchange with other partecipations: Send a message to bpmn:ParticipantParticipant_1kasvod /> linked to: <Activity name: Answer received Type: IntermediateCatchEvent ID: Event_1788d8h Exchange with other partecipations: Receive a message from bpmn:ParticipantParticipant_1kasvod /> linked to: [Start Exclusive Gateway Gateway_1p0aatu (only one of the path can be taken) condition to check in order to proceed with the right path 'Was portability allowed?' different paths: Path of Gateway_1p0aatu taken if: 'yes' linked to <Activity name: Port data to a third party Type: SendTask ID: Activity_0pxfr9m Exchange with other partecipations: no exchanges /> linked to Gateway_0yoku9o Path of Gateway_1p0aatu taken if: 'no' linked to Gateway_0yoku9o End paths of ExclusiveGateway Gateway_1p0aatu ] [Closure Exclusive Gateway Gateway_0yoku9o] linked to: <Activity name: End process Type: EndEvent ID: Event_073kzrc Exchange with other partecipations: no exchanges /> End Participant: Data Controller} { Participant: Participant_1kasvod (empty pool) }" +
-            "\nn2If there aren't two different participants that can impersonate Data Subject and Data Controller, search for an activity which, from the name, suggests that it handles the user's right of portability, like 'Right to Portability handler'. If you find it, print just 'Yes' as the answer; otherwise, print just 'No'. " +
-            "Another case in which you can print 'Yes' as the answer is when there is an activity requesting permission to port the data (data portability), and the process has a gateway where data portability proceeds if and only if the permission is granted.\n2. In every other case, or in case of insecurity, print 'No' as the answer. Provide a brief motivation for your answer."
-        );
+          const hasRightToAccess = hasRightToAccessReq.content;
+          console.log("Has Right To access?", hasRightToAccess);
+          addTextBelowButton(id, hasRightToAccess);
+          break;
+        case "dropDownD":
+          const hasRightOfPortabilityReq = await callChatGpt(
+            "Analyzing the provided BPMN process described below: " +
+              description +
+              ". This is the textual description of the process: " +
+              currentXML +
+              ".\n\nDefinition of Right of Portability: At any moment, the Data Subject (the person the data is about) can request the portability of the data associated with her to third parties, and the Data Controller (the entity that collects the data of the subject) has the obligation to satisfy this request." +
+              "\n\nTask: \nn1 Check if there is a clear separation between the data controller and the data subject, they should be impersonated by two different participants ({Participant } in the textual representation)." +
+              "\n\nInstructions:\n2. Identify if there is an activity where the Data Subject(a participant different from the participant of the data controller) requests the portability of her personal data to the Data Controller. The request must be initiated by the Data Subject and must arrive at the Data Controller check the exchanges of messages indicated in the textual description." +
+              "If this is the case, print just 'Yes' as the answer. " +
+              "an example of this behavior is " +
+              "{Participant: Data Controller <Activity name: Start process Type: StartEvent ID: Event_099wcs6 Exchange with other partecipations: no exchanges /> linked to: <Activity name: Ask for portability Type: IntermediateThrowEvent ID: Event_1mblmkr Exchange with other partecipations: Send a message to bpmn:ParticipantParticipant_1kasvod /> linked to: <Activity name: Answer received Type: IntermediateCatchEvent ID: Event_1788d8h Exchange with other partecipations: Receive a message from bpmn:ParticipantParticipant_1kasvod /> linked to: [Start Exclusive Gateway Gateway_1p0aatu (only one of the path can be taken) condition to check in order to proceed with the right path 'Was portability allowed?' different paths: Path of Gateway_1p0aatu taken if: 'yes' linked to <Activity name: Port data to a third party Type: SendTask ID: Activity_0pxfr9m Exchange with other partecipations: no exchanges /> linked to Gateway_0yoku9o Path of Gateway_1p0aatu taken if: 'no' linked to Gateway_0yoku9o End paths of ExclusiveGateway Gateway_1p0aatu ] [Closure Exclusive Gateway Gateway_0yoku9o] linked to: <Activity name: End process Type: EndEvent ID: Event_073kzrc Exchange with other partecipations: no exchanges /> End Participant: Data Controller} { Participant: Participant_1kasvod (empty pool) }" +
+              "\nn2 If there aren't two different participants that can impersonate Data Subject and Data Controller, search for an activity which, from the name, suggests that it handles the user's right of portability, like 'Right to Portability handler'. If you find it, print just 'Yes' as the answer; otherwise, print just 'No'. " +
+              "Another case in which you can print 'Yes' as the answer is when there is an activity requesting permission to port the data (data portability), and the process has a gateway where data portability proceeds if and only if the permission is granted.\n2. In every other case, or in case of insecurity, print 'No' as the answer. Provide a brief motivation for your answer."
+          );
 
-        const hasRightOfPortability = hasRightOfPortabilityReq.content;
-        console.log("hasRightOfPortabilityReq?", hasRightOfPortability);
-        addTextBelowButton(id, hasRightOfPortability);
-        break;
-      case "dropDownE":
-        const hasRightToRectifyReq = await callChatGpt(
-          "Analyzing the provided BPMN process described below: " +
-            description +
-            ". This is the XML of the process: " +
-            currentXML +
-            ".\n\nDefinition of Right to Rectify: At any moment, the Data Subject (the person the data is about) can request to rectify her personal data to the Data Controller (the entity that collects and processes the data). The Data Controller must satisfy these requests.\n\nTask: Check if there is an activity where the Data Subject requests a modification of her personal data to the Data Controller. This request must be initiated by the Data Subject and addressed to the Data Controller, not the other way around. Check the Message Flow in the XML.\n\nInstructions:\n1. Identify if there is a clear separation between the data subject and the data controller. They must be two different participants (XML tags 'bpmn:Participant' or 'bpmnio:Participant'). If such participants exist and there is an activity where the Data Subject requests her personal data from the Data Controller, print 'Yes' as the answer.\n2. If you do not find such an activity or if the process does not contain participants, check if in the XML there exists an event in which a request for rectification arrives and if it is satisfied. If so, print 'Yes'; otherwise, in case of insecurity, just print 'No'.\n\nMotivation: Briefly explain your answer. Ensure that the activity you identify clearly shows a request from the Data Subject to the Data Controller and involves separate participants."
-        );
+          const hasRightOfPortability = hasRightOfPortabilityReq.content;
+          console.log("hasRightOfPortabilityReq?", hasRightOfPortability);
+          addTextBelowButton(id, hasRightOfPortability);
+          break;
+        case "dropDownE":
+          const hasRightToRectifyReq = await callChatGpt(
+            "Analyzing the provided BPMN process described below: " +
+              description +
+              ". This is the textual description of the XML of the process: " +
+              currentXML +
+              ".\n\nDefinition of Right to Rectify: At any moment, the Data Subject (the person the data is about) can request to rectify her personal data to the Data Controller (the entity that collects and processes the data). The Data Controller must satisfy these requests." +
+              "\n\nTask: n1 check if there are two different participant, one must impersonate the data subject and one must impersonate the data controller." +
+              " if there are two participant Check if there is an activity where the Data Subject requests a modification of her personal data to the Data Controller. there must be an exchanges of messages starting by the data subject and the data controller must allows the rectification" +
+              "an example could be: " +
+              "{ Participant: Participant_0t4txcj (empty pool) } {Participant: Participant_0wfkdnl <Activity name: Request of data rectification Type: StartEvent ID: Event_0c4vuea Exchange with other partecipations: Receive a message from bpmn:ParticipantParticipant_0t4txcj /> linked to: <Activity name: UNllow data rectification Type: SendTask ID: Activity_1jivsdy Exchange with other partecipations: Send a message to bpmn:ParticipantParticipant_0t4txcj /> linked to: <Activity name: bpmn:EndEvent Type: EndEvent ID: Event_06k7hmz Exchange with other partecipations: no exchanges /> End Participant: Participant_0wfkdnl}" +
+              " This request must be initiated by the Data Subject and addressed to the Data Controller, not the other way around. Check the Message Flow in the textual description." +
+              "If you find such a behavior print 'Yes' as the answer." +
+              "\n2. If you do not find such an activity or if the process does not contain participants, check if in the textual description there exists an event in which a request for rectification arrives and if it is satisfied. If so, print 'Yes'; Or check if exists some kind of 'Right of rectification handler' if exists something that by the name suggested some kind of handling of this right, please print 'Yes'" +
+              "The request of rectification must be satisfy, the case in which is denied, like this \n{ Participant: Participant_0t4txcj (empty pool) } {Participant: Participant_0wfkdnl <Activity name: Request of data rectification Type: StartEvent ID: Event_0c4vuea Exchange with other partecipations: Receive a message from bpmn:ParticipantParticipant_0t4txcj /> linked to: <Activity name: Deny the data rectification Type: SendTask ID: Activity_1jivsdy Exchange with other partecipations: Send a message to bpmn:ParticipantParticipant_0t4txcj /> linked to: <Activity name: bpmn:EndEvent Type: EndEvent ID: Event_06k7hmz Exchange with other partecipations: no exchanges /> End Participant: Participant_0wfkdnl} must not be taken in consideration, in this case the answer is 'No'" +
+              "\nin case of insecurity, just print 'No'.\n\nMotivation: Briefly explain your answer. Ensure that the activity you identify clearly shows a request from the Data Subject to the Data Controller and involves separate participants." +
+              "\nBe careful the right of access the data is not equal to the right of rectify them, you have to find a clear activity in which there is a request of rectification/modification. Also the deletion of the data must not be taken in consideration"
+          );
+          const hasRightToRectify = hasRightToRectifyReq.content;
+          console.log("has Right To Rectify ", hasRightToRectify);
+          addTextBelowButton(id, hasRightToRectify);
+          break;
+        case "dropDownF":
+          const hasRightToObjectReq = await callChatGpt(
+            "Analyzing the provided BPMN process described below: " +
+              description +
+              ". This is the textual description of the process, where you can analyze every connection and activity." +
+              currentXML +
+              " Perform the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
+              ".\n\nDefinition of Right to Object: At any moment, the Data Subject (the person the data is about) has the right to object to certain types of data processing, such as direct marketing. The Data Controller (the entity that collects the data of the subject) shall no longer process the personal data unless she demonstrates compelling legitimate grounds for the processing that override the interests and rights of the Data Subject." +
+              "\n\nTask: Check if there is a clear separation between the data controller and the data subject, represented by two different participants (you must find two different {Participant} in the textual representation)." +
+              "\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicates her will to object to a certain data processing. (ex Request of stop data processing) Also, check if the data controller acknowledges the request of the data subject and stops that processing. If you find this behavior, print 'Yes' as the answer." +
+              " If the Data Controller does not acknowledge the request of the data subject, print 'No' as the answer." +
+              " If there aren't two different participants in the textual description, check if there is a request from the data subject where her request to stop a certain type of data processing, or if there is some activity whose name indicates some kind of request like that, check if the request is welcomed by the data controller." +
+              " If you find this behavior, you can print 'Yes' as the answer." +
+              " In every other case, including cases of insecurity, print 'No' as the answer." +
+              "Example of case in which you have to respond 'Yes'" +
+              "{ Participant: user (empty pool) } {Participant: Company <Activity name: Request of stop data processing from the user Type: StartEvent ID: Event_0c4vuea Exchange with other partecipations: Receive a message from user /> linked to: <Activity name: Stop data processing Type: Task ID: Activity_1jivsdy Exchange with other partecipations: no exchanges /> linked to: <Activity name: End process Type: EndEvent ID: Event_06k7hmz Exchange with other partecipations: no exchanges /> End Participant: Company}" +
+              ""
+          );
 
-        const hasRightToRectify = hasRightToRectifyReq.content;
-        console.log("Has Right To access?", hasRightToRectify);
-        addTextBelowButton(id, hasRightToRectify);
-        break;
-      case "dropDownF":
-        const hasRightToObjectReq = await callChatGpt(
-          "Analyzing the provided BPMN process described below: " +
-            description +
-            ". This is the XML of the process, where you can analyze every connection and activity. Perform the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
-            currentXML +
-            ".\n\nDefinition of Right to Object: At any moment, the Data Subject (the person the data is about) has the right to object to certain types of data processing, such as direct marketing. The Data Controller (the entity that collects the data of the subject) shall no longer process the personal data unless she demonstrates compelling legitimate grounds for the processing that override the interests and rights of the Data Subject.\n\nTask: Check if there is a clear separation between the data controller and the data subject, represented by two different participants (XML tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicates her will to object to a certain data processing. Also, check if the data controller acknowledges the request of the data subject and stops that processing. If you find this behavior, print 'Yes' as the answer. If the Data Controller does not acknowledge the request of the data subject, print 'No' as the answer. If there aren't two different participants in the XML, check if there is a request for consent, if there is some activity whose name indicates some kind of data processing, and check if the behavior depends on the answer received. If there is a gateway that indicates whether the data processing is allowed, the activity in which it is executed is run; otherwise, it is stopped. If you find this condition, you can print 'Yes' as the answer. In every other case, including cases of insecurity, print 'No' as the answer."
-        );
+          const hasRightToObject = hasRightToObjectReq.content;
+          console.log("hasRightToObject?", hasRightToObject);
+          addTextBelowButton(id, hasRightToObject);
+          break;
+        case "dropDownG":
+          const hasRightToObjectAutomatedProcessingReq = await callChatGpt(
+            "Analyzing the provided BPMN process described below: " +
+              description +
+              ". This is the textual description of the XML of the process, where you can analyze every connection and activity." +
+              currentXML +
+              " Perform the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
+              ".\n\nDefinition of Right to Object to Automated Processing: At any moment, the Data Subject (the person the data is about) has the right to object to a decision based solely on automated processing, and that may significantly affect the Data Subject's freedoms, such as profiling. The Data Controller (the entity that collects the data of the subject) should implement suitable measures to safeguard the data subject's right and, if needed, stop the automated processing of personal data." +
+              "\n\nTask: Check if there is a clear separation between the data controller and the data subject, represented by two different participants (search for {Participant} in the textual representation')." +
+              "\n\nInstructions:\n1. If there is a clear separation Identify if there is an activity where the Data Subject communicates her will to object to automated processing to the data controller (check if there is 'exchange with participants' from the data subject to the data controller in the textual representation ). Also, check if the data controller acknowledges the request of the data subject check if he  stops the automated processing or implements suitable measures to safeguard the data subject." +
+              " If you find this behavior, print 'Yes' as the answer. If the Data Controller does not acknowledge the request of the data subject or if it takes no action after receiving the request, print 'No' as the answer." +
+              " If there aren't two different participants in the textual description, check if there is an event that reports a request to stop/object the automated processing, and if there is a gateway that indicates whether the automated processing request was acknowledged, the activity in which it is executed is run; otherwise, it is stopped. If you find this condition, you can print 'Yes' as the answer." +
+              " You can also print 'Yes' if you find some activity whose name indicates some kind of right to object to automated processing handling. In every other case, including cases of insecurity, print 'No' as the answer." +
+              "Example of case you can answer 'Yes': \n { Participant: User (empty pool) } {Participant: Company <Activity name: Request to interrupt automated data processing Type: StartEvent ID: Event_0c4vuea Exchange with other partecipations: Receive a message from User /> linked to: <Activity name: Interrupt automated data processing Type: SendTask ID: Activity_1jivsdy Exchange with other partecipations: Send a message to User /> linked to: <Activity name: end Type: EndEvent ID: Event_06k7hmz Exchange with other partecipations: no exchanges /> End Participant: Company}" +
+              "Process: <Activity name: bpmn:StartEvent Type: StartEvent ID: Event_03lz4i3 Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:Task Type: Task ID: Activity_1f7gg9f Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:Task Type: Task ID: Activity_0xq7izg Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:EndEvent Type: EndEvent ID: Event_0gma890 Exchange with other partecipations: no exchanges /> <Activity name: bpmn:StartEvent Type: StartEvent ID: Event_159sevf Exchange with other partecipations: no exchanges /> linked to: <Activity name: Handle Automated Processing Objection Type: Task ID: Activity_1u27rt4 Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:EndEvent Type: EndEvent ID: Event_0vkkept Exchange with other partecipations: no exchanges /> End Process" +
+              "Process: <Activity name: bpmn:StartEvent Type: StartEvent ID: Event_03lz4i3 Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:Task Type: Task ID: Activity_1f7gg9f Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:Task Type: Task ID: Activity_0xq7izg Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:EndEvent Type: EndEvent ID: Event_0gma890 Exchange with other partecipations: no exchanges /> <Activity name: bpmn:StartEvent Type: StartEvent ID: Event_159sevf Exchange with other partecipations: no exchanges /> linked to: <Activity name: Right to Object to automated Processing Type: Task ID: Activity_1u27rt4 Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:EndEvent Type: EndEvent ID: Event_0vkkept Exchange with other partecipations: no exchanges /> End Process"
+          );
+          const hasRightToObjectAutomatedProcessing =
+            hasRightToObjectAutomatedProcessingReq.content;
+          console.log(
+            "hasRightToObjectAutomatedProcessing?",
+            hasRightToObjectAutomatedProcessing
+          );
+          addTextBelowButton(id, hasRightToObjectAutomatedProcessing);
+          break;
+        case "dropDownH":
+          const hasRightToRestrictProcessingReq = await callChatGpt(
+            "Analyze the provided BPMN process described below: " +
+              description +
+              ". This is the textual description of the xml of the process, where you can analyze every connection and activity." +
+              currentXML +
+              " Conduct the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
+              ".\n\nDefinition of Right to Restrict Processing: It gives a Data Subject (the person the data is about) the right to limit the way an organization (data controller) uses their personal data, rather than requesting erasure." +
+              "\n\nTask: Check if there is a clear separation between the data controller and the data subject, represented by two different participants ({Participant} in the textual description')" +
+              ".\n\nInstructions:\n1. If there is a separation between the participants, Identify if there is an activity where the Data Subject communicates her will to restrict the processing of their data. Also, check if the data controller acknowledges the request of the data subject and restricts the processing of the data accordingly." +
+              "\nIf you find this behavior, print 'Yes' as the answer. " +
+              "\nIf the Data Controller does not acknowledge the request of the data subject or if it takes no action after receiving the request, print 'No' as the answer." +
+              "\n2If there aren't two different participants in the process, check if there is an event that reports a request to restrict the processing of the data, and if there is a gateway that indicates whether the restrict processing request was acknowledged, and if there is an activity whose name indicates some restriction being executed on the data of the subject processed. " +
+              "\nIf you find this condition, you can print 'Yes' as the answer. You can also print 'Yes' if you find some activity whose name indicates some kind of right to restrict processing handling. In every other case, including cases of insecurity, print 'No' as the answer." +
+              "Example of textual description that handle the right and for which you can answer 'Yes'\n { Participant: user (empty pool) } {Participant: Company <Activity name: Request to restrict data processing Type: StartEvent ID: Event_0c4vuea Exchange with other partecipations: Receive a message from user /> linked to: <Activity name: Restrict Processing Type: Task ID: Activity_1jivsdy Exchange with other partecipations: no exchanges /> linked to: <Activity name: End process Type: EndEvent ID: Event_06k7hmz Exchange with other partecipations: no exchanges /> End Participant: Company}" +
+              "Example of textual description that handle the right and for which you can answer 'Yes'\n Process: <Activity name: bpmn:StartEvent Type: StartEvent ID: Event_080scd0 Exchange with other partecipations: no exchanges /> linked to: <Activity name: Handle right to restrict processing Type: Task ID: Activity_0dz581c Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:EndEvent Type: EndEvent ID: Event_0t2gigi Exchange with other partecipations: no exchanges />"
+          );
 
-        const hasRightToObject = hasRightToObjectReq.content;
-        console.log("hasRightToObject?", hasRightToObject);
-        addTextBelowButton(id, hasRightToObject);
-        break;
-      case "dropDownG":
-        const hasRightToObjectAutomatedProcessingReq = await callChatGpt(
-          "Analyzing the provided BPMN process described below: " +
-            description +
-            ". This is the XML of the process, where you can analyze every connection and activity. Perform the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
-            currentXML +
-            ".\n\nDefinition of Right to Object to Automated Processing: At any moment, the Data Subject (the person the data is about) has the right to object to a decision based solely on automated processing, and that may significantly affect the Data Subject's freedoms, such as profiling. The Data Controller (the entity that collects the data of the subject) should implement suitable measures to safeguard the data subject's right and, if needed, stop the automated processing of personal data.\n\nTask: Check if there is a clear separation between the data controller and the data subject, represented by two different participants (XML tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicates her will to object to automated processing. Also, check if the data controller acknowledges the request of the data subject and stops the automated processing or implements suitable measures to safeguard the data subject. If you find this behavior, print 'Yes' as the answer. If the Data Controller does not acknowledge the request of the data subject or if it takes no action after receiving the request, print 'No' as the answer. If there aren't two different participants in the XML, check if there is an event that reports a request to stop/object the automated processing, and if there is a gateway that indicates whether the automated processing request was acknowledged, the activity in which it is executed is run; otherwise, it is stopped. If you find this condition, you can print 'Yes' as the answer. You can also print 'Yes' if you find some activity whose name indicates some kind of right to object to automated processing handling. In every other case, including cases of insecurity, print 'No' as the answer."
-        );
+          const hasRightToRestrictProcessing =
+            hasRightToRestrictProcessingReq.content;
+          console.log(
+            "hasRightToRestrictProcessing?",
+            hasRightToRestrictProcessing
+          );
+          addTextBelowButton(id, hasRightToRestrictProcessing);
+          break;
+        case "dropDownI":
+          const hasRightToBeForgottenReq = await callChatGpt(
+            "Analyze the provided BPMN process described below: " +
+              description +
+              ". This is the textual representation of the XML of the process, where you can analyze every connection and activity. Conduct the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
+              currentXML +
+              ".\n\nDefinition of Right to be Forgotten: If the Data Subject (the person the data is about) wants their data to be deleted, the Data Controller has the obligation to satisfy this request." +
+              "\n\nTask: Check if there is a clear separation between the data controller and the data subject, represented by two different participants ({Participant in the textual representation})." +
+              "\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicates their desire to be forgotten or requests the deletion of het data. Also, check if the data controller acknowledges the request of the data subject and deletes the data accordingly." +
+              "\nIf you find this behavior, print 'Yes' as the answer." +
+              "\nIf the Data Controller does not acknowledge the request of the data subject or if it takes no action upon receiving the request, print 'No' as the answer. " +
+              "\nn2If there aren't two different participants in the XML, check if there is an event that reports a request from the data subject to delete/remove her data, and if there is a gateway that indicates whether the deletion data request was acknowledged, and if there is an activity whose name indicates that the deletion of the data was executed." +
+              "\n If you find this condition, you can print 'Yes' as the answer. You can also print 'Yes' if you find some activity whose name indicates some kind of right to be forgotten handling. In every other case, including cases of insecurity, print 'No' as the answer." +
+              "Example of textual representation in which there is everything to replay 'Yes' to the question: \n { Participant: User (empty pool) } {Participant: Controller <Activity name: Request of data data deletion Type: StartEvent ID: Event_0c4vuea Exchange with other partecipations: Receive a message from User /> linked to: <Activity name: Delete data and inform the user Type: SendTask ID: Activity_1jivsdy Exchange with other partecipations: Send a message to User /> linked to: <Activity name: end Type: EndEvent ID: Event_06k7hmz Exchange with other partecipations: no exchanges /> End Participant: Controller}" +
+              "Example of textual representation in which there is everything to replay 'Yes' to the question:\n Process: <Activity name: bpmn:StartEvent Type: StartEvent ID: Event_1wz4lq0 Exchange with other partecipations: no exchanges /> linked to: <Activity name: Handle Data deletion Type: Task ID: Activity_1qy0fyz Exchange with other partecipations: no exchanges /> linked to: <Activity name: bpmn:EndEvent Type: EndEvent ID: Event_0itlnkb Exchange with other partecipations: no exchanges /> End Process: "
+          );
 
-        const hasRightToObjectAutomatedProcessing =
-          hasRightToObjectAutomatedProcessingReq.content;
-        console.log(
-          "hasRightToObjectAutomatedProcessing?",
-          hasRightToObjectAutomatedProcessing
-        );
-        addTextBelowButton(id, hasRightToObjectAutomatedProcessing);
-        break;
-      case "dropDownH":
-        const hasRightToRestrictProcessingReq = await callChatGpt(
-          "Analyze the provided BPMN process described below: " +
-            description +
-            ". This is the XML of the process, where you can analyze every connection and activity. Conduct the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
-            currentXML +
-            ".\n\nDefinition of Right to Restrict Processing: It gives a Data Subject (the person the data is about) the right to limit the way an organization (data controller) uses their personal data, rather than requesting erasure.\n\nTask: Check if there is a clear separation between the data controller and the data subject, represented by two different participants (XML tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicates their will to restrict the processing of their data. Also, check if the data controller acknowledges the request of the data subject and restricts the processing of the data accordingly. If you find this behavior, print 'Yes' as the answer. If the Data Controller does not acknowledge the request of the data subject or if it takes no action after receiving the request, print 'No' as the answer. If there aren't two different participants in the XML, check if there is an event that reports a request to restrict the processing of the data, and if there is a gateway that indicates whether the restrict processing request was acknowledged, and if there is an activity whose name indicates some restriction being executed on the data of the subject processed. If you find this condition, you can print 'Yes' as the answer. You can also print 'Yes' if you find some activity whose name indicates some kind of right to restrict processing handling. In every other case, including cases of insecurity, print 'No' as the answer."
-        );
+          const hasRightToBeForgotten = hasRightToBeForgottenReq.content;
+          console.log("hasRightToBeForgotten?", hasRightToBeForgotten);
+          addTextBelowButton(id, hasRightToBeForgotten);
+          break;
+        case "dropDownL":
+          const hasRightToBeInformedAboutDataBreachesReq = await callChatGpt(
+            "Analyze the provided BPMN process described below: " +
+              description +
+              ". This is the XML of the process, where you can analyze every connection and activity. Conduct the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
+              currentXML +
+              ".\n\nDefinition of Right to be Informed about Data Breaches: In the event of a data breach, the Data Controller is required to communicate it within 72 hours to the National Authority as well as to the Data Subject. This constraint is not subject to any de minimis standard; thus, any data breach, regardless of its magnitude, must always be communicated along with the actions that will be taken to limit the damage. The only exception is if the stolen data is not usable (e.g., encrypted). However, even in this case, the National Authority can compel the Data Controller to communicate the breach to the Data Subject.\n\nTask: Check if there is a clear separation between the data controller, the national authority, and the data subject. They should be represented by three different participants (XML tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Controller communicates the data breaches to the national authority and to the data subject. If you find this behavior, print 'Yes' as the answer. If there aren't three different participants in the XML, check if there are any events that trigger the sending of a message to the national authority and to the data subject to inform them about the data breaches. In that case, you can print 'Yes' as the response. You can also print 'Yes' if you find some activity that, by its name, indicates some kind of data breach handling. In every other case, including cases of insecurity, print 'No' as the answer."
+          );
 
-        const hasRightToRestrictProcessing =
-          hasRightToRestrictProcessingReq.content;
-        console.log(
-          "hasRightToRestrictProcessing?",
-          hasRightToRestrictProcessing
-        );
-        addTextBelowButton(id, hasRightToRestrictProcessing);
-        break;
-      case "dropDownI":
-        const hasRightToBeForgottenReq = await callChatGpt(
-          "Analyze the provided BPMN process described below: " +
-            description +
-            ". This is the XML of the process, where you can analyze every connection and activity. Conduct the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
-            currentXML +
-            ".\n\nDefinition of Right to be Forgotten: If the Data Subject (the person the data is about) wants their data to be deleted, the Data Controller has the obligation to satisfy this request.\n\nTask: Check if there is a clear separation between the data controller and the data subject, represented by two different participants (XML tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Subject communicates their desire to be forgotten or requests the deletion of their data. Also, check if the data controller acknowledges the request of the data subject and deletes the data accordingly. If you find this behavior, print 'Yes' as the answer. If the Data Controller does not acknowledge the request of the data subject or if it takes no action upon receiving the request, print 'No' as the answer. If there aren't two different participants in the XML, check if there is an event that reports a request from the data subject to delete/remove their data, and if there is a gateway that indicates whether the deletion data request was acknowledged, and if there is an activity whose name indicates that the deletion of the data was executed. If you find this condition, you can print 'Yes' as the answer. You can also print 'Yes' if you find some activity whose name indicates some kind of right to be forgotten handling. In every other case, including cases of insecurity, print 'No' as the answer."
-        );
-
-        const hasRightToBeForgotten = hasRightToBeForgottenReq.content;
-        console.log("hasRightToBeForgotten?", hasRightToBeForgotten);
-        addTextBelowButton(id, hasRightToBeForgotten);
-        break;
-      case "dropDownL":
-        const hasRightToBeInformedAboutDataBreachesReq = await callChatGpt(
-          "Analyze the provided BPMN process described below: " +
-            description +
-            ". This is the XML of the process, where you can analyze every connection and activity. Conduct the analysis of the process by considering the names of the activities and the logic behind the process itself: " +
-            currentXML +
-            ".\n\nDefinition of Right to be Informed about Data Breaches: In the event of a data breach, the Data Controller is required to communicate it within 72 hours to the National Authority as well as to the Data Subject. This constraint is not subject to any de minimis standard; thus, any data breach, regardless of its magnitude, must always be communicated along with the actions that will be taken to limit the damage. The only exception is if the stolen data is not usable (e.g., encrypted). However, even in this case, the National Authority can compel the Data Controller to communicate the breach to the Data Subject.\n\nTask: Check if there is a clear separation between the data controller, the national authority, and the data subject. They should be represented by three different participants (XML tag: 'bpmn:Participant').\n\nInstructions:\n1. Identify if there is an activity where the Data Controller communicates the data breaches to the national authority and to the data subject. If you find this behavior, print 'Yes' as the answer. If there aren't three different participants in the XML, check if there are any events that trigger the sending of a message to the national authority and to the data subject to inform them about the data breaches. In that case, you can print 'Yes' as the response. You can also print 'Yes' if you find some activity that, by its name, indicates some kind of data breach handling. In every other case, including cases of insecurity, print 'No' as the answer."
-        );
-
-        const hasRightToBeInformedAboutDataBreaches =
-          hasRightToBeInformedAboutDataBreachesReq.content;
-        console.log(
-          "hasRightToBeForgotten?",
-          hasRightToBeInformedAboutDataBreaches
-        );
-        addTextBelowButton(id, hasRightToBeInformedAboutDataBreaches);
-        break;
+          const hasRightToBeInformedAboutDataBreaches =
+            hasRightToBeInformedAboutDataBreachesReq.content;
+          console.log(
+            "hasRightToBeForgotten?",
+            hasRightToBeInformedAboutDataBreaches
+          );
+          addTextBelowButton(id, hasRightToBeInformedAboutDataBreaches);
+          break;
+      }
     }
   } catch (e) {
     console.error("Error in prediction chatGPT", e);
@@ -909,6 +955,8 @@ async function createUlandSelectActivities(
           questionDone("#dropDownB");
           removeC3();
 
+          removeChatGPTTip("dropDownB");
+
           try {
             // Get the setted activity
             const callSelected = await getSettedActivity("questionB");
@@ -923,6 +971,7 @@ async function createUlandSelectActivities(
               });
 
               // Reorder the diagram
+
               reorderDiagram();
             }
             // Add the selected activities to the path

@@ -270,7 +270,6 @@ async function loadDiagram(diagram) {
         // changeID();
         checkMetaInfo();
         console.log("elementRegistry: ", elementRegistry);
-        fromXMLToText(right_to_object);
 
         //this prevent the modification of the id when someone change the type of something
         eventBus.on("element.updateId", function (event) {
@@ -1718,15 +1717,22 @@ function compareByX(c, d) {
   }
 }
 
-function getSequenceElements() {
+function getSequenceElements(sub) {
   const elementRegistry = viewer.get("elementRegistry");
   const modeling = viewer.get("modeling");
-
-  // Trova tutti gli elementi di tipo 'bpmn:StartEvent'
-  const startEvents = elementRegistry.filter(
-    (element) =>
-      element.type === "bpmn:StartEvent" || element.type === "bpmn:startEvent"
-  );
+  var startEvents;
+  if (!sub) {
+    // Trova tutti gli elementi di tipo 'bpmn:StartEvent'
+    startEvents = elementRegistry.filter(
+      (element) =>
+        element.type === "bpmn:StartEvent" || element.type === "bpmn:startEvent"
+    );
+  } else {
+    startEvents = sub.filter(
+      (element) =>
+        element.type === "bpmn:StartEvent" || element.type === "bpmn:startEvent"
+    );
+  }
 
   const orderedElements = [];
 
@@ -1790,19 +1796,18 @@ export function reorderDiagram() {
     //ha delle collaborazioni => ci sono diversi partecipanti
     has_Collaboration.forEach((part) => {
       //prendi ogni partecipazione
-      const subSet = getSequenceElements();
-      console.log("sequ", subSet); //getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
+      const subSet = getSequenceElements(null);
+      //getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
       reOrderSubSet(subSet);
       distribute = part.children.filter(
-        (element) =>
-          element.type != "bpmn:Group" && !element.id.includes("right")
+        (element) => element.id != "GdprGroup" && !element.id.includes("right")
       );
       //distributor.trigger(distribute, "horizontal");
 
       reorderPools();
     });
   } else {
-    var sub = getOrderedSub(allElements);
+    var sub = getSequenceElements(allElements);
     sub = sub.filter(
       (item) =>
         item.type != "bpmn:MessageFlow" &&
@@ -1814,7 +1819,7 @@ export function reorderDiagram() {
     );
     reOrderSubSet(sub);
     distribute = allElements.filter(
-      (element) => element.type != "bpmn:Group" && !element.id.includes("right")
+      (element) => element.id != "GdprGroup" && !element.id.includes("right")
     );
     distributor.trigger(distribute, "horizontal");
   }
@@ -3004,6 +3009,28 @@ export function fromXMLToText(xml) {
     });
   } else {
     //non ci sono partecipazioni
+    var allSet = allElements.filter(
+      (item) =>
+        item.type != "bpmn:DataInputAssociatio" &&
+        item.type != "bpmn:DataStoreReference" &&
+        item.type != "bpmn:Group" &&
+        item.type != "bpmn:MessageFlow" &&
+        item.type != "bpmn:SequenceFlow" &&
+        item.type != "label" &&
+        item.type != "bpmn:DataObjectReference" &&
+        item.type != "bpmn:DataObjectAssociation"
+    );
+    if (allSet.length > 0) {
+      var first = allSet[0];
+      allSet = allSet.filter((item) => item.id != first.id);
+      content = content + "\nProcess: " + "\n";
+      [content, allSet] = iterateSetOfElementsToTranslate(
+        allSet,
+        content,
+        first
+      );
+      content = content + "\nEnd Process " + "\n";
+    }
   }
   const blob = new Blob([content], { type: "text/plain" });
   return content;
