@@ -1960,6 +1960,8 @@ function adjustPools(sortedPools) {
       const firstY = sortedByY[0];
       const lastY = sortedByY[sortedByY.length - 1];
 
+      console.log("FIRST LAST Y: ", firstY, lastY);
+      console.log("Children: ", children);
       if (firstY.y < pool.y - 90) {
         newBounds.y = firstY.y - 90;
       } else if (firstY.y > pool.y + 90) {
@@ -2066,7 +2068,8 @@ function sortByY(elements) {
   elements.forEach((element) => {
     if (element.y < min.y) {
       min = element;
-    } else if (element.y > max.y) {
+    }
+    if (element.y + element.height > max.y + max.height) {
       max = element;
     }
   });
@@ -2078,7 +2081,8 @@ function sortByX(elements) {
   elements.forEach((element) => {
     if (element.x < min.x) {
       min = element;
-    } else if (element.x > max.x) {
+    }
+    if (element.x + element.width > max.x + max.width) {
       max = element;
     }
   });

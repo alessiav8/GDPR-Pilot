@@ -94,10 +94,10 @@ function addTextBelowButton(Id, answer) {
   if (
     yesButton &&
     noButton &&
-    !(
-      yesButton.style.border == "0.3vh solid rgb(16, 173, 116)" ||
-      noButton.style.border == "0.3vh solid rgb(16, 173, 116)"
-    )
+    ((yesButton.style &&
+      !yesButton.style.border == "0.3vh solid rgb(16, 173, 116)") ||
+      (noButton.style &&
+        !noButton.style.border == "0.3vh solid rgb(16, 173, 116)"))
   ) {
     //if the answer contains an array --> answer related to question B
     if (answer.match(/\[.*?\]/)) {
