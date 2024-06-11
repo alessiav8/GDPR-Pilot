@@ -484,6 +484,8 @@ function enableButtons() {
 export function removeChatGPTTip(id) {
   var buttonId = false;
   var pElement = false;
+  const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L"];
+
   if (document.getElementById("p_yes_" + id)) {
     buttonId = "yes_" + id;
     pElement = document.getElementById("p_yes_" + id);
@@ -497,6 +499,15 @@ export function removeChatGPTTip(id) {
     if (button) {
       button.style.backgroundColor = "white";
     }
+  }
+  if (id == "dropDownB") {
+    letters.forEach((letter) => {
+      var check = document.getElementById("checkbox_dropDown" + letter);
+      if (check) {
+        check.style.backgroundColor = "white";
+        check.style.border = " 0.1em solid black";
+      }
+    });
   }
 }
 //

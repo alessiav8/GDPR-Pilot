@@ -1071,6 +1071,11 @@ async function handleClickOnGdprButton() {
     const description = descriptionReq.content;
     localStorage.setItem("currentXml", currentXML);
     localStorage.setItem("description", description);
+    console.log(
+      "description: " + description,
+      "\ncurrentTransformationDiagram: \n",
+      currentXML
+    );
   } catch (e) {
     console.error("Error", e);
   }
@@ -1992,8 +1997,47 @@ function adjustPools(sortedPools) {
           // Controlla se il GDPR estende oltre i limiti del pool
           newBounds.height = gdpr.y + gdpr.height + 20 - pool.y;
         }
-      }
+        var setOfRights = new Array();
+        rights.forEach((right) => {
+          const rightRef = elementRegistry.get(right);
+          if (rightRef) {
+            setOfRights.push(rightRef);
+          }
+        });
+        if (setOfRights.length > 0) {
+          const sortGdprY = sortByY(setOfRights);
+          const firstYGdpr = sortGdprY[0];
+          const lastYGdpr = sortGdprY[sortedByX.length - 1];
 
+          var newBoundsGdpr = {
+            x: gdpr.x,
+            y: gdpr.y,
+            width: gdpr.width,
+            height: gdpr.height,
+          };
+
+          if (firstYGdpr.y < gdpr.y - 10) {
+            newBoundsGdpr.y = firstYGdpr.y - 10;
+          } else if (firstYGdpr.y > gdpr.y + 10) {
+            newBoundsGdpr.y = firstYGdpr.y - 10;
+          } else {
+            newBoundsGdpr.y = gdpr.y;
+          }
+
+          if (lastYGdpr.y + lastYGdpr.height > gdpr.y + gdpr.height - 10) {
+            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 10;
+          } else if (
+            lastYGdpr.y + lastYGdpr.height <
+            gdpr.y + gdpr.height - 10
+          ) {
+            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 10;
+          } else {
+            newBoundsGdpr.height = gdpr.height;
+          }
+
+          modeling.resizeShape(gdpr, newBoundsGdpr);
+        }
+      }
       modeling.resizeShape(pool, newBounds);
     }
 
@@ -2267,7 +2311,7 @@ async function findFreeY() {
   var max_height = group.height != 0 ? group.height : 150;
   const y_ex = group.y;
   var elem;
-  var y = y_ex + 20;
+  var y = y_ex + 20; // la prima y sarà la posizione di group + 20 come padding
   const rights = [
     "right_to_access",
     "right_to_portability",
@@ -2280,11 +2324,11 @@ async function findFreeY() {
   ];
   rights.forEach((right) => {
     if (elementRegistry.get(right)) {
-      console.log("add", right);
-      y = y + 120;
+      const r = elementRegistry.get(right);
+      y = r.y + 150;
     }
   });
-  const limitPoint = y_ex + max_height - 20; //50 è il padding
+  const limitPoint = y_ex + max_height - 20; //20 è il padding
   const spaceNeeded = y + 20 + 120;
 
   if (spaceNeeded > limitPoint) {
@@ -2332,7 +2376,6 @@ export async function addSubEvent(
   }
 
   const y = await findFreeY();
-
   const start_event = elementFactory.createShape({
     type: "bpmn:StartEvent",
     id: path_name + "_start",
@@ -2345,11 +2388,7 @@ export async function addSubEvent(
   start_event.businessObject.id = path_name + "_start";
 
   try {
-    modeling.createShape(
-      start_event,
-      { x: gdpr.x + 40, y: gdpr.y + y - 120 },
-      parent
-    );
+    modeling.createShape(start_event, { x: gdpr.x + 40, y: y }, parent);
   } catch (error) {
     console.error("Error creating or resizing start_event:", error);
     return;
@@ -2366,11 +2405,7 @@ export async function addSubEvent(
   end_event.businessObject.name = end_event_title;
 
   try {
-    modeling.createShape(
-      end_event,
-      { x: gdpr.x + 200, y: gdpr.y + y - 120 },
-      parent
-    );
+    modeling.createShape(end_event, { x: gdpr.x + 200, y: y }, parent);
   } catch (error) {
     console.error("Error creating or resizing end_event:", error);
     return;
@@ -2406,7 +2441,6 @@ export async function addSubEvent(
     return;
   }
 }
-
 //
 
 //function to delete the gdrp path
@@ -2549,7 +2583,9 @@ function addActivityInText(child, content, connected = true) {
     "<Activity name: " +
     name +
     " \nType: " +
-    child.type.split(":")[1]; //ci aggiungiamo il nome di ogni attività
+    child.type.split(":")[1] +
+    "\nID: " +
+    child.id; //ci aggiungiamo il nome di ogni attività
   //ci sono delle frecce dalla partecipazione considerata ad un altra?
   const sendMessageSet = child.outgoing.filter(
     (element) => element.type == "bpmn:MessageFlow"
