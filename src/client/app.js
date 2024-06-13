@@ -179,7 +179,6 @@ const GatewayTypes = [
   "bpmn:ParallelGateway",
   "bpmn:ComplexGateway",
   "bpmn:EventBasedGateway",
-  "bpmn:ExclusiveEventBasedGateway",
 ];
 //
 
@@ -1797,7 +1796,7 @@ export function reorderDiagram() {
       distribute = part.children.filter(
         (element) => element.id != "GdprGroup" && !element.id.includes("right")
       );
-      //distributor.trigger(distribute, "vertical");
+      //distributor.trigger(distribute, "horizontal");
 
       reorderPools();
     });
@@ -2504,26 +2503,6 @@ export function decolorActivity(activityId) {
   modeling.setColor([activity], null);
 }
 
-//possibile primo prompt
-/*Given this process bpmn generate for me a definition of how it works in 20 lines maximum, 
-no lists or anything. Just a description of what the process does and its purpose.*/
-
-//secondo prompt
-/*Given a bpmn process of which this is the description: {} 
-Given the definition of consent: "Consent to Use the Data: when retrieving personal data, the Data Controller needs 
-to ask the Data Subject for consent and to provide the Data Subject with information about the intentions on how to use and/or process the data."
-
-If you ask the consent for a certain set of data you can use them without asking the consent again. 
-The consent is about just personal data of the user not anything else! 
-personal data are the information that identifies or makes identifiable, directly.
-Particularly important are:
-- data that allow direct identification-such as biographical data (for example: first and last names), pictures, etc. - and data that allow indirect identification-such as an identification number (e.g., social security number, IP address, license plate number);
-- data falling into special categories: these are the so-called "sensitive" data, i.e., data revealing racial or ethnic origin, religious or philosophical beliefs, political opinions, trade union membership, relating to health or sex life. Regulation (EU) 2016/679 (Article 9) also included genetic data, biometric data, and data relating to sexual orientation in the notion;
-- data relating to criminal convictions and offenses: these are so-called "judicial" data, i.e., those that may reveal the existence of certain judicial measures subject to entry in the criminal record (e.g., final criminal convictions, conditional release, prohibition or obligation to stay, alternative measures to detention) or the quality of defendant or suspect. Regulation (EU) 2016/6. The activity must directly involve some personal data to be considered in the answer keep this in mind and for those data must miss the request of consent because if some activity in a privious moment has request for consent i don't need to request the consent again 
-Which activities require the request for consent before being executed? The list of activities is: {} Print just the name of the activities that requires the consent before in a strict manner. 
-*/
-//
-
 //function to get the origins of the message
 //set: the set of incoming / outgoing sequence flow
 //type: is outgoing sequence (out) or incoming sequence (in)
@@ -2568,6 +2547,10 @@ function getOrigin(set, type) {
 }
 //
 
+//function to add an activity of the textual description that we want to generate of the XML
+//child: the activity i want to add
+//content: what i have already inserted
+//connected: if the acrivity is an endEvent or is connected to something else(and so, i will put the 'linked to' in the text otherwise no). The default is false
 function addActivityInText(child, content, connected = true) {
   const name = child.businessObject.name
     ? child.businessObject.name
@@ -2633,6 +2616,9 @@ function addActivityInText(child, content, connected = true) {
   return content;
 }
 
+////function to add a gateway and all the path connected to it, until its termination of the textual description that we want to generate of the XML
+//child: the gateway i want to add
+//setOfElements: the set of elements i still need to insert into the textual  description (withou the gateway i'm going to insert write now)
 function addGatewayInText(child, content, setOfElements) {
   var first;
   var typeOfGateway = child.type;
@@ -2648,7 +2634,11 @@ function addGatewayInText(child, content, setOfElements) {
         ? child.businessObject.name
         : " No condition specified";
       content =
-        content + "\n[" + isClosureGateway + " Exclusive Gateway " + child.id;
+        content +
+        "\n[" +
+        isClosureGateway +
+        " Exclusive Gateway \nID:" +
+        child.id;
       if (isClosureGateway == "Start") {
         content =
           content +
@@ -2664,7 +2654,7 @@ function addGatewayInText(child, content, setOfElements) {
         content +
         "\n[" +
         isClosureGateway +
-        " Parallel Gateway " +
+        " Parallel Gateway \nID:" +
         child.id +
         " ";
       if (isClosureGateway == "Start") {
@@ -2676,6 +2666,47 @@ function addGatewayInText(child, content, setOfElements) {
       }
       pathSentence = "\nPath of  " + child.id + " number: ";
       break;
+    case "bpmn:InclusiveGateway":
+      content =
+        content +
+        "\n[" +
+        isClosureGateway +
+        " Inclusive Gateway\nID: " +
+        child.id +
+        " ";
+      if (isClosureGateway == "Start") {
+        content =
+          content +
+          child.id +
+          "(all the paths that met the conditions will be taken. At least one will be taken)" +
+          "' possible paths: ";
+      }
+    case "bpmn:EventBasedGateway":
+      content =
+        content +
+        "\n[" +
+        isClosureGateway +
+        " Event Based Gateway\nID: " +
+        child.id +
+        " ";
+      if (isClosureGateway == "Start") {
+        content =
+          content +
+          child.id +
+          "(the path taken is the one that contains the first event that will be triggered)" +
+          "' different paths: ";
+      }
+    case "bpmn:ComplexGateway":
+      content =
+        content +
+        "\n[" +
+        isClosureGateway +
+        " Complex Gateway\nID: " +
+        child.id +
+        " ";
+      if (isClosureGateway == "Start") {
+        content = content + child.id + "(da cercare)" + "' different paths: ";
+      }
     default:
       break;
   }
@@ -2688,9 +2719,15 @@ function addGatewayInText(child, content, setOfElements) {
       //itero su ogni ramo
       if (isClosureGateway == "Start") {
         content = content + pathSentence;
-        if (typeOfGateway == "bpmn:ParallelGateway") {
+        if (
+          typeOfGateway == "bpmn:ParallelGateway" ||
+          typeOfGateway == "bpmn:EventBasedGateway"
+        ) {
           content = content + " " + i + " ";
-        } else if (typeOfGateway == "bpmn:ExclusiveGateway") {
+        } else if (
+          typeOfGateway == "bpmn:ExclusiveGateway" ||
+          typeOfGateway == "bpmn:InclusiveGateway"
+        ) {
           const path_name = outGateway[i].businessObject.name
             ? outGateway[i].businessObject.name
             : "no path condition specified";
@@ -2769,6 +2806,10 @@ function addGatewayInText(child, content, setOfElements) {
   }
   return [content, setOfElements, first];
 }
+//the function returns
+//the content that is the textual description generated so far
+//the setOfElements updated (without the elements that i inserted)
+//first the first element i need to analyze after the gatway that started the function
 
 //function to call in a recursive manner
 //set: the set of element i need to translate into text
@@ -2830,7 +2871,9 @@ function iterateSetOfElementsToTranslate(set, content, firstPassed) {
 //
 
 //function that handle the case in which the activity has a boundary activity attached
-//idActivity the Id of the activity i want to check the attachment of
+//ActivityToCheck the Id of the activity i want to check the attachment of
+//setOfElements is the set of elements that i still need to insert
+//content: the textual description generated so far
 function procedureHasBoundary(ActivityToCheck, setOfElements, content) {
   var result = false;
   var boundaryActivity;
@@ -2904,6 +2947,10 @@ function procedureHasBoundary(ActivityToCheck, setOfElements, content) {
 }
 //
 
+//function that handles the case in  which the activity has a subprocess
+//ActivityToCheck, the activity subproess that i need to check
+//set of elements the set of elements i need to consider
+//content. the textual description generated so far
 function procedureSubProcess(ActivityToCheck, setOfElements, content) {
   var activityName = ActivityToCheck.businessObject.name
     ? ActivityToCheck.businessObject.name
@@ -2946,6 +2993,7 @@ function procedureSubProcess(ActivityToCheck, setOfElements, content) {
 }
 
 //function to transform the xml to a text scheme of the process
+//xml: the xml of the process at the moment in which the function is called
 export function fromXMLToText(xml) {
   //creo un blob (file txt) dove andrò ad inserire la descrizione testuale del processo.
   var content = "";
@@ -3012,13 +3060,16 @@ export function fromXMLToText(xml) {
     if (allSet.length > 0) {
       var first = allSet[0];
       allSet = allSet.filter((item) => item.id != first.id);
-      content = content + "\nProcess: " + "\n";
+      content =
+        content +
+        "\nNo Partecipations, unique\n Start of the process: {" +
+        "\n";
       [content, allSet] = iterateSetOfElementsToTranslate(
         allSet,
         content,
         first
       );
-      content = content + "\nEnd Process " + "\n";
+      content = content + "\nEnd of the process} " + "\n";
     }
   }
   const blob = new Blob([content], { type: "text/plain" });

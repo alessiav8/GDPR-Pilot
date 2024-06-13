@@ -666,22 +666,6 @@ async function createDropDown(
   row.appendChild(dropDown);
   space.appendChild(row);
 
-  /*ulContainer.addEventListener("shown.bs.collapse", function (event) {
-    const dropDownId = ulContainer.id.slice(10);
-
-    const yesButtonId = document.getElementById("yes_" + dropDownId);
-    const noButtonId = document.getElementById("no_" + dropDownId);
-    if (
-      yesButtonId &&
-      noButtonId &&
-      (yesButtonId.style.border == " 0.3vh solid rgb(16, 173, 116)" ||
-        noButtonId.style.border == "0.3vh solid rgb(16, 173, 116)")
-    ) {
-      removeChatGPTTip(dropDownId);
-    }
-    {
-    }
-  });*/
   return dropDown;
 }
 //end function create the dropDown
