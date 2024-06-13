@@ -2705,8 +2705,15 @@ function addGatewayInText(child, content, setOfElements) {
         child.id +
         " ";
       if (isClosureGateway == "Start") {
-        content = content + child.id + "(da cercare)" + "' different paths: ";
+        content =
+          content +
+          " (only one of the path can be taken)" +
+          " \ncondition to check in order to proceed with the right path '" +
+          GatewayCondition +
+          "' different paths: ";
       }
+      pathSentence = "\nPath of " + child.id + " taken if: '";
+      break;
     default:
       break;
   }
@@ -2726,7 +2733,8 @@ function addGatewayInText(child, content, setOfElements) {
           content = content + " " + i + " ";
         } else if (
           typeOfGateway == "bpmn:ExclusiveGateway" ||
-          typeOfGateway == "bpmn:InclusiveGateway"
+          typeOfGateway == "bpmn:InclusiveGateway" ||
+          typeOfGateway == "bpmn:ComplexGateway"
         ) {
           const path_name = outGateway[i].businessObject.name
             ? outGateway[i].businessObject.name
