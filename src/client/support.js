@@ -148,6 +148,8 @@ function addTextBelowButton(Id, answer) {
     const button = document.getElementById(buttonId);
 
     if (button) {
+      const myEvent = new Event("removeGif");
+      document.dispatchEvent(myEvent);
       button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
       const textElement = document.createElement("p");
       textElement.innerHTML = "Suggested by <br>OpenAI";
@@ -399,6 +401,11 @@ async function predictionChatGPT(id) {
     console.error("Error in prediction chatGPT", e);
   }
 }
+
+//the green loading to add
+/*
+<div class="tenor-gif-embed" data-postid="27042978" data-share-method="host" data-aspect-ratio="1" data-width="100%"><a href="https://tenor.com/view/loading-green-loading-gimp-gif-gif-27042978">Loading Green Loading Sticker</a>from <a href="https://tenor.com/search/loading-stickers">Loading Stickers</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
+*/
 
 //function to create a drop down
 //id:id to use for the dropdown ex "dropDownA"

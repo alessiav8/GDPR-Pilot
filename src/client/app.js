@@ -2616,6 +2616,11 @@ function addActivityInText(child, content, connected = true) {
   return content;
 }
 
+// Add an event listener for the custom event
+document.addEventListener("removeGif", function (e) {
+  console.log("myCustomEvent was fired!");
+});
+
 ////function to add a gateway and all the path connected to it, until its termination of the textual description that we want to generate of the XML
 //child: the gateway i want to add
 //setOfElements: the set of elements i still need to insert into the textual  description (withou the gateway i'm going to insert write now)
