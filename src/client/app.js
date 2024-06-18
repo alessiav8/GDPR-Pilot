@@ -938,6 +938,7 @@ import_button.addEventListener("click", () => {
   input.addEventListener("change", function (event) {
     var diagram_imported = event.target.files[0];
     if (diagram_imported) {
+      undoProcedure();
       const reader = new FileReader();
       reader.onload = function (event) {
         const fileXML = event.target.result;
@@ -1105,63 +1106,66 @@ function handleUndoGdpr() {
   elementRegistry = viewer.get("elementRegistry");
   displayDynamicPopUp("Are you sure?").then((conferma) => {
     if (conferma) {
-      setGdprButtonCompleted(false);
-      getMetaInformationResponse().then((response) => {
-        for (let question in response) {
-          if (response[question] != null) {
-            switch (question) {
-              case "gdpr_compliant":
-                editMetaInfo("gdpr", false);
-                break;
-              case "questionA":
-                editMetaInfo("A", null);
-              case "questionB":
-                response[question].forEach((element) => {
-                  if (element.id != "response") {
-                    const activity = elementRegistry.get(element.id);
-                    removeConsentFromActivity(activity, "consent_");
-                  }
-                });
-                editMetaInfo("B", null);
-                break;
-
-              case "questionC":
-              case "questionD":
-              case "questionE":
-              case "questionF":
-              case "questionG":
-              case "questionH":
-              case "questionI":
-              case "questionL":
-                const id = questionToId(question);
-                deleteGdprPath(id);
-                const letter = question[question.length - 1];
-                editMetaInfo(letter, null);
-                break;
-              default:
-                break;
-            }
-          }
-        }
-        const group = elementRegistry.get("GdprGroup");
-        if (group) {
-          modeling.removeShape(group);
-        }
-        closeSideBarSurvey();
-        handleSideBar(false);
-        removeChatGPTTipFromAll();
-        decolorEverySelected();
-        reorderDiagram();
-        //reorderDiagram();
-        viewer.get("canvas").zoom("fit-viewport");
-      });
+      undoProcedure();
     }
+    decolorEverySelected();
   });
-
-  setGdprButtonCompleted(false);
-  decolorEverySelected();
 }
 //
+
+function undoProcedure() {
+  setGdprButtonCompleted(false);
+  getMetaInformationResponse().then((response) => {
+    for (let question in response) {
+      if (response[question] != null) {
+        switch (question) {
+          case "gdpr_compliant":
+            editMetaInfo("gdpr", false);
+            break;
+          case "questionA":
+            editMetaInfo("A", null);
+          case "questionB":
+            response[question].forEach((element) => {
+              if (element.id != "response") {
+                const activity = elementRegistry.get(element.id);
+                removeConsentFromActivity(activity, "consent_");
+              }
+            });
+            editMetaInfo("B", null);
+            break;
+
+          case "questionC":
+          case "questionD":
+          case "questionE":
+          case "questionF":
+          case "questionG":
+          case "questionH":
+          case "questionI":
+          case "questionL":
+            const id = questionToId(question);
+            deleteGdprPath(id);
+            const letter = question[question.length - 1];
+            editMetaInfo(letter, null);
+            break;
+          default:
+            break;
+        }
+      }
+    }
+    const group = elementRegistry.get("GdprGroup");
+    if (group) {
+      modeling.removeShape(group);
+    }
+    closeSideBarSurvey();
+    handleSideBar(false);
+    removeChatGPTTipFromAll();
+    decolorEverySelected();
+    reorderDiagram();
+    //reorderDiagram();
+    viewer.get("canvas").zoom("fit-viewport");
+  });
+  setGdprButtonCompleted(false);
+}
 
 //function to get the id from the question
 function questionToId(question) {
@@ -1796,8 +1800,7 @@ export function reorderDiagram() {
       distribute = part.children.filter(
         (element) => element.id != "GdprGroup" && !element.id.includes("right")
       );
-      //distributor.trigger(distribute, "horizontal");
-
+      distributor.trigger(distribute, "horizontal");
       reorderPools();
     });
   } else {

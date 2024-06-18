@@ -151,9 +151,9 @@ function addTextBelowButton(Id, answer) {
       document.dispatchEvent(myEvent);
       button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
       const textElement = document.createElement("p");
-      textElement.innerHTML = "Suggested by <br>OpenAI";
+      textElement.innerHTML = "AI Suggestion";
       textElement.style.marginTop = "5px";
-      textElement.style.fontSize = "10px";
+      textElement.style.fontSize = "1.5vh";
       textElement.style.color = "rgba(16, 173, 116)";
       textElement.id = "p_" + buttonId;
       button.parentNode.insertBefore(textElement, button.nextSibling);
@@ -449,6 +449,7 @@ async function createDropDown(
     button.removeAttribute("data-bs-toggle");
     button.style.border = "0.00002vh solid gray";
   }
+
   button.setAttribute("href", "#ulCollapse" + id);
 
   button.style.width = "100%";
@@ -854,7 +855,7 @@ async function createUlandSelectActivities(
           c1.id = "col_checkbox_" + activity.id;
 
           const c2 = document.createElement("div");
-          c2.className = "col-7";
+          c2.className = "col-9";
 
           var c3 = null;
 
@@ -901,13 +902,16 @@ async function createUlandSelectActivities(
               activitySuggested.some((act) => act === activity.id) &&
               !document.getElementById("c3_checkbox_" + activity.id)
             ) {
+              c2.className = "col-5";
+
               c3 = document.createElement("div");
               c3.id = "c3_checkbox_" + activity.id;
-              c3.innerHTML = "Suggested by OpenAI";
-              c3.className = "col-2 checkbox-suggested";
+              c3.innerHTML = "AI Suggestion";
+              c3.className = "col-4 checkbox-suggested";
               c3.style.marginTop = "2%";
+              c3.style.fontSize = "1vh";
               checkbox.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
-              checkbox.style.border = " 0.1em solid #2ca912";
+              checkbox.style.border = "0.1em solid #2ca912";
             }
           }
           //
