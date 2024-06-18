@@ -2618,7 +2618,13 @@ function addActivityInText(child, content, connected = true) {
 
 // Add an event listener for the custom event
 document.addEventListener("removeGif", function (e) {
-  console.log("myCustomEvent was fired!");
+  const passedId = e.detail.id;
+  console.log("Passed: " + passedId);
+  if (passedId) {
+    const imgLoader = document.getElementById("imgLoader_" + passedId);
+    console.log("passed img", imgLoader);
+    if (imgLoader) imgLoader.remove();
+  }
 });
 
 ////function to add a gateway and all the path connected to it, until its termination of the textual description that we want to generate of the XML

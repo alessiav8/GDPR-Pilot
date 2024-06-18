@@ -1,17 +1,17 @@
-const path = require('path');
+const path = require("path");
 
 module.exports = {
   entry: {
-    app: './src/client/app.js', 
+    app: "./src/client/app.js",
   },
   output: {
-    filename: '[name].bundle.js', 
-    path: path.resolve(__dirname, 'public'),
+    filename: "[name].bundle.js",
+    path: path.resolve(__dirname, "public"),
   },
   devServer: {
     static: {
-      directory: path.join(__dirname, 'public'),
-      publicPath: '/',
+      directory: path.join(__dirname, "public"),
+      publicPath: "/",
     },
     port: 8080,
     open: true,
@@ -22,24 +22,35 @@ module.exports = {
     rules: [
       {
         test: /\.bpmn$/,
-        use: 'raw-loader',
+        use: "raw-loader",
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.(png|jpe?g|gif)$/i,
+        use: [
+          {
+            loader: "file-loader",
+            options: {
+              name: "[name].[ext]",
+              outputPath: "images/",
+              publicPath: "images/",
+            },
+          },
+        ],
       },
     ],
   },
-  mode: 'development',
-  
+  mode: "development",
   resolve: {
     fallback: {
       path: require.resolve("path-browserify"),
       os: require.resolve("os-browserify/browser"),
       crypto: require.resolve("crypto-browserify"),
       stream: require.resolve("stream-browserify"),
-      vm: require.resolve("vm-browserify")
-
-    }
-  }
+      vm: require.resolve("vm-browserify"),
+    },
+  },
 };

@@ -34,6 +34,7 @@ import right_to_restrict_processing from "../../resources/right_to_restrict_proc
 import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
 import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
 
+import loading from "../../resources/loading.gif";
 //close sideBarSurvey
 function closeSideBarSurvey() {
   const mainColumn = document.querySelector(".main-column");
@@ -114,14 +115,12 @@ function addTextBelowButton(Id, answer) {
       if (answer.match(/\[.*?\]/)) {
         buttonId = "no_" + Id;
         const arrayMatch = answer.match(/\[.*?\]/);
-        console.log("arrayMatch", arrayMatch);
         if (arrayMatch) {
           try {
             const jsonString = arrayMatch[0];
             const cleanedJsonString = jsonString.replace(/\\/g, "");
             const array = JSON.parse(cleanedJsonString);
             if (array) {
-              console.log("Array of activities suggested", array);
               localStorage.setItem(
                 "activities_suggested",
                 JSON.stringify(array)
@@ -148,7 +147,7 @@ function addTextBelowButton(Id, answer) {
     const button = document.getElementById(buttonId);
 
     if (button) {
-      const myEvent = new Event("removeGif");
+      const myEvent = new CustomEvent("removeGif", { detail: { id: Id } });
       document.dispatchEvent(myEvent);
       button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
       const textElement = document.createElement("p");
@@ -425,6 +424,7 @@ async function createDropDown(
   //the row that will contain the drop down
   const space = document.querySelector("#areaDropDowns");
   const row = document.createElement("div");
+  var addLoader = true;
   row.className = "row";
   //
   const dropDown = document.createElement("div");
@@ -501,8 +501,10 @@ async function createDropDown(
 
   if (valueButton == "Yes") {
     YesButton.style.border = "0.3 solid #10ad74";
+    addLoader = false;
   } else if (valueButton == "No") {
     NoButton.style.border = "0.3 solid #10ad74";
+    addLoader = false;
   }
 
   YesButton.addEventListener("click", async function (event) {
@@ -667,6 +669,21 @@ async function createDropDown(
 
   ul.appendChild(divQuestion);
   ul.appendChild(divButtons);
+  if (addLoader) {
+    const divLoading = document.createElement("div");
+    divLoading.style.justifyContent = "center";
+    divLoading.style.alignItems = "center";
+    divLoading.style.marginLeft = "45%";
+    divLoading.id = "imgLoader_" + id;
+
+    const Loading = document.createElement("img");
+    Loading.style.height = "4vh";
+    Loading.style.width = "4vh";
+    Loading.src = loading;
+
+    divLoading.appendChild(Loading);
+    ul.appendChild(divLoading);
+  }
 
   dropDown.appendChild(ulContainer);
 
