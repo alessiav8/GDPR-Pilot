@@ -395,10 +395,18 @@ export function getLastAnswered(setOfQuestions) {
 //function to enable again a dropdown
 function allowOpenNextQuestion(nextQuestion) {
   const dropDown = document.querySelector("#dropDown" + nextQuestion);
-  const button = dropDown.querySelector(".btn");
-  button.setAttribute("data-bs-toggle", "collapse");
-  button.style.border = "0.00002vh solid";
-  button.style.backgroundColor = "white";
+  if (dropDown) {
+    const button = dropDown.querySelector(".btn");
+    if (
+      button &&
+      button.style.border &&
+      button.style.border == "0.00002vh solid gray"
+    ) {
+      button.setAttribute("data-bs-toggle", "collapse");
+      button.style.border = "0.00002vh solid";
+      button.style.backgroundColor = "white";
+    }
+  }
 }
 //
 

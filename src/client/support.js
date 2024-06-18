@@ -670,6 +670,8 @@ async function createDropDown(
   ul.appendChild(divQuestion);
   ul.appendChild(divButtons);
   if (addLoader) {
+    questionDone(id);
+
     const divLoading = document.createElement("div");
     divLoading.style.justifyContent = "center";
     divLoading.style.alignItems = "center";
@@ -744,12 +746,14 @@ function removeUlFromDropDown(dropDown) {
 //function to sign the question as done
 export function questionDone(dD) {
   const dropDown = document.querySelector(dD);
-  const button = dropDown.querySelector(".btn");
-  button.click();
-  if (button) {
-    button.style.border = " 0.0002vh solid #2CA912";
-  } else {
-    console.error("error in finding the button");
+  if (dropDown) {
+    const button = dropDown.querySelector(".btn");
+    if (button) {
+      button.style.border = " 0.0002vh solid #2CA912";
+      button.click();
+    } else {
+      console.error("error in finding the button");
+    }
   }
 }
 //
