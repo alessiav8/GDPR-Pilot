@@ -1802,6 +1802,7 @@ export function reorderDiagram() {
       );
       distributor.trigger(distribute, "vertical");
       distributor.trigger(distribute, "horizontal");
+      adjustGroups();
 
       reorderPools();
     });
@@ -1820,7 +1821,9 @@ export function reorderDiagram() {
     distribute = allElements.filter(
       (element) => element.id != "GdprGroup" && !element.id.includes("right")
     );
+    distributor.trigger(distribute, "vertical");
     distributor.trigger(distribute, "horizontal");
+    adjustGroups();
   }
   viewer.get("canvas").zoom("fit-viewport");
 }
