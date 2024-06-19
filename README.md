@@ -4,9 +4,11 @@ This repository contains the codebase for my Master's thesis as part of the Comp
 
 ## Installation
 
-npm install
-npm start (into the root repo)
-node server.js (into the server repo cd src/server/)
+If you don't have concurrently installed, you need to install it: <br>
+`sh npm install concurrently --save-dev` <br>
+
+Run the following command to start the tool:<br>
+`sh npm run dev`
 
 ## Contributions
 
@@ -17,3 +19,7 @@ The code of this project is released under the [MIT License](./LICENSE.md), whic
 ## Contacts
 
 Email: alessia.volpi.28@gmail.com
+
+```
+
+```
