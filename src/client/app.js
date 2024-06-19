@@ -1800,7 +1800,9 @@ export function reorderDiagram() {
       distribute = part.children.filter(
         (element) => element.id != "GdprGroup" && !element.id.includes("right")
       );
+      distributor.trigger(distribute, "vertical");
       distributor.trigger(distribute, "horizontal");
+
       reorderPools();
     });
   } else {

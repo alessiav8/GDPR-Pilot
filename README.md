@@ -5,10 +5,10 @@ This repository contains the codebase for my Master's thesis as part of the Comp
 ## Installation
 
 If you don't have concurrently installed, you need to install it: <br>
-`sh npm install concurrently --save-dev` <br>
+`npm install concurrently --save-dev` <br>
 
 Run the following command to start the tool:<br>
-`sh npm run dev`
+`npm run dev`
 
 ## Contributions
 
