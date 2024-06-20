@@ -32,7 +32,6 @@ app.get("/api/call_chat_gpt", async (req, res) => {
       messages: [{ role: "user", content: userMessage }],
       model: "gpt-3.5-turbo-0125",
     });
-
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:8080");
     res.json(completion.choices[0].message);
   } catch (error) {

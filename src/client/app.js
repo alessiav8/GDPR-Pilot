@@ -1802,9 +1802,8 @@ export function reorderDiagram() {
       );
       distributor.trigger(distribute, "vertical");
       distributor.trigger(distribute, "horizontal");
-      adjustGroups();
-
       reorderPools();
+      fixGroups();
     });
   } else {
     var sub = getSequenceElements(allElements);
@@ -1823,11 +1822,71 @@ export function reorderDiagram() {
     );
     distributor.trigger(distribute, "vertical");
     distributor.trigger(distribute, "horizontal");
-    adjustGroups();
   }
   viewer.get("canvas").zoom("fit-viewport");
 }
 //
+
+function fixGroups() {
+  elementRegistry = viewer.get("elementRegistry");
+  var starts = null;
+  const groups = elementRegistry
+    .getAll()
+    .filter((item) => item.type == "bpmn:Group" && item.id != "GdprGroup");
+  const allElements = elementRegistry.getAll();
+  if (groups.length > 0) {
+    groups.forEach((group) => {
+      const xGroup = group.x ? group.x : null;
+      const yGroup = group.y ? group.y : null;
+      const heightGroup = group.height ? group.height : null;
+      const widthGroup = group.width ? group.width : null;
+      if (xGroup && yGroup && heightGroup && widthGroup) {
+        starts = allElements.filter(
+          (item) =>
+            item.type == "bpmn:StartEvent" &&
+            item.y >= yGroup &&
+            item.y + item.height <= yGroup + heightGroup
+        );
+        if (starts && starts.length > 0) {
+          starts.forEach((start) => {
+            if (start.outgoing && start.outgoing.length > 0) {
+              start.outgoing.forEach((out) => {
+                if (out.type == "bpmn:SequenceFlow" && out.target != start) {
+                  reOrderSubSet([start, out.target]);
+                  allignSuccessor(out.target, group);
+                }
+              });
+            }
+          });
+        }
+      }
+    });
+  }
+}
+
+function allignSuccessor(element, group) {
+  const elementEndX = element.x + element.width;
+  const groupEndX = group.x + group.width;
+  if (elementEndX > groupEndX) {
+    const offsetX = elementEndX - groupEndX + 30;
+    modeling.resizeShape(group, {
+      x: group.x,
+      y: group.y,
+      height: group.height,
+      width: group.width + offsetX,
+    });
+    modeling.moveShape(element, { x: -offsetX, y: 0 });
+  }
+  if (element.outgoing && element.outgoing.length > 0) {
+    element.outgoing.forEach((out) => {
+      if (out.type == "bpmn:SequenceFlow" && out.target != element) {
+        console.log("out", element, out.target);
+        allignSuccessor(out.target, group);
+        reOrderSubSet([element, out.target]);
+      }
+    });
+  }
+}
 
 function reOrderSubSet(sub) {
   sub.forEach((element) => {
@@ -2627,10 +2686,8 @@ function addActivityInText(child, content, connected = true) {
 // Add an event listener for the custom event
 document.addEventListener("removeGif", function (e) {
   const passedId = e.detail.id;
-  console.log("Passed: " + passedId);
   if (passedId) {
     const imgLoader = document.getElementById("imgLoader_" + passedId);
-    console.log("passed img", imgLoader);
     if (imgLoader) imgLoader.remove();
   }
 });

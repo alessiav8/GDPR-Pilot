@@ -676,15 +676,27 @@ async function createDropDown(
     const divLoading = document.createElement("div");
     divLoading.style.justifyContent = "center";
     divLoading.style.alignItems = "center";
-    divLoading.style.marginLeft = "45%";
+    //divLoading.style.marginLeft = "45%";
     divLoading.id = "imgLoader_" + id;
 
     const Loading = document.createElement("img");
     Loading.style.height = "4vh";
     Loading.style.width = "4vh";
+    Loading.style.marginLeft = "45%";
+    Loading.style.marginTop = "5%";
+
     Loading.src = loading;
 
+    const textUnderLoading = document.createElement("div");
+    textUnderLoading.innerHTML = "Loading AI suggestions";
+    textUnderLoading.style.fontSize = "1.4vh";
+    textUnderLoading.style.marginLeft = "29%";
+    textUnderLoading.style.marginTop = "2%";
+    textUnderLoading.style.color = "rgba(32, 170, 42, 1)";
+    textUnderLoading.style.fontWeight = "bold";
+
     divLoading.appendChild(Loading);
+    divLoading.appendChild(textUnderLoading);
     ul.appendChild(divLoading);
   }
 
@@ -903,7 +915,6 @@ async function createUlandSelectActivities(
               !document.getElementById("c3_checkbox_" + activity.id)
             ) {
               c2.className = "col-5";
-
               c3 = document.createElement("div");
               c3.id = "c3_checkbox_" + activity.id;
               c3.innerHTML = "AI Suggestion";
