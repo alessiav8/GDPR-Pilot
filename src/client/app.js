@@ -1822,6 +1822,7 @@ export function reorderDiagram() {
     );
     distributor.trigger(distribute, "vertical");
     distributor.trigger(distribute, "horizontal");
+    fixGroups();
   }
   viewer.get("canvas").zoom("fit-viewport");
 }
@@ -2111,6 +2112,8 @@ function adjustPools(sortedPools) {
     currentX = pool.x;
   });
 }
+
+function resizeGdprGroup() {}
 
 async function reorderPools() {
   const elementRegistry = viewer.get("elementRegistry");
