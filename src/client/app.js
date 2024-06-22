@@ -1793,12 +1793,14 @@ export function reorderDiagram() {
     has_Collaboration.forEach((part) => {
       //prendi ogni partecipazione
       const subSet = getSequenceElements(null);
+      const newSub = subSet.filter((element) => element.id.includes("right"));
+      //reOrderSubSet(newSub);
       //getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
-      reOrderSubSet(subSet.filter((element) => element.id.includes("right")));
+      reOrderSubSet(subSet); //.filter((element) => element.id.includes("right")));
       distribute = part.children.filter(
         (element) => element.id != "GdprGroup" && !element.id.includes("right")
       );
-      //distributor.trigger(distribute, "vertical");
+      distributor.trigger(distribute, "vertical");
       distributor.trigger(distribute, "horizontal");
       reorderPools();
       fixGroups();
@@ -1891,10 +1893,12 @@ function reOrderSubSet(sub) {
   sub.forEach((element) => {
     //get the set of elements that precede the element
     const previousElementSet = getPreviousElement(element);
+    console.log("previousElementSet", previousElementSet);
     if (previousElementSet.length > 0) {
       var setVertical = null;
       //se ci sono elementi prima
       previousElementSet.forEach((previousElement) => {
+        console.log("previousElement", previousElement);
         //per ogni elemento
         //assegnamo una distanza fissa in base a quanto è largo ogni elemento
         const compare =
