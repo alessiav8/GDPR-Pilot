@@ -169,7 +169,6 @@ const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:DataObjectAssociation",
   "bpmn:DataInputAssociation",
   "bpmn:Group",
-  "label",
 ]);
 const gdprActivityQuestionsPrefix = ["consent"];
 
@@ -408,6 +407,31 @@ async function loadDiagram(diagram) {
         console.log("eventBus", eventBus);
 
         eventBus.on("element.click", handleClick);
+
+        eventBus.on(
+          "commandStack.connection.updateWaypoints.postExecute",
+          function (event) {
+            const element = event.context.connection; // Elemento SequenceFlow
+            if (
+              element &&
+              element.type === "bpmn:SequenceFlow" &&
+              element.labels.length > 0
+            ) {
+              const waypoints = element.waypoints;
+              if (element.labels && element.labels.length > 0) {
+                element.labels.forEach((label) => {
+                  const labelToUpdate = elementRegistry.get(label.id);
+                  const deltaX =
+                    (waypoints[0].x + waypoints[waypoints.length - 1].x) / 2 -
+                    labelToUpdate.x -
+                    labelToUpdate.width;
+                  const deltaY = waypoints[0].y - labelToUpdate.y - 10;
+                  modeling.moveShape(labelToUpdate, { x: deltaX, y: deltaY });
+                });
+              }
+            }
+          }
+        );
 
         eventBus.on("element.changed", function (event) {
           const element = event.element; //sequence flow element
@@ -1944,7 +1968,9 @@ function reOrderSubSet(sub) {
                 },
                 { x: newPositionX, y: newPositionY + element.height / 2 },
               ];
+
               modeling.updateWaypoints(incomingElement, newWaypoints);
+
               existSomethingInBetween(incomingElement);
             }
           }
@@ -1961,16 +1987,33 @@ function existSomethingInBetween(flow) {
   if (waypoints) {
     const startingPoint = waypoints[0];
     const endingPoint = waypoints[1];
-    allElements = allElements.filter(
-      (element) =>
-        startingPoint.x < element.x &&
-        element.x < endingPoint.x &&
-        startingPoint.y < element.y &&
-        element.y < endingPoint.y &&
-        bpmnActivityTypes.some((item) => item == element.type)
-    );
+    allElements =
+      allElements.filter(
+        (element) =>
+          startingPoint.x < element.x &&
+          element.x < endingPoint.x &&
+          startingPoint.y < element.y &&
+          element.y < endingPoint.y &&
+          bpmnActivityTypes.some((item) => item == element.type)
+      ).length > 0
+        ? allElements.filter(
+            (element) =>
+              startingPoint.x < element.x &&
+              element.x < endingPoint.x &&
+              startingPoint.y < element.y &&
+              element.y < endingPoint.y &&
+              bpmnActivityTypes.some((item) => item == element.type)
+          )
+        : allElements.filter(
+            (element) =>
+              startingPoint.x <= element.x &&
+              element.x + element.width <= endingPoint.x &&
+              startingPoint.y == endingPoint.y &&
+              element.x + element.width != endingPoint.x &&
+              bpmnActivityTypes.some((item) => item == element.type)
+          );
+
     if (allElements.length > 0) {
-      console.log("Found", allElements);
       var considered;
       if (allElements.length == 1) {
         considered = allElements[0];
@@ -1979,24 +2022,39 @@ function existSomethingInBetween(flow) {
           return prev.y > current.y ? prev : current;
         });
       }
-      const newWaypoints = { x: startingPoint.x, y: considered.y - 50 };
+      var freePosition = false;
+      var differenceToAdd = 50;
+      while (!freePosition) {
+        const flowSameHight = elementRegistry
+          .getAll()
+          .filter(
+            (element) =>
+              element.type == "bpmn:SequenceFlow" &&
+              element.waypoints.filter(
+                (waypoint) =>
+                  waypoint.y == considered.y - differenceToAdd &&
+                  waypoint.x > startingPoint.x &&
+                  waypoint.x < endingPoint.x
+              ).length > 0
+          );
+        if (flowSameHight.length > 0) {
+          differenceToAdd = differenceToAdd > 20 ? differenceToAdd - 10 : -50;
+        } else {
+          freePosition = true;
+        }
+      }
+      const newWaypoints = {
+        x: startingPoint.x,
+        y: considered.y - differenceToAdd,
+      };
       const newWaypoints2 = {
         x: endingPoint.x,
-        y: considered.y - 50,
+        y: considered.y - differenceToAdd,
       };
 
       waypoints.splice(1, 0, newWaypoints, newWaypoints2);
 
       modeling.updateWaypoints(flow, waypoints);
-      console.log("Updated", flow);
-      if (flow.labels.length > 0) {
-        flow.labels.forEach((label) => {
-          modeling.updateProperties(label, {
-            x: (startingPoint.x + endingPoint.x) / 2,
-            y: considered.y - 50,
-          });
-        });
-      }
     } else {
       return;
     }
