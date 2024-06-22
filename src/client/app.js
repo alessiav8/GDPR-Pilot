@@ -1161,7 +1161,6 @@ function undoProcedure() {
     removeChatGPTTipFromAll();
     decolorEverySelected();
     reorderDiagram();
-    //reorderDiagram();
     viewer.get("canvas").zoom("fit-viewport");
   });
   setGdprButtonCompleted(false);
@@ -1790,17 +1789,16 @@ export function reorderDiagram() {
   var distribute;
 
   if (has_Collaboration) {
-    console.log("hasCollaboration", has_Collaboration);
     //ha delle collaborazioni => ci sono diversi partecipanti
     has_Collaboration.forEach((part) => {
       //prendi ogni partecipazione
       const subSet = getSequenceElements(null);
       //getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
-      reOrderSubSet(subSet);
+      reOrderSubSet(subSet.filter((element) => element.id.includes("right")));
       distribute = part.children.filter(
         (element) => element.id != "GdprGroup" && !element.id.includes("right")
       );
-      distributor.trigger(distribute, "vertical");
+      //distributor.trigger(distribute, "vertical");
       distributor.trigger(distribute, "horizontal");
       reorderPools();
       fixGroups();
@@ -1869,7 +1867,7 @@ function allignSuccessor(element, group) {
   const elementEndX = element.x + element.width;
   const groupEndX = group.x + group.width;
   if (elementEndX > groupEndX) {
-    const offsetX = elementEndX - groupEndX + 30;
+    const offsetX = elementEndX - groupEndX + 5;
     modeling.resizeShape(group, {
       x: group.x,
       y: group.y,
@@ -1908,16 +1906,6 @@ function reOrderSubSet(sub) {
         const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
         var add = compare - diff > 0 ? compare - diff : 0; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
-        /*if (
-          !(
-            isInRange(previousElement.y, element.y) ||
-            isInRange(element.y, previousElement.y)
-          ) //se non rispetta i range fissati per distanza y non muovere x
-        ) {
-          /*addY = 150 - (element.y - previousElement.y); //aggiusta y ma non muovere x
-          add = 0;*/
-        /*setVertical = true;
-        }*/
         var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
         incomingElementSet = incomingElementSet.filter(
           (elem) => elem.type == "bpmn:SequenceFlow"
@@ -1938,8 +1926,13 @@ function reOrderSubSet(sub) {
                   modeling.moveShape(attached, { x: add, y: addY });
                 });
               }
-              //if the object i'm moving has a label, move the label too
-              if (element.labels.length > 0) {
+              const label_associated =
+                element.labels.length > 0
+                  ? element.labels
+                  : elementRegistry.get(element.id + "_label")
+                  ? elementRegistry.get(element.id + "_label")
+                  : element.labels;
+              if (label_associated.length > 0) {
                 element.labels.forEach((label) => {
                   modeling.moveShape(label, { x: add, y: addY });
                 });
@@ -2092,12 +2085,12 @@ function adjustPools(sortedPools) {
           }
 
           if (lastYGdpr.y + lastYGdpr.height > gdpr.y + gdpr.height - 10) {
-            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 10;
+            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 40;
           } else if (
             lastYGdpr.y + lastYGdpr.height <
             gdpr.y + gdpr.height - 10
           ) {
-            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 10;
+            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 40;
           } else {
             newBoundsGdpr.height = gdpr.height;
           }

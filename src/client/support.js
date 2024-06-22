@@ -401,11 +401,6 @@ async function predictionChatGPT(id) {
   }
 }
 
-//the green loading to add
-/*
-<div class="tenor-gif-embed" data-postid="27042978" data-share-method="host" data-aspect-ratio="1" data-width="100%"><a href="https://tenor.com/view/loading-green-loading-gimp-gif-gif-27042978">Loading Green Loading Sticker</a>from <a href="https://tenor.com/search/loading-stickers">Loading Stickers</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
-*/
-
 //function to create a drop down
 //id:id to use for the dropdown ex "dropDownA"
 //isExpanded: whether the dropdown must be expanded
