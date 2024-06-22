@@ -378,7 +378,6 @@ async function loadDiagram(diagram) {
                       break;
                   }
                 }
-                //reorderDiagram();
               });
             }
           } catch (e) {
@@ -1161,7 +1160,6 @@ function undoProcedure() {
     removeChatGPTTipFromAll();
     decolorEverySelected();
     reorderDiagram();
-    //reorderDiagram();
     viewer.get("canvas").zoom("fit-viewport");
   });
   setGdprButtonCompleted(false);
@@ -1790,18 +1788,18 @@ export function reorderDiagram() {
   var distribute;
 
   if (has_Collaboration) {
-    console.log("hasCollaboration", has_Collaboration);
     //ha delle collaborazioni => ci sono diversi partecipanti
     has_Collaboration.forEach((part) => {
       //prendi ogni partecipazione
       const subSet = getSequenceElements(null);
       //getOrderedSub(part.children); //ordina gli elementi interni ad ognuna di esse singolarmente
       reOrderSubSet(subSet);
-      distribute = part.children.filter(
-        (element) => element.id != "GdprGroup" && !element.id.includes("right")
+      /*distribute = part.children.filter(
+        (element) =>
+          element.type == "SequenceFlow" || element.type == "MessageFlow"
       );
       distributor.trigger(distribute, "vertical");
-      distributor.trigger(distribute, "horizontal");
+      distributor.trigger(distribute, "horizontal");*/
       reorderPools();
       fixGroups();
     });
@@ -1817,11 +1815,11 @@ export function reorderDiagram() {
         item.type != "bpmn:DataObjectAssociation"
     );
     reOrderSubSet(sub);
-    distribute = allElements.filter(
+    /*distribute = allElements.filter(
       (element) => element.id != "GdprGroup" && !element.id.includes("right")
     );
     distributor.trigger(distribute, "vertical");
-    distributor.trigger(distribute, "horizontal");
+    distributor.trigger(distribute, "horizontal");*/
     fixGroups();
   }
   viewer.get("canvas").zoom("fit-viewport");
@@ -1865,6 +1863,9 @@ function fixGroups() {
   }
 }
 
+//function to allign an element inside the group and resizing the group if the element goes outside the group
+//element: the element inside the group that i want to consider
+//group:the group i'm considering
 function allignSuccessor(element, group) {
   const elementEndX = element.x + element.width;
   const groupEndX = group.x + group.width;
@@ -1899,25 +1900,11 @@ function reOrderSubSet(sub) {
       previousElementSet.forEach((previousElement) => {
         //per ogni elemento
         //assegnamo una distanza fissa in base a quanto è largo ogni elemento
-        const compare =
-          previousElement.width == 36
-            ? 90
-            : previousElement.width == 50
-            ? 150
-            : 150;
-        const diff = element.x - previousElement.x; //quanto sono distanti i due elementi
-        var add = compare - diff > 0 ? compare - diff : 0; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
+        const compare = 40;
+        const diff = element.x - (previousElement.x + previousElement.width); //quanto sono distanti i due elementi
+        var add = diff > compare ? 0 : compare; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
-        /*if (
-          !(
-            isInRange(previousElement.y, element.y) ||
-            isInRange(element.y, previousElement.y)
-          ) //se non rispetta i range fissati per distanza y non muovere x
-        ) {
-          /*addY = 150 - (element.y - previousElement.y); //aggiusta y ma non muovere x
-          add = 0;*/
-        /*setVertical = true;
-        }*/
+
         var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
         incomingElementSet = incomingElementSet.filter(
           (elem) => elem.type == "bpmn:SequenceFlow"
@@ -1943,7 +1930,13 @@ function reOrderSubSet(sub) {
                 element.labels.forEach((label) => {
                   modeling.moveShape(label, { x: add, y: addY });
                 });
+              } else {
+                const label = elementRegistry.get(element.id + "_label");
+                if (label) {
+                  modeling.moveShape(label, { x: add, y: addY });
+                }
               }
+
               const newWaypoints = [
                 {
                   x: previousElement.x + previousElement.width,
@@ -1952,12 +1945,62 @@ function reOrderSubSet(sub) {
                 { x: newPositionX, y: newPositionY + element.height / 2 },
               ];
               modeling.updateWaypoints(incomingElement, newWaypoints);
+              existSomethingInBetween(incomingElement);
             }
           }
         }
       });
     }
   });
+}
+
+function existSomethingInBetween(flow) {
+  elementRegistry = viewer.get("elementRegistry");
+  var allElements = elementRegistry.getAll();
+  var waypoints = flow.waypoints;
+  if (waypoints) {
+    const startingPoint = waypoints[0];
+    const endingPoint = waypoints[1];
+    allElements = allElements.filter(
+      (element) =>
+        startingPoint.x < element.x &&
+        element.x < endingPoint.x &&
+        startingPoint.y < element.y &&
+        element.y < endingPoint.y &&
+        bpmnActivityTypes.some((item) => item == element.type)
+    );
+    if (allElements.length > 0) {
+      console.log("Found", allElements);
+      var considered;
+      if (allElements.length == 1) {
+        considered = allElements[0];
+      } else {
+        considered = allElements.reduce((prev, current) => {
+          return prev.y > current.y ? prev : current;
+        });
+      }
+      const newWaypoints = { x: startingPoint.x, y: considered.y - 50 };
+      const newWaypoints2 = {
+        x: endingPoint.x,
+        y: considered.y - 50,
+      };
+
+      waypoints.splice(1, 0, newWaypoints, newWaypoints2);
+
+      modeling.updateWaypoints(flow, waypoints);
+      console.log("Updated", flow);
+      if (flow.labels.length > 0) {
+        flow.labels.forEach((label) => {
+          modeling.updateProperties(label, {
+            x: (startingPoint.x + endingPoint.x) / 2,
+            y: considered.y - 50,
+          });
+        });
+      }
+    } else {
+      return;
+    }
+  }
 }
 
 function adjustPools(sortedPools) {
@@ -2216,6 +2259,7 @@ export function removeConsentFromActivity(activity, type) {
   elementRegistry = viewer.get("elementRegistry");
   try {
     var i = 0;
+    //mi serve un ciclo nel caso io abbia aggiunto più consent alla stessa attività perche ho più path che portano ad essa
     var name = type + activity.id + "_" + i;
     var toRemove = elementRegistry.get(name);
     while (toRemove) {
@@ -2255,7 +2299,7 @@ export function removeConsentFromActivity(activity, type) {
         }
       }
     }
-    reorderDiagram();
+    //reorderDiagram();
   } catch (e) {
     console.error("Some problem in removing path gdpr added to activity", e);
   }
@@ -2912,7 +2956,7 @@ function iterateSetOfElementsToTranslate(set, content, firstPassed) {
       first = set[0]; //se non gli ho passato un inizio
       connected = first.type == "bpmn:StartEvent" ? true : false;
     }
-    set = set.filter((item) => item.id != first.id); //tolgo l'elemento considerato dal set
+    set = set.filter((item) => item && item.id != first.id); //tolgo l'elemento considerato dal set
     if (
       bpmnActivityTypes.some(
         (item) =>
