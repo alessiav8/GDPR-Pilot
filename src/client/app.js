@@ -1183,10 +1183,10 @@ function undoProcedure() {
     handleSideBar(false);
     removeChatGPTTipFromAll();
     decolorEverySelected();
-    reorderDiagram();
-    viewer.get("canvas").zoom("fit-viewport");
   });
   setGdprButtonCompleted(false);
+  reorderDiagram();
+  viewer.get("canvas").zoom("fit-viewport");
 }
 
 //function to get the id from the question
