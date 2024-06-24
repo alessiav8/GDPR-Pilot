@@ -1183,13 +1183,13 @@ function undoProcedure() {
     if (group) {
       modeling.removeShape(group);
     }
+    reorderDiagram();
     closeSideBarSurvey();
     handleSideBar(false);
     removeChatGPTTipFromAll();
     decolorEverySelected();
   });
   setGdprButtonCompleted(false);
-  reorderDiagram();
   viewer.get("canvas").zoom("fit-viewport");
 }
 
@@ -1424,7 +1424,6 @@ function getMainProcess() {
 
 //function to check if the id is unique
 function checkUniqueID(id) {
-  console.log("checkUniqueID", id);
   try {
     elementRegistry = viewer.get("elementRegistry");
     const uniqueID = elementRegistry.get(id);
@@ -1911,7 +1910,6 @@ function allignSuccessor(element, group) {
   if (element.outgoing && element.outgoing.length > 0) {
     element.outgoing.forEach((out) => {
       if (out.type == "bpmn:SequenceFlow" && out.target != element) {
-        console.log("out", element, out.target);
         allignSuccessor(out.target, group);
         reOrderSubSet([element, out.target]);
       }
@@ -2015,6 +2013,14 @@ function existSomethingInBetween(flow) {
               element.x + element.width <= endingPoint.x &&
               startingPoint.y == endingPoint.y &&
               element.x + element.width != endingPoint.x &&
+              ((flow.source.y < element.y &&
+                (element.y + element.height <
+                  flow.source.y + flow.source.height ||
+                  element.y < flow.source.y + flow.source.height)) ||
+                (flow.source.y > element.y &&
+                  element.y + element.height > flow.source.y &&
+                  element.y + element.height <
+                    flow.source.y + flow.source.y)) &&
               bpmnActivityTypes.some((item) => item == element.type)
           );
 
@@ -2167,6 +2173,7 @@ function adjustPools(sortedPools) {
       const gdpr = elementRegistry.get("GdprGroup");
       if (gdpr) {
         if (gdpr.y >= pool.y && gdpr.y + gdpr.height > pool.y + pool.height) {
+          // Controlla se il GDPR estende oltre i limiti del pool
           newBounds.height = gdpr.y + gdpr.height + 20 - pool.y;
         }
         var setOfRights = new Array();
@@ -2356,7 +2363,6 @@ export function removeConsentFromActivity(activity, type) {
             commandStack.execute("connection.delete", {
               connection: incoming_elem,
             });
-            console.log("Connection removed successfully");
           } catch (error) {
             console.error("Error removing connection:", error);
           }

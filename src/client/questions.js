@@ -150,7 +150,6 @@ export async function addBPath(activities, activities_already_selected) {
     "Do you allow users to access their data?"
   );
   editMetaInfo("B", setJsonData("No", activities));
-  console.log("activities", activities);
 
   try {
     activities.forEach(async function (activity) {
@@ -241,7 +240,6 @@ export function createWithOnlyQuestionXExpandable(letter, questions) {
             : questions["questionB"][0].value == "No"
             ? "No"
             : null;
-        console.log(value);
         createDropDown(
           "dropDownB",
           false,
@@ -422,7 +420,6 @@ export function openDropDown(dropdown) {
 //function to check if a group exists or to create it
 async function checkGroupOrCreate() {
   const exist_gdpr = existGdprGroup();
-  console.log("group exists", exist_gdpr);
   if (exist_gdpr == false) {
     createAGroup();
   } else {

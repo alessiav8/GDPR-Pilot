@@ -111,7 +111,6 @@ function addTextBelowButton(Id, answer) {
     if (answer.match(/\[.*?\]/)) {
       buttonId = "no_" + Id;
       const arrayMatch = answer.match(/\[.*?\]/);
-      console.log("arrayMatch", arrayMatch);
       if (answer.match(/\[.*?\]/)) {
         buttonId = "no_" + Id;
         const arrayMatch = answer.match(/\[.*?\]/);
@@ -1001,7 +1000,6 @@ async function createUlandSelectActivities(
           try {
             // Get the setted activity
             const callSelected = await getSettedActivity("questionB");
-            console.log("callSelected: ", callSelected);
 
             if (callSelected.length > 0) {
               // Remove consent from activities not selected
