@@ -147,14 +147,12 @@ const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:SubProcess",
   "bpmn:ParallelGateway",
   "bpmn:BoundaryEvent",
-  "bpmn:MessageFlow",
   "bpmn:gateway",
   "bpmn:sequenceFlow",
   "bpmn:exclusiveGateway",
   "bpmn:subProcess",
   "bpmn:parallelGateway",
   "bpmn:boundaryEvent",
-  "bpmn:messageFlow",
   "bpmn:endEvent",
   "bpmn:EndEvent",
   "bpmn:startEvent",
@@ -168,6 +166,8 @@ const allBpmnElements = bpmnActivityTypes.concat([
   "bpmn:DataObjectReference",
   "bpmn:DataObjectAssociation",
   "bpmn:DataInputAssociation",
+  "bpmn:messageFlow",
+  "bpmn:MessageFlow",
   "bpmn:Group",
 ]);
 const gdprActivityQuestionsPrefix = ["consent"];
@@ -999,7 +999,7 @@ export function cleanSelection() {
 //
 
 //function to handle the click of the gdpr button ---> open side bar
-async function handleClickOnGdprButton() {
+function handleClickOnGdprButton() {
   viewer.get("canvas").zoom("fit-viewport");
   handleSideBar(true);
   cleanSelection();
@@ -1081,6 +1081,11 @@ async function handleClickOnGdprButton() {
     undo_button.addEventListener("click", handleUndoGdpr);
     checkQuestion();
   }
+  startPrediction();
+}
+//
+
+async function startPrediction() {
   try {
     const currentXML = await fromXMLToText();
     const descriptionReq = await callChatGpt(
@@ -1099,7 +1104,6 @@ async function handleClickOnGdprButton() {
     console.error("Error", e);
   }
 }
-//
 
 //function to get back the xml of the current diagram
 export async function getXMLOfTheCurrentBpmn() {
@@ -1824,6 +1828,7 @@ export function reorderDiagram() {
       );
       distributor.trigger(distribute, "vertical");
       distributor.trigger(distribute, "horizontal");*/
+
       reorderPools();
       fixGroups();
     });
@@ -2162,7 +2167,6 @@ function adjustPools(sortedPools) {
       const gdpr = elementRegistry.get("GdprGroup");
       if (gdpr) {
         if (gdpr.y >= pool.y && gdpr.y + gdpr.height > pool.y + pool.height) {
-          // Controlla se il GDPR estende oltre i limiti del pool
           newBounds.height = gdpr.y + gdpr.height + 20 - pool.y;
         }
         var setOfRights = new Array();
@@ -2221,8 +2225,10 @@ async function reorderPools() {
   var pools = elementRegistry.filter(
     (element) => element.type === "bpmn:Participant"
   );
-  const sortedPools = pools.sort((a, b) => a.y - b.y);
-  adjustPools(sortedPools);
+  if (pools.length > 0) {
+    const sortedPools = pools.sort((a, b) => a.y - b.y);
+    adjustPools(sortedPools);
+  }
 }
 
 function sortByY(elements) {
@@ -3121,7 +3127,7 @@ function procedureHasBoundary(ActivityToCheck, setOfElements, content) {
                   (item) => item.type == "bpmn:SequenceFlow"
                 )
               : false;
-          firstTarget = set ? set[0].target : false;
+          firstTarget = set && set[0] ? set[0].target : false;
         }
       });
     }

@@ -1196,6 +1196,9 @@ export function displayDynamicAlert(message, type, time) {
   const alertDiv = document.createElement("div");
   alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
   alertDiv.setAttribute("role", "alert");
+  alertDiv.style.color = "#10ad74";
+  alertDiv.style.backgroundColor = "white";
+  alertDiv.style.border = "1vh solid white";
 
   alertDiv.innerHTML = `
         <strong>Important!</strong> ${message}
@@ -1232,12 +1235,13 @@ export function displayDynamicPopUp(message) {
     alertDiv.style.zIndex = "1050";
     alertDiv.style.backgroundColor = "white";
     alertDiv.style.border = "white";
+    alertDiv.style.color = "#10ad74";
 
     alertDiv.innerHTML = `<center>
       <strong>${message}</strong>
       <hr>
-      <button type="button" class="btn btn-success yes-btn">Yes</button>
-      <button type="button" class="btn btn-danger no-btn">No</button>
+      <button type="button" class="btn btn-outline-success yes-btn">Yes</button>
+      <button type="button" class="btn btn-outline-danger no-btn">No</button>
     </center>`;
 
     alertContainer.appendChild(alertDiv);
