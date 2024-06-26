@@ -1566,92 +1566,103 @@ function getSuccessorElement(referenceElement) {
 //first element: the first element of the sequence
 //second element: the last element of the sequence
 //new element: the element that will be added between the first and the second
-function addActivityBetweenTwoElements(
+async function addActivityBetweenTwoElements(
   firstElement,
   secondElement,
-  newElement
+  newElement,
+  justGdprGroup = false
 ) {
-  const modeling = viewer.get("modeling");
-  const getBoundsNew = newElement.di.bounds;
+  try {
+    const modeling = viewer.get("modeling");
+    const getBoundsNew = newElement.di.bounds;
 
-  if (firstElement == null) {
-    const newBoundsNew = {
-      x: secondElement.x - 1.5 * newElement.width,
-      y: secondElement.y,
-      width: getBoundsNew.width,
-      height: getBoundsNew.height,
-    };
-    modeling.resizeShape(newElement, newBoundsNew);
+    if (firstElement == null) {
+      const newBoundsNew = {
+        x: secondElement.x - 1.5 * newElement.width,
+        y: secondElement.y,
+        width: getBoundsNew.width,
+        height: getBoundsNew.height,
+      };
+      modeling.resizeShape(newElement, newBoundsNew);
 
-    const newSequenceFlowAttrsOutgoing = {
-      type: "bpmn:SequenceFlow",
-    };
+      const newSequenceFlowAttrsOutgoing = {
+        type: "bpmn:SequenceFlow",
+      };
 
-    modeling.createConnection(
-      newElement,
-      secondElement,
-      newSequenceFlowAttrsOutgoing,
-      secondElement.parent
-    );
-  } else {
-    //il caso in cui abbiamo uno prima e uno dopo e quindi va aggiunto nel mezzo
-    const newX = (secondElement.x + firstElement.x) / 2;
-    var newY =
-      firstElement.type == "bpmn:StartEvent" ||
-      firstElement.type == "bpmn:EndEvent" ||
-      firstElement.type == "bpmn:startEvent" ||
-      firstElement.type == "bpmn:endEvent"
-        ? firstElement.y - 22
-        : firstElement.type == "bpmn:ExclusiveGateway" ||
-          firstElement.type == "bpmn:ParallelGateway" ||
-          firstElement.type == "bpmn:Gateway"
-        ? secondElement.y
-        : firstElement.y;
+      modeling.createConnection(
+        newElement,
+        secondElement,
+        newSequenceFlowAttrsOutgoing,
+        secondElement.parent
+      );
+    } else {
+      //il caso in cui abbiamo uno prima e uno dopo e quindi va aggiunto nel mezzo
+      const newX = (secondElement.x + firstElement.x) / 2;
+      var newY =
+        firstElement.type == "bpmn:StartEvent" ||
+        firstElement.type == "bpmn:EndEvent" ||
+        firstElement.type == "bpmn:startEvent" ||
+        firstElement.type == "bpmn:endEvent"
+          ? firstElement.y - 22
+          : firstElement.type == "bpmn:ExclusiveGateway" ||
+            firstElement.type == "bpmn:ParallelGateway" ||
+            firstElement.type == "bpmn:Gateway"
+          ? secondElement.y
+          : firstElement.y;
 
-    const outgoingFlow = firstElement.outgoing;
+      const outgoingFlow = firstElement.outgoing;
 
-    if (outgoingFlow.length > 0) {
-      outgoingFlow.forEach((outgoingElem) => {
-        if (
-          outgoingElem.type != "bpmn:MessageFlow" &&
-          outgoingElem.businessObject.targetRef.id === secondElement.id
-        ) {
-          modeling.removeConnection(outgoingElem);
-        }
-      });
+      if (outgoingFlow.length > 0) {
+        outgoingFlow.forEach((outgoingElem) => {
+          if (
+            outgoingElem.type != "bpmn:MessageFlow" &&
+            outgoingElem.businessObject.targetRef.id === secondElement.id
+          ) {
+            modeling.removeConnection(outgoingElem);
+          }
+        });
+      }
+
+      const to_shift = newElement.di.bounds.width;
+      const newBoundsNew = {
+        x: newX,
+        y: newY,
+        width: getBoundsNew.width,
+        height: getBoundsNew.height,
+      };
+      modeling.resizeShape(newElement, newBoundsNew);
+
+      const newSequenceFlowAttrsIncoming = {
+        type: "bpmn:SequenceFlow",
+      };
+      modeling.createConnection(
+        firstElement,
+        newElement,
+        newSequenceFlowAttrsIncoming,
+        firstElement.parent
+      );
+
+      const newSequenceFlowAttrsOutgoing = {
+        type: "bpmn:SequenceFlow",
+      };
+      modeling.createConnection(
+        newElement,
+        secondElement,
+        newSequenceFlowAttrsOutgoing,
+        secondElement.parent
+      );
     }
-
-    const to_shift = newElement.di.bounds.width;
-    const newBoundsNew = {
-      x: newX,
-      y: newY,
-      width: getBoundsNew.width,
-      height: getBoundsNew.height,
-    };
-    modeling.resizeShape(newElement, newBoundsNew);
-
-    const newSequenceFlowAttrsIncoming = {
-      type: "bpmn:SequenceFlow",
-    };
-    modeling.createConnection(
-      firstElement,
-      newElement,
-      newSequenceFlowAttrsIncoming,
-      firstElement.parent
-    );
-
-    const newSequenceFlowAttrsOutgoing = {
-      type: "bpmn:SequenceFlow",
-    };
-    modeling.createConnection(
-      newElement,
-      secondElement,
-      newSequenceFlowAttrsOutgoing,
-      secondElement.parent
-    );
+    alienator.trigger([firstElement, newElement, secondElement], "middle");
+    if (justGdprGroup) {
+      await reOrderSubSet([firstElement, newElement, secondElement]);
+      fixGroups();
+      reorderPools();
+    } else {
+      reorderDiagram();
+    }
+  } catch (e) {
+    console.error("Error in addBetween", e);
   }
-  alienator.trigger([firstElement, newElement, secondElement], "middle");
-  reorderDiagram();
 }
 //
 
@@ -1808,7 +1819,7 @@ function hasCollaboration() {
 }
 
 //function to reorder the diagram
-export function reorderDiagram() {
+export function reorderDiagram(justGdprGroup = false) {
   //prendo tutti gli elementi del processo
   elementRegistry = viewer.get("elementRegistry");
   const allElements = elementRegistry.getAll();
@@ -1817,7 +1828,6 @@ export function reorderDiagram() {
   const has_Collaboration = hasCollaboration();
 
   var distribute;
-
   if (has_Collaboration) {
     //ha delle collaborazioni => ci sono diversi partecipanti
     has_Collaboration.forEach((part) => {
@@ -1836,22 +1846,24 @@ export function reorderDiagram() {
       fixGroups();
     });
   } else {
-    var sub = getSequenceElements(allElements);
-    sub = sub.filter(
-      (item) =>
-        item.type != "bpmn:MessageFlow" &&
-        item.type != "bpmn:Group" &&
-        item.type != "bpmn:DataInputAssociation" &&
-        item.type != "bpmn:DataStoreReference" &&
-        item.type != "bpmn:DataObjectReference" &&
-        item.type != "bpmn:DataObjectAssociation"
-    );
-    reOrderSubSet(sub);
-    /*distribute = allElements.filter(
-      (element) => element.id != "GdprGroup" && !element.id.includes("right")
-    );
-    distributor.trigger(distribute, "vertical");
-    distributor.trigger(distribute, "horizontal");*/
+    if (justGdprGroup) {
+      var gdprChildren = allElements.filter((element) =>
+        element.id.includes("right")
+      );
+      reOrderSubSet(gdprChildren);
+    } else {
+      var sub = getSequenceElements(allElements);
+      sub = sub.filter(
+        (item) =>
+          item.type != "bpmn:MessageFlow" &&
+          item.type != "bpmn:Group" &&
+          item.type != "bpmn:DataInputAssociation" &&
+          item.type != "bpmn:DataStoreReference" &&
+          item.type != "bpmn:DataObjectReference" &&
+          item.type != "bpmn:DataObjectAssociation"
+      );
+      reOrderSubSet(sub);
+    }
     fixGroups();
   }
   viewer.get("canvas").zoom("fit-viewport");
@@ -1933,9 +1945,9 @@ function reOrderSubSet(sub) {
         //assegnamo una distanza fissa in base a quanto è largo ogni elemento
         const compare = 40;
         const diff = element.x - (previousElement.x + previousElement.width); //quanto sono distanti i due elementi
-        var add = diff > compare ? 0 : compare; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
+        var add = diff > compare ? 0 : compare - diff; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
-        if (diff > 200) add = 0;
+        //if (element.y != previousElement.y) add = 0;
         //lo devo aumentare solo se non c'è nulla nel mezzo
 
         if (elementRegistry.getAll().filter((element) => element))
@@ -2619,7 +2631,12 @@ export async function addSubEvent(
   }
 
   try {
-    await addActivityBetweenTwoElements(start_event, end_event, subprocess);
+    await addActivityBetweenTwoElements(
+      start_event,
+      end_event,
+      subprocess,
+      true
+    );
   } catch (error) {
     console.error("Error adding activity between elements:", error);
     return;

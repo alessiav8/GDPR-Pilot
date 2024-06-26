@@ -106,7 +106,6 @@ function addTextBelowButton(Id, answer) {
       noButton.style && noButton.style.border == "0.3vh solid rgb(16, 173, 116)"
         ? true
         : false;
-    console.log("No button style: ", noButton.style.border, HasBorderN);
   }
   if (yesButton && noButton && !HasBorderY && !HasBorderN) {
     //if the answer contains an array --> answer related to question B
