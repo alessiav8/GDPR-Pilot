@@ -215,9 +215,7 @@ export async function callChatGpt(message) {
   try {
     const response = await axios.get(url, {
       params: {
-        message:
-          "Consider to be a GDPR(General Data Protection Regulation) expert that have to analyze how much a process is GDPR compliant. When I talk about different participant, you have to find in the text different {Participant} inside of each of theme there are different processes and they can communicate. The activities named 'Right to be Informed and to consent' must be taken into account just for the right to consent analysis, if i provide some other definition, like 'Right to access' or 'Right to Object' ecc.. please ignore those activities. " +
-          message,
+        message: message,
         withCredentials: true,
       },
 
@@ -1081,7 +1079,6 @@ function handleClickOnGdprButton() {
     undo_button.addEventListener("click", handleUndoGdpr);
     checkQuestion();
   }
-  startPrediction();
 }
 //
 
@@ -1089,8 +1086,14 @@ async function startPrediction() {
   try {
     const currentXML = await fromXMLToText();
     const descriptionReq = await callChatGpt(
-      "I give you the textual description of a bpmn process, can you give me back the description of the objective of this process? Just a brief description of at most 30 lines." +
-        currentXML
+      "You have to complete this two task:\n Task 1 (Logic description generation): I give you the textual description of a bpmn process, can you give me back the description of the working of this process, explicit the protagonists if there " +
+        "are messages exchaged between more participants? Just a brief description of at most 30 lines" +
+        currentXML +
+        "\n" +
+        "Task 2 (Roles definition): Consider to be a GDPR specialist, you have the same textual description of the process and you need to clearly identify who is the Data Controller and who is the Data Subject." +
+        "Go to head and you have to output this information following this format, taking as example the process of a makeup store that needs to register a new customer in its database: 'Data Controller: Makeup Store;\n Data Subject: Customer'" +
+        "The end output should look like this: \n\n Logic description:\n A makeup store acquires a new customer by requesting their personal data (e.g., name, email address). After verifying the data, it is entered into the database. The customer then receives promotions and product updates. The process concludes with confirmation of data entry into the system." +
+        "\n Roles definition:\n Data Controller: Makeup Store;\n Data Subject: Customer"
     );
     const description = descriptionReq.content;
     localStorage.setItem("currentXml", currentXML);
@@ -1927,12 +1930,15 @@ function reOrderSubSet(sub) {
       previousElementSet.forEach((previousElement) => {
         //per ogni elemento
         //assegnamo una distanza fissa in base a quanto è largo ogni elemento
-        const compare = 40;
+        const compare = 60;
         const diff = element.x - (previousElement.x + previousElement.width); //quanto sono distanti i due elementi
         var add = diff > compare ? 0 : compare; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
+        if (diff > 200) add = 0;
+        //lo devo aumentare solo se non c'è nulla nel mezzo
 
-        var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
+        if (elementRegistry.getAll().filter((element) => element))
+          var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
         incomingElementSet = incomingElementSet.filter(
           (elem) => elem.type == "bpmn:SequenceFlow"
         );
@@ -2013,10 +2019,10 @@ function existSomethingInBetween(flow) {
               element.x + element.width <= endingPoint.x &&
               startingPoint.y == endingPoint.y &&
               element.x + element.width != endingPoint.x &&
-              ((flow.source.y < element.y &&
-                (element.y + element.height <
+              ((flow.source.y <= element.y &&
+                (element.y + element.height <=
                   flow.source.y + flow.source.height ||
-                  element.y < flow.source.y + flow.source.height)) ||
+                  element.y <= flow.source.y + flow.source.height)) ||
                 (flow.source.y > element.y &&
                   element.y + element.height > flow.source.y &&
                   element.y + element.height <
@@ -2731,14 +2737,38 @@ function getOrigin(set, type) {
 }
 //
 
-//function to add an activity of the textual description that we want to generate of the XML
-//child: the activity i want to add
-//content: what i have already inserted
-//connected: if the acrivity is an endEvent or is connected to something else(and so, i will put the 'linked to' in the text otherwise no). The default is false
-function addActivityInText(child, content, connected = true) {
+// Function to read Blob content
+function readBlob(blob, callback) {
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    callback(event.target.result);
+  };
+  reader.onerror = function (event) {
+    callback(null, event.target.error);
+  };
+  reader.readAsText(blob);
+}
+
+// Function to concatenate a string to a Blob
+function concatenateStringToBlob(blob, newString) {
+  return new Promise((resolve, reject) => {
+    readBlob(blob, (blobContent, error) => {
+      if (error) {
+        return reject(error);
+      }
+      const combinedContent = blobContent + newString;
+      const newBlob = new Blob([combinedContent], { type: "text/plain" });
+      resolve(newBlob);
+    });
+  });
+}
+
+// Function to add an activity to the textual description
+function addActivityInText(child, connected = true) {
   const name = child.businessObject.name
     ? child.businessObject.name
     : child.type;
+  var content = "";
   content =
     content +
     "<Activity name: " +
@@ -2746,12 +2776,11 @@ function addActivityInText(child, content, connected = true) {
     " \nType: " +
     child.type.split(":")[1] +
     "\nID: " +
-    child.id; //ci aggiungiamo il nome di ogni attività
-  //ci sono delle frecce dalla partecipazione considerata ad un altra?
+    child.id;
+
   const sendMessageSet = child.outgoing.filter(
     (element) => element.type == "bpmn:MessageFlow"
   );
-  //ci sono delle frecce da un altra partecipazione a quella considerata ?
   const receiveMessageSet = child.incoming.filter(
     (element) => element.type == "bpmn:MessageFlow"
   );
@@ -2760,7 +2789,6 @@ function addActivityInText(child, content, connected = true) {
   const received = getOrigin(receiveMessageSet, "in");
 
   if (sendMessageSet.length > 0 && receiveMessageSet.length > 0) {
-    //manda e riceve messaggi
     if (sent == received) {
       content =
         content +
@@ -2790,7 +2818,7 @@ function addActivityInText(child, content, connected = true) {
       " />";
   } else {
     content =
-      content + " \nExchange with other partecipations: no exchanges" + " />";
+      content + " \nExchange with other partecipations: no exchanges />";
   }
   if (child.type != "bpmn:EndEvent" && connected) {
     content += " linked to: \n";
@@ -2800,130 +2828,110 @@ function addActivityInText(child, content, connected = true) {
   return content;
 }
 
-// Add an event listener for the custom event
-document.addEventListener("removeGif", function (e) {
-  const passedId = e.detail.id;
-  if (passedId) {
-    const imgLoader = document.getElementById("imgLoader_" + passedId);
-    if (imgLoader) imgLoader.remove();
-  }
-});
-
-////function to add a gateway and all the path connected to it, until its termination of the textual description that we want to generate of the XML
-//child: the gateway i want to add
-//setOfElements: the set of elements i still need to insert into the textual  description (withou the gateway i'm going to insert write now)
-function addGatewayInText(child, content, setOfElements) {
+// Function to add a gateway and all paths connected to it
+//child: gateway to add
+//content: text generated so far
+//setOfElements: the remaining elements
+async function addGatewayInText(child, content, setOfElements) {
   var first;
   var typeOfGateway = child.type;
   var pathSentence;
-  const outGateway = child.outgoing; //get the gateway outgoings
+  const outGateway = child.outgoing;
   setOfElements = setOfElements.filter((item) => item.id != child.id);
   const isClosureGateway = child.outgoing.length > 1 ? "Start" : "Closure";
-  //Change behavior in base to the type of gateway
+
   switch (typeOfGateway) {
     case "bpmn:ExclusiveGateway":
-      //get the gateway condition
       const GatewayCondition = child.businessObject.name
         ? child.businessObject.name
         : " No condition specified";
-      content =
-        content +
-        "\n[" +
-        isClosureGateway +
-        " Exclusive Gateway \nID:" +
-        child.id;
+      content = await concatenateStringToBlob(
+        content,
+        "\n[" + isClosureGateway + " Exclusive Gateway \nID:" + child.id
+      );
       if (isClosureGateway == "Start") {
-        content =
-          content +
-          " (only one of the path can be taken)" +
-          " \ncondition to check in order to proceed with the right path '" +
-          GatewayCondition +
-          "' different paths: ";
+        content = await concatenateStringToBlob(
+          content,
+          " (only one of the path can be taken)\ncondition to check in order to proceed with the right path '" +
+            GatewayCondition +
+            "' different paths: "
+        );
       }
       pathSentence = "\nPath of " + child.id + " taken if: '";
       break;
     case "bpmn:ParallelGateway":
-      content =
-        content +
-        "\n[" +
-        isClosureGateway +
-        " Parallel Gateway \nID:" +
-        child.id +
-        " ";
+      content = await concatenateStringToBlob(
+        content,
+        "\n[" + isClosureGateway + " Parallel Gateway \nID:" + child.id + " "
+      );
       if (isClosureGateway == "Start") {
-        content =
-          content +
-          child.id +
-          "(all the path will be taken)" +
-          "' different paths: ";
+        content = await concatenateStringToBlob(
+          content,
+          child.id + "(all the path will be taken)' different paths: "
+        );
       }
-      pathSentence = "\nPath of  " + child.id + " number: ";
+      pathSentence = "\nPath of " + child.id + " number: ";
       break;
     case "bpmn:InclusiveGateway":
-      content =
-        content +
-        "\n[" +
-        isClosureGateway +
-        " Inclusive Gateway\nID: " +
-        child.id +
-        " ";
+      content = await concatenateStringToBlob(
+        content,
+        "\n[" + isClosureGateway + " Inclusive Gateway\nID: " + child.id + " "
+      );
       if (isClosureGateway == "Start") {
-        content =
-          content +
+        content = await concatenateStringToBlob(
+          content,
           child.id +
-          "(all the paths that met the conditions will be taken. At least one will be taken)" +
-          "' possible paths: ";
+            "(all the paths that met the conditions will be taken. At least one will be taken)' possible paths: "
+        );
       }
+      pathSentence = "\nPath of " + child.id + " taken if: '";
+      break;
     case "bpmn:EventBasedGateway":
-      content =
-        content +
-        "\n[" +
-        isClosureGateway +
-        " Event Based Gateway\nID: " +
-        child.id +
-        " ";
+      content = await concatenateStringToBlob(
+        content,
+        "\n[" + isClosureGateway + " Event Based Gateway\nID: " + child.id + " "
+      );
       if (isClosureGateway == "Start") {
-        content =
-          content +
+        content = await concatenateStringToBlob(
+          content,
           child.id +
-          "(the path taken is the one that contains the first event that will be triggered)" +
-          "' different paths: ";
+            "(the path taken is the one that contains the first event that will be triggered)' different paths: "
+        );
       }
+      pathSentence = "\nPath of " + child.id + " taken if: '";
+      break;
     case "bpmn:ComplexGateway":
-      content =
-        content +
-        "\n[" +
-        isClosureGateway +
-        " Complex Gateway\nID: " +
-        child.id +
-        " ";
+      content = await concatenateStringToBlob(
+        content,
+        "\n[" + isClosureGateway + " Complex Gateway\nID: " + child.id + " "
+      );
       if (isClosureGateway == "Start") {
-        content =
-          content +
-          " (only one of the path can be taken)" +
-          " \ncondition to check in order to proceed with the right path '" +
-          GatewayCondition +
-          "' different paths: ";
+        content = await concatenateStringToBlob(
+          content,
+          " (only one of the path can be taken)\ncondition to check in order to proceed with the right path '" +
+            GatewayCondition +
+            "' different paths: "
+        );
       }
       pathSentence = "\nPath of " + child.id + " taken if: '";
       break;
     default:
       break;
   }
-  if (isClosureGateway == "Closure") content += "] linked to: \n";
+
+  if (isClosureGateway == "Closure") {
+    content = await concatenateStringToBlob(content, "] linked to: \n");
+  }
 
   if (outGateway && outGateway.length > 1) {
-    //if we have some outgoing flows
-
     for (var i = 0; i < outGateway.length; i++) {
-      //itero su ogni ramo
       if (isClosureGateway == "Start") {
-        content = content + pathSentence;
+        content = await concatenateStringToBlob(content, pathSentence);
         if (
           typeOfGateway == "bpmn:ParallelGateway" ||
           typeOfGateway == "bpmn:EventBasedGateway"
         ) {
-          content = content + " " + i + " ";
+          content = await concatenateStringToBlob(content, " " + i + " ");
         } else if (
           typeOfGateway == "bpmn:ExclusiveGateway" ||
           typeOfGateway == "bpmn:InclusiveGateway" ||
@@ -2932,12 +2940,12 @@ function addGatewayInText(child, content, setOfElements) {
           const path_name = outGateway[i].businessObject.name
             ? outGateway[i].businessObject.name
             : "no path condition specified";
-          content = content + path_name + "' ";
+          content = await concatenateStringToBlob(content, path_name + "' ");
         }
       }
 
-      var targetFlow = outGateway[i]; //primo ramo considerato
-      var targetRef; //la prima activity che incontro nel mio path
+      var targetFlow = outGateway[i];
+      var targetRef;
       var target;
       var target_name;
       var times = 0;
@@ -2949,30 +2957,31 @@ function addGatewayInText(child, content, setOfElements) {
           if (
             target &&
             (target.type != typeOfGateway ||
-              (target.type == typeOfGateway && target.outgoing.length > 1)) && //se è un exlcusive allora se ha 1 solo ramo uscente => che è di chiusura
-            setOfElements.some((e) => e.id == target.id) //se non c'è l'ho giù analizzato
+              (target.type == typeOfGateway && target.outgoing.length > 1)) &&
+            setOfElements.some((e) => e.id == target.id)
           ) {
             var retSet;
             var toPass = [target];
-            if (times == 0) content = content + " linked to\n ";
+            if (times == 0) {
+              content = await concatenateStringToBlob(content, " linked to\n ");
+            }
             times++;
-            [content, retSet] = iterateSetOfElementsToTranslate(
+            [content, retSet] = await iterateSetOfElementsToTranslate(
               toPass,
               content,
               null
-            ); //target è l'elemento che trovo sul ramo uscente del gateway(primo giro) quindi itero su di lui per aggiungerlo al content
+            );
             setOfElements = setOfElements.filter(
               (item) => item.id != target.id
-            ); //lo tolgo dal set
+            );
 
             if (target.outgoing.length > 1) {
               targetFlow = target.outgoing.filter(
                 (item) => item.type == "bpmn:SequenceFlow"
-              );
-              targetFlow = targetFlow[0];
-            } else if (target.outgoing.length == 1)
+              )[0];
+            } else if (target.outgoing.length == 1) {
               targetFlow = target.outgoing[0];
-            else {
+            } else {
               targetFlow = false;
             }
           } else {
@@ -2983,9 +2992,10 @@ function addGatewayInText(child, content, setOfElements) {
               target.outgoing.length <= 1
             ) {
               const nameLastTarget = target.id ? target.id : " ";
-              content += " \nlinked to " + nameLastTarget + " ";
-
-              //se sto chiudendo il gateway
+              content = await concatenateStringToBlob(
+                content,
+                " \nlinked to " + nameLastTarget + " "
+              );
               if (target.outgoing.length != 0) {
                 targetFlow = null;
                 first = target;
@@ -2997,36 +3007,27 @@ function addGatewayInText(child, content, setOfElements) {
         }
       }
     }
-    content =
-      content +
-      "\n End paths of " +
-      typeOfGateway.split(":")[1] +
-      " " +
-      child.id +
-      " ]\n";
+    content = await concatenateStringToBlob(
+      content,
+      "\n End paths of " + typeOfGateway.split(":")[1] + " " + child.id + " ]\n"
+    );
   }
   return [content, setOfElements, first];
 }
-//the function returns
-//the content that is the textual description generated so far
-//the setOfElements updated (without the elements that i inserted)
-//first the first element i need to analyze after the gatway that started the function
 
-//function to call in a recursive manner
-//set: the set of element i need to translate into text
-//content; the content (the current written text)
-function iterateSetOfElementsToTranslate(set, content, firstPassed) {
+// Function to iterate set of elements to translate into text
+async function iterateSetOfElementsToTranslate(set, content, firstPassed) {
   var first = firstPassed;
   var connected = true;
   var hasBoundaryAttached = false;
-  // se ci sono elementi nel set che gli passo
+
   while (set.length > 0) {
     var next = null;
     if (first == null) {
-      first = set[0]; //se non gli ho passato un inizio
+      first = set[0];
       connected = first.type == "bpmn:StartEvent" ? true : false;
     }
-    set = set.filter((item) => item && item.id != first.id); //tolgo l'elemento considerato dal set
+    set = set.filter((item) => item && item.id != first.id);
     if (
       bpmnActivityTypes.some(
         (item) =>
@@ -3039,43 +3040,43 @@ function iterateSetOfElementsToTranslate(set, content, firstPassed) {
       )
     ) {
       if (first.type == "bpmn:SubProcess") {
-        [content, set] = procedureSubProcess(first, set, content);
+        [content, set] = await procedureSubProcess(first, set, content);
       }
-      [hasBoundaryAttached, content, set] = procedureHasBoundary(
+      [hasBoundaryAttached, content, set] = await procedureHasBoundary(
         first,
         set,
         content
       );
-      if (hasBoundaryAttached == false) {
-        content = addActivityInText(first, content, connected);
+      if (!hasBoundaryAttached) {
+        content = await concatenateStringToBlob(
+          content,
+          addActivityInText(first, connected)
+        );
       }
       connected = true;
-    }
-    //oppure è un gateway
-    else if (GatewayTypes.some((item) => item == first.type)) {
-      [content, set, next] = addGatewayInText(first, content, set);
+    } else if (GatewayTypes.some((item) => item == first.type)) {
+      [content, set, next] = await addGatewayInText(first, content, set);
+      console.log("after gateway added", set);
     }
 
     if (next == null) {
       const getAttached = first.outgoing.filter(
-        //prendo il riferimento dell'attività attaccata a quella che sto considerando
         (out) => out.type == "bpmn:SequenceFlow"
       );
       if (getAttached.length > 0) {
         next = elementRegistry.get(getAttached[0].target.id);
+        if (!set.some((item) => item.id == next.id)) {
+          next = null;
+        }
       }
     }
     first = next ? next : null;
   }
   return [content, set];
 }
-//
 
-//function that handle the case in which the activity has a boundary activity attached
-//ActivityToCheck the Id of the activity i want to check the attachment of
-//setOfElements is the set of elements that i still need to insert
-//content: the textual description generated so far
-function procedureHasBoundary(ActivityToCheck, setOfElements, content) {
+// Function that handles the case in which the activity has a boundary activity attached
+async function procedureHasBoundary(ActivityToCheck, setOfElements, content) {
   var result = false;
   var boundaryActivity;
   var firstTarget;
@@ -3100,31 +3101,38 @@ function procedureHasBoundary(ActivityToCheck, setOfElements, content) {
     }
   }
   if (result) {
-    const boundaryHasLin = boundaryActivity.outgoing.length > 0 ? true : false; //è connessa ad altro?
-
-    content = addActivityInText(ActivityToCheck, content, false);
-    content = content + " { " + activityName + " has a boundary activity: \n";
+    const boundaryHasLin = boundaryActivity.outgoing.length > 0 ? true : false;
+    content = await concatenateStringToBlob(
+      content,
+      addActivityInText(ActivityToCheck, false)
+    );
+    content = await concatenateStringToBlob(
+      content,
+      " { " + activityName + " has a boundary activity: \n"
+    );
 
     setOfElements = setOfElements.filter(
       (item) => item.id != boundaryActivity.id
-    ); //tolgo la boundary dal set
+    );
 
-    content = addActivityInText(boundaryActivity, content, boundaryHasLin);
+    content = await concatenateStringToBlob(
+      content,
+      addActivityInText(boundaryActivity, boundaryHasLin)
+    );
 
     if (boundaryHasLin) {
       const setOfLinkFromBoundary = boundaryActivity.outgoing.filter(
         (item) => item.type == "bpmn:SequenceFlow"
       );
-      //devo gestire l'aggiunta di ogni elemento connesso alla boundary fino al termine
-      setOfLinkFromBoundary.forEach((first) => {
-        //devo iterare su tutti i rami uscenti di boundary
-        firstTarget = first.target; //prendo il primo
+      for (const first of setOfLinkFromBoundary) {
+        firstTarget = first.target;
         while (firstTarget) {
-          //finchè ha un collegamento
-          var connected = firstTarget.type == "bpmn:EndEvent" ? true : false; //ne ha un altro ?
-          content = addActivityInText(firstTarget, content, connected); //aggiungilo al text
+          var connected = firstTarget.type == "bpmn:EndEvent" ? true : false;
+          content = await concatenateStringToBlob(
+            content,
+            addActivityInText(firstTarget, connected)
+          );
           setOfElements = setOfElements.filter(
-            //elimino dll'insieme degli elementi
             (item) => item.id != firstTarget.id
           );
           const set =
@@ -3135,24 +3143,20 @@ function procedureHasBoundary(ActivityToCheck, setOfElements, content) {
               : false;
           firstTarget = set && set[0] ? set[0].target : false;
         }
-      });
+      }
     }
-    content =
-      content +
-      " end boundary path} \n The activity " +
-      activityName +
-      " is linked to:\n";
+
+    content = await concatenateStringToBlob(
+      content,
+      " end boundary path} \n The activity " + activityName + " is linked to:\n"
+    );
   }
 
   return [result, content, setOfElements];
 }
-//
 
-//function that handles the case in  which the activity has a subprocess
-//ActivityToCheck, the activity subproess that i need to check
-//set of elements the set of elements i need to consider
-//content. the textual description generated so far
-function procedureSubProcess(ActivityToCheck, setOfElements, content) {
+// Function that handles the case in which the activity has a subprocess
+async function procedureSubProcess(ActivityToCheck, setOfElements, content) {
   var activityName = ActivityToCheck.businessObject.name
     ? ActivityToCheck.businessObject.name
     : ActivityToCheck.id;
@@ -3173,48 +3177,47 @@ function procedureSubProcess(ActivityToCheck, setOfElements, content) {
     setOfElements = setOfElements.filter(
       (item) => !setOfChildren.some((c) => c.id == item.id)
     );
-    content =
-      content +
+    content = await concatenateStringToBlob(
+      content,
       " activity " +
-      activityName +
-      " is a Sub Process the process inside it is: {\n ";
-    const setToPass = new Array();
+        activityName +
+        " is a Sub Process the process inside it is: {\n "
+    );
+    const setToPass = [];
     setOfChildren.forEach((child) => {
       setToPass.push(elementRegistry.get(child.id));
     });
-    [content, setOfChildren] = iterateSetOfElementsToTranslate(
+    [content, setOfChildren] = await iterateSetOfElementsToTranslate(
       setToPass,
       content,
       null
     );
-    content = content + " end subprocess}\n ";
+    content = await concatenateStringToBlob(content, " end subprocess}\n ");
   }
 
   return [content, setOfElements];
 }
 
-//function to transform the xml to a text scheme of the process
-//xml: the xml of the process at the moment in which the function is called
-export function fromXMLToText(xml) {
+// Function to transform the xml to a text scheme of the process
+export async function fromXMLToText(xml) {
   //creo un blob (file txt) dove andrò ad inserire la descrizione testuale del processo.
-  var content = "";
+  var contentIntial = "Text description of the process \n";
+
+  var content = new Blob([contentIntial], { type: "text/plain" });
   elementRegistry = viewer.get("elementRegistry");
-  const allElements = elementRegistry.getAll(); //prendo tutti gli elementi che ho nel diagramma
+  const allElements = elementRegistry.getAll();
 
   const sub = allElements.filter(
     (element) =>
       element.type == "bpmn:Participant" || element.type == "bpmn:participant"
-  ); //filtro il set per avere solo le partecipazioni
+  );
 
   if (sub.length > 0) {
-    //ci sono delle partecipazioni
-    sub.forEach((subset) => {
-      //itero su ogni partecipazione
+    for (const subset of sub) {
       const partecipant_name = subset.businessObject.name
         ? subset.businessObject.name
-        : subset.id; //prendo il nome della partecipazione
-
-      var childToIterate = subset.children; //prendo tutti gli elementi appartenenti alla partecipazione
+        : subset.id;
+      var childToIterate = subset.children;
       childToIterate = childToIterate.filter(
         (item) =>
           item.type != "bpmn:DataInputAssociatio" &&
@@ -3228,25 +3231,28 @@ export function fromXMLToText(xml) {
       );
 
       if (childToIterate.length > 0) {
-        // se ha degli elementi allora
-        content = content + "\n{Participant: " + partecipant_name + "\n";
-        var first = childToIterate[0]; //prendo il primo elemento della partecipazione
-        [content, childToIterate] = iterateSetOfElementsToTranslate(
+        content = await concatenateStringToBlob(
+          content,
+          "\n{Participant: " + partecipant_name + "\n"
+        );
+        var first = childToIterate[0];
+        [content, childToIterate] = await iterateSetOfElementsToTranslate(
           childToIterate,
           content,
           first
-        ); //invio chiamata ricorsiva su primo elemento
-        content = content + "\nEnd Participant: " + partecipant_name + "}\n";
+        );
+        content = await concatenateStringToBlob(
+          content,
+          "\nEnd Participant: " + partecipant_name + "}\n"
+        );
       } else {
-        content =
-          content +
-          "\n{ Participant: " +
-          partecipant_name +
-          " (empty pool) }\n";
+        content = await concatenateStringToBlob(
+          content,
+          "\n{ Participant: " + partecipant_name + " (empty pool) }\n"
+        );
       }
-    });
+    }
   } else {
-    //non ci sono partecipazioni
     var allSet = allElements.filter(
       (item) =>
         item.type != "bpmn:DataInputAssociatio" &&
@@ -3261,22 +3267,33 @@ export function fromXMLToText(xml) {
     if (allSet.length > 0) {
       var first = allSet[0];
       allSet = allSet.filter((item) => item.id != first.id);
-      content =
-        content +
-        "\nNo Partecipations, unique\n Start of the process: {" +
-        "\n";
-      [content, allSet] = iterateSetOfElementsToTranslate(
+      content = await concatenateStringToBlob(
+        content,
+        "\nNo Partecipations, unique\n Start of the process: {\n"
+      );
+      [content, allSet] = await iterateSetOfElementsToTranslate(
         allSet,
         content,
         first
       );
-      content = content + "\nEnd of the process} " + "\n";
+      content = await concatenateStringToBlob(
+        content,
+        "\nEnd of the process}\n"
+      );
     }
   }
-  const blob = new Blob([content], { type: "text/plain" });
   return content;
 }
-//
+
+// Add an event listener for the custom event
+document.addEventListener("removeGif", function (e) {
+  const passedId = e.detail.id;
+  if (passedId) {
+    const imgLoader = document.getElementById("imgLoader_" + passedId);
+    if (imgLoader) imgLoader.remove();
+  }
+});
+
 export {
   getDiagram,
   editMetaInfo,

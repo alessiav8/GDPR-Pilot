@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@bpmn-io/properties-panel": "^3.18.2",
+    "@dqbd/tiktoken": "^1.0.15",
     "axios": "^1.6.8",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
@@ -23,6 +24,7 @@
     "cors": "^2.8.5",
     "crypto-browserify": "^3.12.0",
     "dotenv": "^16.4.5",
+    "gpt-3-encoder": "^1.1.4",
     "jquery": "^3.7.1",
     "openai": "^4.38.2",
     "os-browserify": "^0.3.0",

@@ -35,6 +35,7 @@ import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
 import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
 
 import loading from "../../resources/loading.gif";
+
 //close sideBarSurvey
 function closeSideBarSurvey() {
   const mainColumn = document.querySelector(".main-column");
@@ -150,8 +151,9 @@ function addTextBelowButton(Id, answer) {
       document.dispatchEvent(myEvent);
       button.style.backgroundColor = "rgba(16, 173, 116, 0.3)";
       const textElement = document.createElement("p");
-      textElement.innerHTML = "AI Suggestion";
+      textElement.innerHTML = "<center>LLM-based suggestion</center>";
       textElement.style.marginTop = "5px";
+      textElement.style.marginLeft = "0.001vh";
       textElement.style.fontSize = "1.5vh";
       textElement.style.color = "rgba(16, 173, 116)";
       textElement.id = "p_" + buttonId;
@@ -160,25 +162,53 @@ function addTextBelowButton(Id, answer) {
   }
 }
 //
-
+export function readBlobDirectly(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      resolve(event.target.result);
+    };
+    reader.onerror = function (event) {
+      reject(event.target.error);
+    };
+    reader.readAsText(blob);
+  });
+}
 //function that send the right message to chatGPT in order to get the prediction about the question
 //id: the id of the drop down related to the question ex. dropDownA
 async function predictionChatGPT(id) {
   try {
-    const currentXML = localStorage.getItem("currentXml");
-    const description = localStorage.getItem("description");
-
+    const currentXMLBlob = await fromXMLToText();
+    const currentXML = await readBlobDirectly(currentXMLBlob);
+    console.log(currentXML);
+    const descriptionReq = await callChatGpt(
+      "You have to complete this two task:\n Task 1 (Logic description generation): I give you the textual description of a bpmn process, can you give me back the description of the working of this process, explicit the protagonists if there " +
+        "are messages exchaged between more participants? Just a brief description of at most 30 lines" +
+        currentXML +
+        "\n" +
+        "Task 2 (Roles definition): Consider to be a GDPR specialist, you have the same textual description of the process and you need to clearly identify who is the Data Controller and who is the Data Subject." +
+        "Go to head and you have to output this information following this format, taking as example the process of a makeup store that needs to register a new customer in its database: 'Data Controller: Makeup Store;\n Data Subject: Customer'" +
+        "The end output should look like this: \n\n Logic description:\n A makeup store acquires a new customer by requesting their personal data (e.g., name, email address). After verifying the data, it is entered into the database. The customer then receives promotions and product updates. The process concludes with confirmation of data entry into the system." +
+        "\n Roles definition:\n Data Controller: Makeup Store;\n Data Subject: Customer"
+    );
+    const description = descriptionReq.content;
     if (currentXML != "") {
       const activitiesSet = await getActivities();
       switch (id) {
         case "dropDownA":
           const hasPersonalDataReq = await callChatGpt(
-            "Given the description of a bpmn process" +
+            "Consider to be a GDPR expert that needs to analyzing a process, in order to understand if it handles personal data of the Data subject." +
+              "\n Task 1: Check this logical description of the process" +
               description +
-              ", are you able to say if the process handle some personal data? Definition of personal data: Personal data refers to any information that relates to an identified or identifiable individual. This encompasses a wide range of details that can be used to distinguish or trace an individual’s identity, either directly or indirectly. According to the General Data Protection Regulation (GDPR) in the European Union, personal data includes, but is not limited to:Name: This could be a full name or even initials, depending on the context and the ability to identify someone with those initials. Identification numbers: These include social security numbers, passport numbers, driver’s license numbers, or any other unique identifier. Location data: Any data that indicates the geographic location of an individual, such as GPS data, addresses, or even metadata from electronic devices.Online identifiers: These include IP addresses, cookie identifiers, and other digital footprints that can be linked to an individual.Physical, physiological, genetic, mental, economic, cultural, or social identity: This broad category includes biometric data, health records, economic status, cultural background, social status, and any other characteristic that can be used to identify an individual.The GDPR emphasizes that personal data includes any information that can potentially identify a person when combined with other data, which means that even seemingly innocuous information can be considered personal data if it contributes to identifying an individual. You have to answer just Yes or No, nothing more and if you are not sure answer no." +
-              " the textual description of the process is" +
-              currentXML,
-            "Check if there are activities that handle personal data. Some examples of activities that involves personal data are: Request personal data, request name and surname, request phone number, request cap of residence ecc... "
+              " in order to understand who is the data Subject and who is the data controller if they are present in the process, if they are not present in the process, check if there is some activity with a name that suggest the handle of personal data. You don't have to invent nothing, just use the material i provide to you" +
+              +"Task 2: Retrieve the definition of personal data and find out if in the process handled personal data of the Data Subject" +
+              "double check your answer analyzing the textual description of the process and searching for activities that suggest the handle of personal data of the data subject" +
+              currentXML +
+              "If the response is positive, print ‘Yes’, otherwise if the process does not handle personal data print or in ANY other case print ‘No’, add a brief motivation for your answer" +
+              "The format of the response could be just 'Yes + explanation' or 'No + explanation' " +
+              "\nExample you can use to understand: the description we have: A makeup store acquires a new customer by requesting their personal data (e.g., name, email address). After verifying the data, it is entered into the database. The customer then receives promotions and product updates. The process concludes with confirmation of data entry into the system." +
+              "the roles definition: Data Controller: Makeup store; \n Data Subject: Customer" +
+              "Here the response should be 'Yes' because the description clearly says:' A makeup store acquires a new customer by requesting their personal data' and this make us understand that the makeup store, that is the data controller, handles the personal data of the data subject that is, the customer"
           );
           const hasPersonalData = hasPersonalDataReq.content;
           console.log("Personal data", hasPersonalData);
@@ -687,9 +717,9 @@ async function createDropDown(
     Loading.src = loading;
 
     const textUnderLoading = document.createElement("div");
-    textUnderLoading.innerHTML = "Loading AI suggestions";
+    textUnderLoading.innerHTML = "Loading LLM-based suggestions";
     textUnderLoading.style.fontSize = "1.4vh";
-    textUnderLoading.style.marginLeft = "29%";
+    textUnderLoading.style.marginLeft = "20%";
     textUnderLoading.style.marginTop = "2%";
     textUnderLoading.style.color = "rgba(32, 170, 42, 1)";
     textUnderLoading.style.fontWeight = "bold";
@@ -916,7 +946,8 @@ async function createUlandSelectActivities(
               c2.className = "col-5";
               c3 = document.createElement("div");
               c3.id = "c3_checkbox_" + activity.id;
-              c3.innerHTML = "AI Suggestion";
+              c3.innerHTML = "LLM-based Suggestion";
+              c3.style.marginLeft = "2px";
               c3.className = "col-4 checkbox-suggested";
               c3.style.marginTop = "2%";
               c3.style.fontSize = "1vh";
