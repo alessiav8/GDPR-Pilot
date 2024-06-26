@@ -4,6 +4,8 @@ const app = express();
 const axios = require("axios");
 const OpenAI = require("openai");
 
+require("dotenv").config();
+
 app.use(
   cors({
     origin: "http://localhost:8080",

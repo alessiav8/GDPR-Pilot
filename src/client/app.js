@@ -230,7 +230,6 @@ export async function callChatGpt(message) {
     throw error;
   }
 }
-//export API_KEY=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©
 
 //function to load the diagram through importXML
 //diagram: the xml of the diagram i want to import in the canvas
@@ -1936,8 +1935,13 @@ function allignSuccessor(element, group) {
 function reOrderSubSet(sub) {
   sub.forEach((element) => {
     //get the set of elements that precede the element
-    const previousElementSet = getPreviousElement(element);
+    var previousElementSet = getPreviousElement(element);
+
     if (previousElementSet.length > 0) {
+      previousElementSet = previousElementSet.filter(
+        (element) => element.type != "bpmn:Participant"
+      );
+
       var setVertical = null;
       //se ci sono elementi prima
       previousElementSet.forEach((previousElement) => {
@@ -1945,10 +1949,19 @@ function reOrderSubSet(sub) {
         //assegnamo una distanza fissa in base a quanto è largo ogni elemento
         const compare = 40;
         const diff = element.x - (previousElement.x + previousElement.width); //quanto sono distanti i due elementi
-        var add = diff > compare ? 0 : compare - diff; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
+        var add =
+          diff > compare
+            ? 0
+            : element.x + element.width > previousElement.x
+            ? compare - diff
+            : 0; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
-        //if (element.y != previousElement.y) add = 0;
-        //lo devo aumentare solo se non c'è nulla nel mezzo
+        if (
+          element.y > previousElement.y + 60 ||
+          element.y < previousElement.y - 60
+        ) {
+          add = 0;
+        }
 
         if (elementRegistry.getAll().filter((element) => element))
           var incomingElementSet = element.incoming; //ottieni tutte le frecce entranti
@@ -1966,6 +1979,7 @@ function reOrderSubSet(sub) {
 
               modeling.moveShape(element, { x: add, y: addY });
 
+              //se ci sono cose attaccate
               if (element.attachers.length > 0) {
                 element.attachers.forEach((attached) => {
                   modeling.moveShape(attached, { x: add, y: addY });
@@ -1992,7 +2006,6 @@ function reOrderSubSet(sub) {
               ];
 
               modeling.updateWaypoints(incomingElement, newWaypoints);
-
               existSomethingInBetween(incomingElement);
             }
           }
@@ -2028,8 +2041,10 @@ function existSomethingInBetween(flow) {
           )
         : allElements.filter(
             (element) =>
-              startingPoint.x <= element.x &&
-              element.x + element.width <= endingPoint.x &&
+              ((startingPoint.x <= element.x &&
+                element.x + element.width <= endingPoint.x) ||
+                (endingPoint.x <= element.x &&
+                  element.x + element.width <= startingPoint.x)) &&
               startingPoint.y == endingPoint.y &&
               element.x + element.width != endingPoint.x &&
               ((flow.source.y <= element.y &&
@@ -2037,12 +2052,11 @@ function existSomethingInBetween(flow) {
                   flow.source.y + flow.source.height ||
                   element.y <= flow.source.y + flow.source.height)) ||
                 (flow.source.y > element.y &&
-                  element.y + element.height > flow.source.y &&
-                  element.y + element.height <
-                    flow.source.y + flow.source.y)) &&
+                  element.y + element.height >= flow.source.y)) &&
               bpmnActivityTypes.some((item) => item == element.type)
           );
 
+    console.log("something in between", allElements, "\n from", flow.source);
     if (allElements.length > 0) {
       var considered;
       if (allElements.length == 1) {

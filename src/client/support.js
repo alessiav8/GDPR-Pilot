@@ -181,7 +181,7 @@ export function readBlobDirectly(blob) {
 //id: the id of the drop down related to the question ex. dropDownA
 async function predictionChatGPT(id) {
   try {
-    const currentXMLBlob = await fromXMLToText();
+    /*   const currentXMLBlob = await fromXMLToText();
     const currentXML = await readBlobDirectly(currentXMLBlob);
     console.log(currentXML);
     const descriptionReq = await callChatGpt(
@@ -427,7 +427,7 @@ async function predictionChatGPT(id) {
           addTextBelowButton(id, hasRightToBeInformedAboutDataBreaches);
           break;
       }
-    }
+    }*/
   } catch (e) {
     console.error("Error in prediction chatGPT", e);
   }
