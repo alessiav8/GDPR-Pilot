@@ -2056,7 +2056,6 @@ function existSomethingInBetween(flow) {
               bpmnActivityTypes.some((item) => item == element.type)
           );
 
-    console.log("something in between", allElements, "\n from", flow.source);
     if (allElements.length > 0) {
       var considered;
       if (allElements.length == 1) {
