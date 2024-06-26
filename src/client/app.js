@@ -1594,6 +1594,7 @@ function addActivityBetweenTwoElements(
       secondElement.parent
     );
   } else {
+    //il caso in cui abbiamo uno prima e uno dopo e quindi va aggiunto nel mezzo
     const newX = (secondElement.x + firstElement.x) / 2;
     var newY =
       firstElement.type == "bpmn:StartEvent" ||
@@ -1930,7 +1931,7 @@ function reOrderSubSet(sub) {
       previousElementSet.forEach((previousElement) => {
         //per ogni elemento
         //assegnamo una distanza fissa in base a quanto è largo ogni elemento
-        const compare = 60;
+        const compare = 40;
         const diff = element.x - (previousElement.x + previousElement.width); //quanto sono distanti i due elementi
         var add = diff > compare ? 0 : compare; //quanto devo aggiungere/togliere per ottenere la distanza perfetta
         var addY = 0;
@@ -3056,7 +3057,6 @@ async function iterateSetOfElementsToTranslate(set, content, firstPassed) {
       connected = true;
     } else if (GatewayTypes.some((item) => item == first.type)) {
       [content, set, next] = await addGatewayInText(first, content, set);
-      console.log("after gateway added", set);
     }
 
     if (next == null) {

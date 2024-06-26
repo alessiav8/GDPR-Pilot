@@ -86,7 +86,8 @@ export async function openDrop(drop, type, open) {
 function addTextBelowButton(Id, answer) {
   var buttonId;
   var otherP;
-
+  var HasBorderN = false;
+  var HasBorderY = false;
   var yesButton = document.getElementById("yes_" + Id)
     ? document.getElementById("yes_" + Id)
     : true;
@@ -94,18 +95,18 @@ function addTextBelowButton(Id, answer) {
     ? document.getElementById("no_" + Id)
     : true;
   if (yesButton) {
-    var HasBorderY =
+    HasBorderY =
       yesButton.style &&
-      !yesButton.style.border == "0.3vh solid rgb(16, 173, 116)"
+      yesButton.style.border == "0.3vh solid rgb(16, 173, 116)"
         ? true
         : false;
   }
   if (noButton) {
-    var HasBorderN =
-      noButton.style &&
-      !noButton.style.border == "0.3vh solid rgb(16, 173, 116)"
+    HasBorderN =
+      noButton.style && noButton.style.border == "0.3vh solid rgb(16, 173, 116)"
         ? true
         : false;
+    console.log("No button style: ", noButton.style.border, HasBorderN);
   }
   if (yesButton && noButton && !HasBorderY && !HasBorderN) {
     //if the answer contains an array --> answer related to question B
@@ -159,6 +160,9 @@ function addTextBelowButton(Id, answer) {
       textElement.id = "p_" + buttonId;
       button.parentNode.insertBefore(textElement, button.nextSibling);
     }
+  } else {
+    const myEvent = new CustomEvent("removeGif", { detail: { id: Id } });
+    document.dispatchEvent(myEvent);
   }
 }
 //
