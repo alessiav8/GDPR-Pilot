@@ -2440,7 +2440,7 @@ export function createAGroup() {
 
   if (start != null) {
     var x = 0;
-    var y = start.y;
+    var y = start.y - 400;
   }
 
   if (oldP) {
@@ -2572,7 +2572,7 @@ export async function addSubEvent(
   start_event.businessObject.id = path_name + "_start";
 
   try {
-    modeling.createShape(start_event, { x: gdpr.x + 40, y: y }, parent);
+    modeling.createShape(start_event, { x: gdpr.x + 40, y: y + 50 }, parent);
   } catch (error) {
     console.error("Error creating or resizing start_event:", error);
     return;
@@ -2589,7 +2589,7 @@ export async function addSubEvent(
   end_event.businessObject.name = end_event_title;
 
   try {
-    modeling.createShape(end_event, { x: gdpr.x + 200, y: y }, parent);
+    modeling.createShape(end_event, { x: gdpr.x + 200, y: y + 50 }, parent);
   } catch (error) {
     console.error("Error creating or resizing end_event:", error);
     return;
