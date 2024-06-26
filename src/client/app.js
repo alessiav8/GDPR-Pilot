@@ -2236,12 +2236,12 @@ function adjustPools(sortedPools) {
           }
 
           if (lastYGdpr.y + lastYGdpr.height > gdpr.y + gdpr.height - 10) {
-            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 10;
+            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 35;
           } else if (
             lastYGdpr.y + lastYGdpr.height <
             gdpr.y + gdpr.height - 10
           ) {
-            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 10;
+            newBoundsGdpr.height = lastYGdpr.y + lastYGdpr.height - gdpr.y + 35;
           } else {
             newBoundsGdpr.height = gdpr.height;
           }
