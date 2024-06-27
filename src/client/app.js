@@ -212,23 +212,35 @@ document.addEventListener("DOMContentLoaded", async function () {
 export async function callChatGpt(message) {
   const url = "http://localhost:3000/api/call_chat_gpt";
 
-  try {
-    const response = await axios.get(url, {
-      params: {
-        message: message,
-        withCredentials: true,
-      },
+  const makeRequest = async (retryCount = 0) => {
+    try {
+      const response = await axios.get(url, {
+        params: {
+          message: message,
+          withCredentials: true,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.status === 429 && retryCount < 5) {
+        // Rate limit error
+        const retryAfter = error.response.headers["retry-after-ms"] || 3000; // Default to 3 seconds if not provided
+        console.log(`Rate limit exceeded. Retrying after ${retryAfter}ms`);
+        await new Promise((resolve) => setTimeout(resolve, retryAfter));
+        return makeRequest(retryCount + 1);
+      } else {
+        // Other errors or max retries exceeded
+        console.error("There was a problem with the request:", error);
+        throw error;
+      }
+    }
+  };
 
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("There was a problem with the request:", error);
-    throw error;
-  }
+  return makeRequest();
 }
 
 //function to load the diagram through importXML
