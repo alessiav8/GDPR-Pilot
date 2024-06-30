@@ -29,6 +29,7 @@
 #settings_area {
   cursor: pointer;
   width: 97%;
+  height: 7vh;
   padding: 8px 12px;
   border-radius: 4px;
   background-color: #f0f0f0;
@@ -281,7 +282,12 @@ input[type="checkbox"]::before {
   border: none;
 }
 
-/* Stile per il checkbox selezionato */
 input[type="checkbox"]:checked::before {
   transform: translate(-50%, -50%) scale(1);
+}
+
+.col-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }

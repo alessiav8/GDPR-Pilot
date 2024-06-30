@@ -1257,9 +1257,11 @@ export function displayDynamicAlert(message, type, time) {
   const alertDiv = document.createElement("div");
   alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
   alertDiv.setAttribute("role", "alert");
-  alertDiv.style.color = "#10ad74";
-  alertDiv.style.backgroundColor = "white";
-  alertDiv.style.border = "1vh solid white";
+  if (type != "danger") {
+    alertDiv.style.color = "#10ad74";
+    alertDiv.style.backgroundColor = "white";
+    alertDiv.style.border = "1vh solid white";
+  }
 
   alertDiv.innerHTML = `
         <strong>Important!</strong> ${message}

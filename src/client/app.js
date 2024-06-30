@@ -536,7 +536,10 @@ async function loadDiagram(diagram) {
         });
       })
       .catch((error) => {
-        console.error("Errore nell'importazione dell'XML:", error);
+        displayDynamicAlert("Impossible to load this file", "danger", 2000);
+        setTimeout(() => {
+          location.reload();
+        }, 2400);
       });
   } catch (err) {
     console.error("Si è verificato un errore:", err);
