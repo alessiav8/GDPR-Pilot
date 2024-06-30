@@ -740,9 +740,9 @@ async function createDropDown(
     Loading.src = loading;
 
     const textUnderLoading = document.createElement("div");
-    textUnderLoading.innerHTML = "Loading LLM-based suggestions";
+    textUnderLoading.innerHTML =
+      "<center>Loading LLM-based suggestions</center>";
     textUnderLoading.style.fontSize = "1.1vh";
-    textUnderLoading.style.marginLeft = "20%";
     textUnderLoading.style.marginTop = "2%";
     textUnderLoading.style.color = "rgba(32, 170, 42, 1)";
     textUnderLoading.style.fontWeight = "bold";

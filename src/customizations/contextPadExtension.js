@@ -1,9 +1,9 @@
 import { is } from "bpmn-js/lib/util/ModelUtil";
 
 import { assign } from "min-dash";
-import { handleSideBar, decolorEverySelected } from "../client/app.js";
-import { removeChatGPTTipFromAll } from "../client/questions.js";
-import { closeSideBarSurvey } from "../client/support.js";
+import { handleSideBar, decolorEverySelected } from "../js/app.js";
+import { removeChatGPTTipFromAll } from "../js/questions.js";
+import { closeSideBarSurvey } from "../js/support.js";
 
 //diagrams
 import right_to_access from "../../resources/right_to_be_consent.bpmn";
