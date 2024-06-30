@@ -25,15 +25,18 @@ import diagram_two_activities from "../../resources/diagram_two_activities.bpmn"
 import confirmForGDPRPath from "../customizations/confirm";
 import diagram_to_test_part from "../../resources/diagram_to_test_part.bpmn";
 
-import consent_to_use_the_data from "../../resources/consent_to_use_the_data.bpmn";
-import right_to_access from "../../resources/right_to_be_consent.bpmn";
-import right_to_portability from "../../resources/right_of_portability.bpmn";
-import right_to_rectify from "../../resources/right_to_rectify.bpmn";
-import right_to_object from "../../resources/right_to_object.bpmn";
-import right_to_object_to_automated_processing from "../../resources/right_to_object_to_automated_processing.bpmn";
-import right_to_restrict_processing from "../../resources/right_to_restrict_processing.bpmn";
-import right_to_be_forgotten from "../../resources/right_to_be_forgotten.bpmn";
-import right_to_be_informed_of_data_breaches from "../../resources/data_breach.bpmn";
+//GDPR compliance pattern
+import consent_to_use_the_data from "../../resources/gdpr_compliance_patterns/consent_to_use_the_data.bpmn";
+import right_to_access from "../../resources/gdpr_compliance_patterns/right_to_be_consent.bpmn";
+import right_to_portability from "../../resources/gdpr_compliance_patterns/right_of_portability.bpmn";
+import right_to_rectify from "../../resources/gdpr_compliance_patterns/right_to_rectify.bpmn";
+import right_to_object from "../../resources/gdpr_compliance_patterns/right_to_object.bpmn";
+import right_to_object_to_automated_processing from "../../resources/gdpr_compliance_patterns/right_to_object_to_automated_processing.bpmn";
+import right_to_restrict_processing from "../../resources/gdpr_compliance_patterns/right_to_restrict_processing.bpmn";
+import right_to_be_forgotten from "../../resources/gdpr_compliance_patterns/right_to_be_forgotten.bpmn";
+import right_to_be_informed_of_data_breaches from "../../resources/gdpr_compliance_patterns/data_breach.bpmn";
+//
+
 import diagram_to_test_text_generation from "../../resources/diagram_to_test_text_generation.bpmn";
 import diagram_goal_to_achieve from "../../resources/diagram_goal_to_achieve.bpmn";
 import {
