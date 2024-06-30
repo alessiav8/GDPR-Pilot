@@ -154,7 +154,7 @@ function addTextBelowButton(Id, answer) {
       textElement.innerHTML = "<center>LLM-based suggestion</center>";
       textElement.style.marginTop = "5px";
       textElement.style.marginLeft = "0.001vh";
-      textElement.style.fontSize = "1.5vh";
+      textElement.style.fontSize = "1.1vh";
       textElement.style.color = "rgba(16, 173, 116)";
       textElement.id = "p_" + buttonId;
       button.parentNode.insertBefore(textElement, button.nextSibling);
@@ -499,6 +499,7 @@ async function createDropDown(
 
   button.style.width = "100%";
   button.setAttribute("ariaExpanded", isExpanded);
+  button.style.fontSize = "1.6vh";
   button.textContent = textContent;
   dropDown.appendChild(button);
 
@@ -516,6 +517,8 @@ async function createDropDown(
   const divQuestion = document.createElement("div");
   divQuestion.className = "container-centered";
   const question = questionText;
+  divQuestion.style.fontSize = "1.6vh";
+
   const questionNode = document.createTextNode(question);
 
   divQuestion.appendChild(questionNode);
@@ -537,12 +540,16 @@ async function createDropDown(
   YesButton.className = "btn btn-light";
   YesButton.style.border = "0.01vh solid black";
   YesButton.textContent = "Yes";
+  YesButton.style.fontSize = "1.6vh";
+
   YesButton.id = "yes_" + id;
 
   const NoButton = document.createElement("button");
   NoButton.className = "btn btn-light";
   NoButton.style.border = "0.01vh solid black";
   NoButton.textContent = "No";
+  NoButton.style.fontSize = "1.6vh";
+
   NoButton.id = "no_" + id;
 
   if (valueButton == "Yes") {
@@ -734,7 +741,7 @@ async function createDropDown(
 
     const textUnderLoading = document.createElement("div");
     textUnderLoading.innerHTML = "Loading LLM-based suggestions";
-    textUnderLoading.style.fontSize = "1.4vh";
+    textUnderLoading.style.fontSize = "1.1vh";
     textUnderLoading.style.marginLeft = "20%";
     textUnderLoading.style.marginTop = "2%";
     textUnderLoading.style.color = "rgba(32, 170, 42, 1)";
@@ -880,6 +887,7 @@ async function createUlandSelectActivities(
     const Title = document.createTextNode(titleText);
     const divTitle = document.createElement("div");
     divTitle.className = "container-centered";
+    divTitle.style.fontSize = "1.6vh";
     divTitle.appendChild(Title);
 
     const divActivities = document.createElement("div");
@@ -899,6 +907,7 @@ async function createUlandSelectActivities(
         divActivities.style.justifyContent = "center";
         divActivities.style.fontWeight = "bold";
         divActivities.textContent = "No activities available";
+        divActivities.style.fontSize = "1.6vh";
       } else {
         const form = document.createElement("form");
 
@@ -909,9 +918,12 @@ async function createUlandSelectActivities(
 
           const c1 = document.createElement("div");
           c1.className = "col-1";
+          c1.style.alignItems = "center";
           c1.id = "col_checkbox_" + activity.id;
+          c1.style.marginTop = "0.7vh";
 
           const c2 = document.createElement("div");
+          c2.style.alignItems = "center";
           c2.className = "col-9";
 
           var c3 = null;
@@ -927,12 +939,15 @@ async function createUlandSelectActivities(
               ? activity.name
               : activity.id;
           label.id = "label:" + activity.id;
+          label.style.fontSize = "1.3vh";
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.name = "activity";
           checkbox.value = activity.id;
           checkbox.id = "checkbox_" + activity.id;
+          checkbox.style.fontSize = "1.9vh";
+          checkbox.style.marginBottom = "0.2vh";
 
           if (activities_already_selected) {
             if (
@@ -1014,6 +1029,7 @@ async function createUlandSelectActivities(
         submitButton.className = "btn btn-light btn-sm";
         submitButton.textContent = "Submit";
         submitButton.style.width = "30%";
+        submitButton.style.fontSize = "1.5vh";
         submitButton.type = "submit";
         submitButton.id = "submit_" + dropDownID;
 

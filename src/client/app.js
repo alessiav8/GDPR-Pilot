@@ -1057,7 +1057,7 @@ function handleClickOnGdprButton() {
     divTitle.style.marginTop = "4vh";
     divTitle.style.marginBottom = "2vh";
     divTitle.style.fontWeight = "bold";
-    divTitle.style.fontSize = "2vh";
+    divTitle.style.fontSize = "1.5vh";
 
     divTitle.appendChild(textNode);
     survey_area.appendChild(divTitle);
@@ -1080,6 +1080,7 @@ function handleClickOnGdprButton() {
     const undo_button = document.createElement("button");
     undo_button.className = "btn btn-outline-danger";
     undo_button.textContent = "Undo everything";
+    undo_button.style.fontSize = "1.5vh";
 
     undo.appendChild(undo_button);
     survey_area.appendChild(undo);

@@ -11,22 +11,6 @@
   border-radius: 4px;
 }
 
-#settings_area {
-  cursor: pointer;
-  width: 97%;
-  padding: 8px 12px;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  text-align: center;
-  text-decoration: none;
-  margin-top: 1vh;
-  margin-left: 3vh;
-  margin-right: 3vh;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
-  gap: 10px;
-}
-
 .status_row {
   height: 3vh;
   font-size: 2vh;
@@ -41,6 +25,21 @@
   text-align: center;
   color: white;
   font-weight: bold;
+}
+#settings_area {
+  cursor: pointer;
+  width: 97%;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 1vh;
+  margin-left: 3vh;
+  margin-right: 3vh;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
+  gap: 10px;
 }
 
 .canvas-style {
