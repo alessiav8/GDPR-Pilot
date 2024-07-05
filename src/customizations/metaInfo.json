@@ -1,6 +1,6 @@
 {
   "name": "MetaInfoExtension",
-  "uri": "http://gdpr_architect/schema/bpmn/gdpr",
+  "uri": "http://example.com/schema/bpmn/custom",
   "prefix": "meta",
   "xml": {
     "tagAlias": "lowerCase"
