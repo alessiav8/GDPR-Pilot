@@ -1,6 +1,6 @@
 {
   "name": "MetaInfoExtension",
-  "uri": "http://example.com/schema/bpmn/custom",
+  "uri": "http://gdpr_architect/schema/bpmn/gdpr",
   "prefix": "meta",
   "xml": {
     "tagAlias": "lowerCase"
@@ -19,61 +19,61 @@
           "name": "questionA",
           "isAttr": true,
           "type": "String",
-          "value": "personal_data_handling_question"
+          "value": "Do you handle personal data in your process?"
         },
         {
           "name": "questionB",
           "isAttr": true,
           "type": "String",
-          "value": "consent_to_use_the_data_question"
+          "value": "Did you ask for consent before?"
         },
         {
           "name": "questionC",
           "isAttr": true,
           "type": "String",
-          "value": "access_to_data_question"
+          "value": "Do you allow users to access their data?"
         },
         {
           "name": "questionD",
           "isAttr": true,
           "type": "String",
-          "value": "data_portability_question"
+          "value": "Do you allow users to port their data?"
         },
         {
           "name": "questionE",
           "isAttr": true,
           "type": "String",
-          "value": "rectification_question"
+          "value": "Do you allow users to rectify their data?"
         },
         {
           "name": "questionF",
           "isAttr": true,
           "type": "String",
-          "value": "consent_to_data_processing_question"
+          "value": "Do you allow users to withdraw the consent?"
         },
         {
           "name": "questionG",
           "isAttr": true,
           "type": "String",
-          "value": "consent_to_automated_processing_question"
+          "value": "Do you allow users to access to object to automated processing?"
         },
         {
           "name": "questionH",
           "isAttr": true,
           "type": "String",
-          "value": "consent_to_data_processing_rectification_question"
+          "value": "Do you allow users to restrict processing on their data?"
         },
         {
           "name": "questionI",
           "isAttr": true,
           "type": "String",
-          "value": "right_to_be_forgotten_question"
+          "value": "Do you allow users to be forgotten"
         },
         {
           "name": "questionL",
           "isAttr": true,
           "type": "String",
-          "value": "right_to_be_informed_about_data_breach_question"
+          "value": "Do you allow users to be informed of data breaches occurred to their data?"
         }
       ]
     }
