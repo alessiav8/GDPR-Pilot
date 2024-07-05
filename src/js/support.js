@@ -22,6 +22,7 @@ import {
   callChatGpt,
   getXMLOfTheCurrentBpmn,
   fromXMLToText,
+  reSet,
 } from "./app.js";
 
 //GDPR compliance patterns
@@ -37,6 +38,8 @@ import right_to_be_informed_of_data_breaches from "../../resources/gdpr_complian
 //
 
 import loading from "../../resources/loading.gif";
+import gdprAchived from "../../resources/GDPR_achieved.png";
+import gdprImage from "../../resources/gdpr_gray.png";
 
 //close sideBarSurvey
 function closeSideBarSurvey() {
@@ -52,6 +55,7 @@ function closeSideBarSurvey() {
     mainColumn.style.width = "100%";
     survey_col.className = "sidebar-column";
   }
+  reSet();
 }
 //
 
@@ -492,6 +496,7 @@ async function createDropDown(
     button.style.backgroundColor = "white";
   } else {
     button.removeAttribute("data-bs-toggle");
+    button.style.backgroundColor = "#f0f0f0";
     button.style.border = "0.00002vh solid gray";
   }
 
@@ -517,7 +522,7 @@ async function createDropDown(
   const divQuestion = document.createElement("div");
   divQuestion.className = "container-centered";
   const question = questionText;
-  divQuestion.style.fontSize = "1.6vh";
+  divQuestion.style.fontSize = "1.4vh";
 
   const questionNode = document.createTextNode(question);
 
@@ -540,7 +545,7 @@ async function createDropDown(
   YesButton.className = "btn btn-light";
   YesButton.style.border = "0.01vh solid black";
   YesButton.textContent = "Yes";
-  YesButton.style.fontSize = "1.6vh";
+  YesButton.style.fontSize = "1.4vh";
 
   YesButton.id = "yes_" + id;
 
@@ -548,7 +553,7 @@ async function createDropDown(
   NoButton.className = "btn btn-light";
   NoButton.style.border = "0.01vh solid black";
   NoButton.textContent = "No";
-  NoButton.style.fontSize = "1.6vh";
+  NoButton.style.fontSize = "1.4vh";
 
   NoButton.id = "no_" + id;
 
@@ -764,13 +769,14 @@ async function createDropDown(
 //funtion to set the gdpr button as completed or remove the complete button
 export function setGdprButtonCompleted(isCompleted) {
   const gdpr_button = document.querySelector("#gdpr_compliant_button");
-  if (gdpr_button.style.backgroundColor != "rgb(44, 169, 18)" && isCompleted) {
-    gdpr_button.style.backgroundColor = "#2CA912";
-    gdpr_button.textContent = "GDPR compliance";
+  gdpr_button.style.backgroundImage = `url(${gdprAchived})`;
+  if (
+    gdpr_button.style.backgroundImage != `url(${gdprAchived})` &&
+    isCompleted
+  ) {
+    gdpr_button.style.backgroundImage = `url(${gdprAchived})`;
   } else {
-    gdpr_button.style.border = "0.3vh solid #10ad74";
-    gdpr_button.textContent = "Ensure GDPR compliance";
-    gdpr_button.style.backgroundColor = "white";
+    gdpr_button.style.backgroundImage = `url(${gdprImage})`;
   }
 }
 //
@@ -887,7 +893,7 @@ async function createUlandSelectActivities(
     const Title = document.createTextNode(titleText);
     const divTitle = document.createElement("div");
     divTitle.className = "container-centered";
-    divTitle.style.fontSize = "1.6vh";
+    divTitle.style.fontSize = "1.4vh";
     divTitle.appendChild(Title);
 
     const divActivities = document.createElement("div");
@@ -907,7 +913,7 @@ async function createUlandSelectActivities(
         divActivities.style.justifyContent = "center";
         divActivities.style.fontWeight = "bold";
         divActivities.textContent = "No activities available";
-        divActivities.style.fontSize = "1.6vh";
+        divActivities.style.fontSize = "1.4vh";
       } else {
         const form = document.createElement("form");
 
@@ -1297,14 +1303,15 @@ export function displayDynamicPopUp(message) {
     alertDiv.style.bottom = "82%";
     alertDiv.style.zIndex = "1050";
     alertDiv.style.backgroundColor = "white";
-    alertDiv.style.border = "white";
+    alertDiv.style.border = "0.1vh solid black";
     alertDiv.style.color = "#10ad74";
+    alertDiv.style.fontSize = "1.6vh";
 
     alertDiv.innerHTML = `<center>
       <strong>${message}</strong>
       <hr>
-      <button type="button" class="btn btn-outline-success yes-btn">Yes</button>
-      <button type="button" class="btn btn-outline-danger no-btn">No</button>
+      <button type="button" style="font-size:1.4vh" class="btn btn-outline-success yes-btn">Yes</button>
+      <button type="button" style="font-size:1.4vh" class="btn btn-outline-danger no-btn">No</button>
     </center>`;
 
     alertContainer.appendChild(alertDiv);

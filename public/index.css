@@ -12,9 +12,9 @@ html {
   overflow-y: hidden;
 }
 #canvas {
-  height: 86vh !important;
+  height: 92vh !important;
   width: 97% !important;
-  background-color: #f0f0f0;
+  background-color: white !important;
   justify-content: center;
   align-items: center;
   margin: 1vh 3vh 0 3vh;
@@ -22,13 +22,14 @@ html {
 }
 
 .sidebar-open {
-  height: 86vh !important;
+  height: 92vh !important;
   width: 22.9% !important;
-  background-color: #f0f0f0;
+  background-color: white;
   justify-content: center;
   align-items: center;
   margin-top: 1vh !important;
-  border-radius: 4px;
+  border-radius: 6px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .status_row {
@@ -45,22 +46,24 @@ html {
 
 #settings_area {
   cursor: pointer;
-  width: 97% !important;
+  width: 20% !important;
+  position: absolute;
   height: 7vh;
-  padding: 8px 12px;
+  padding: 8px 8px;
   border-radius: 4px;
   background-color: #f0f0f0;
   text-align: center;
   text-decoration: none;
-  margin: 1vh 3vh;
+  margin: 86vh 5vh;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
-  gap: 10px;
+  gap: 1vh;
+  z-index: 10;
 }
 .canvas-style {
-  height: 86vh;
-  width: 98.4% !important;
-  background-color: #f0f0f0;
+  height: 92vh !important;
+  width: 97% !important;
+  background-color: white !important;
   display: block;
   justify-content: center;
   align-items: center;
@@ -123,10 +126,17 @@ html {
 }
 
 .label_button {
-  font-size: 1.5vh;
+  font-size: 1.2vh;
   display: none;
   position: absolute;
-  transform: translateY(-200%);
+  transform: translateY(-370%);
+}
+
+.label_button_gdpr {
+  font-size: 1.2vh;
+  display: none;
+  position: absolute;
+  transform: translateY(-350%), translateX(20%);
 }
 
 #export_button:hover + .label_button {
@@ -137,6 +147,9 @@ html {
   display: block;
 }
 
+#gdpr_compliant_button:hover + .label_button_gdpr {
+  display: block;
+}
 .popup {
   background-color: white;
   padding: 30px;
@@ -176,18 +189,23 @@ input[type="text"] {
   border-radius: 5px;
   cursor: pointer;
   transform: translate(60%, 50%);
-  font-size: 13px !important;
+  font-size: 1.5vh !important;
   margin-bottom: 1vh;
+  margin-left: 0vh;
 }
 
 .background-container {
-  position: absolute;
+  position: fixed; /* Cambiato da absolute a fixed */
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 112.5%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
+  display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 10000;
 }
 
 .close-btn {
@@ -228,7 +246,7 @@ input[type="text"] {
 .btn-completed {
   box-shadow: 0 0 0 2px #2ca912;
   border-radius: 1vh;
-  margin-top: 0.3vh;
+  margin-top: 0.1vh;
   background-color: white;
 }
 
@@ -302,4 +320,20 @@ input[type="checkbox"]:checked::before {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.button-icon {
+  width: 49%;
+  height: 49%;
+}
+
+.button-gdpr {
+  width: 95.5%;
+  height: 95.5%;
+
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+  border: 0.3vh solid #f0f0f0;
+  margin: 1 0 1 0;
 }

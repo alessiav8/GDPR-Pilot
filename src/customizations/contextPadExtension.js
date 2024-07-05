@@ -60,7 +60,7 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function (
     closeSideBarSurvey();
     handleSideBar(false);
     decolorEverySelected();
-    removeChatGPTTipFromAll();
+    //removeChatGPTTipFromAll();
 
     const settings_area = document.getElementById("settings_area");
     if (settings_area) {
@@ -122,6 +122,7 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function (
 
     back.style.display = "block";
     separator.style.display = "block";
+
     name.style.display = "block";
     name.innerHTML = title;
 

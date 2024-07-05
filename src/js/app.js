@@ -6,6 +6,8 @@ import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
 import NavigatedViewer from "bpmn-js/dist/bpmn-navigated-viewer.production.min.js";
 import BpmnAlignElements from "bpmn-js/lib/features/align-elements/BpmnAlignElements.js";
 import layoutProcess from "bpmn-auto-layout";
+import gridModule from "diagram-js-grid";
+
 import BpmnModdle from "bpmn-moddle";
 import BpmnModeler from "bpmn-js/lib/Modeler";
 import AlignElements from "diagram-js/lib/features/align-elements/AlignElements.js";
@@ -62,7 +64,13 @@ import {
 } from "./support.js";
 import axios from "axios";
 import zeebeModdleDescriptor from "zeebe-bpmn-moddle/resources/zeebe";
+import gdprImage from "../../resources/gdpr_gray.png";
+
+document.getElementById(
+  "gdpr_compliant_button"
+).style.backgroundImage = `url(${gdprImage})`;
 const zeebeModdle = require("zeebe-bpmn-moddle/resources/zeebe.json");
+
 var MetaPackage = require("../customizations/metaInfo.json");
 
 var moddle = new BpmnModdle({ camunda: camundaModdle });
@@ -76,7 +84,12 @@ var viewer = new BpmnJS({
     meta: MetaPackage,
     zeebe: zeebeModdleDescriptor,
   },
-  additionalModules: [disableModeling, confirmForGDPRPath, BpmnAlignElements],
+  additionalModules: [
+    disableModeling,
+    confirmForGDPRPath,
+    BpmnAlignElements,
+    gridModule,
+  ],
 });
 
 //statements
@@ -247,6 +260,10 @@ export async function callChatGpt(message) {
   return makeRequest();
 }
 
+export function reSet() {
+  viewer.get("canvas").zoom("fit-viewport");
+}
+
 //function to load the diagram through importXML
 //diagram: the xml of the diagram i want to import in the canvas
 async function loadDiagram(diagram) {
@@ -281,7 +298,7 @@ async function loadDiagram(diagram) {
         // changeID();
         checkMetaInfo();
         console.log("elementRegistry: ", elementRegistry);
-
+        localStorage.removeItem("activities_suggested");
         //this prevent the modification of the id when someone change the type of something
         eventBus.on("element.updateId", function (event) {
           event.preventDefault();
@@ -875,10 +892,12 @@ export_button.addEventListener("click", function () {
 
   var popup = document.createElement("div");
   popup.classList.add("popup");
+  popup.style.justifyContent = "center";
 
   var what_is = document.createElement("div");
   what_is.innerHTML = "<strong>Insert a title for the diagram</strong>";
-  what_is.style.marginLeft = "20%";
+  what_is.style.fontSize = "2vh";
+  what_is.style.textAlign = "center";
 
   popup.appendChild(what_is);
 
@@ -886,14 +905,14 @@ export_button.addEventListener("click", function () {
   inputText.setAttribute("type", "text");
   inputText.setAttribute("placeholder", "Insert the title");
   inputText.setAttribute("value", "Diagram");
-  inputText.style.marginTop = "1.8vh";
+  inputText.style.marginTop = "1.5vh";
+  inputText.style.fontSize = "1.4vh";
 
   popup.appendChild(inputText);
 
   var confirmBtn = document.createElement("button");
   confirmBtn.classList.add("btn-popup");
   confirmBtn.style.backgroundColor = "#10ad74";
-  confirmBtn.style.textSize = "1vh";
   confirmBtn.textContent = "Confirm and export";
 
   popup.appendChild(confirmBtn);
@@ -924,6 +943,7 @@ export_button.addEventListener("click", function () {
     container.removeChild(background_container);
   });
 });
+
 //part where i actually generate the xml file
 function exportDiagram(title) {
   viewer
@@ -1062,6 +1082,7 @@ function handleClickOnGdprButton() {
     divTitle.style.marginBottom = "2vh";
     divTitle.style.fontWeight = "bold";
     divTitle.style.fontSize = "2vh";
+    divTitle.style.color = "#10ad74";
 
     divTitle.appendChild(textNode);
     survey_area.appendChild(divTitle);
