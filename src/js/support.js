@@ -50,7 +50,9 @@ function closeSideBarSurvey() {
   if (survey_col && survey_area) {
     survey_col.removeChild(document.getElementById("survey_area"));
     mainColumn.style.width = "100%";
-    survey_col.className = "sidebar-column";
+    sidebarColumn.style.width = "0%";
+    sidebarColumn.style.height = "0%";
+    sidebarColumn.style.marginTop = "0vh";
   }
 }
 //
@@ -1260,7 +1262,7 @@ export function displayDynamicAlert(message, type, time) {
   if (type != "danger") {
     alertDiv.style.color = "#10ad74";
     alertDiv.style.backgroundColor = "white";
-    alertDiv.style.border = "0.1vh solid black";
+    alertDiv.style.border = "1vh solid white";
   }
 
   alertDiv.innerHTML = `

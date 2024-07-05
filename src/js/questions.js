@@ -38,7 +38,6 @@ import right_to_restrict_processing from "../../resources/gdpr_compliance_patter
 import right_to_be_forgotten from "../../resources/gdpr_compliance_patterns/right_to_be_forgotten.bpmn";
 import right_to_be_informed_of_data_breaches from "../../resources/gdpr_compliance_patterns/data_breach.bpmn";
 //
-
 //----------------------------START YES HANDLER------------------------------------
 //handle click yes for question A
 export async function yesdropDownA() {

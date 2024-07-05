@@ -5,7 +5,6 @@ import "bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css";
 import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
 import NavigatedViewer from "bpmn-js/dist/bpmn-navigated-viewer.production.min.js";
 import BpmnAlignElements from "bpmn-js/lib/features/align-elements/BpmnAlignElements.js";
-import layoutProcess from "bpmn-auto-layout";
 import BpmnModdle from "bpmn-moddle";
 import BpmnModeler from "bpmn-js/lib/Modeler";
 import AlignElements from "diagram-js/lib/features/align-elements/AlignElements.js";
@@ -1027,9 +1026,12 @@ function handleClickOnGdprButton() {
   if (!document.getElementById("survey_area")) {
     // Aggiorna le larghezze delle colonne
     mainColumn.style.width = "74.8%";
-    sidebarColumn.className = "sidebar-open";
+    sidebarColumn.style.width = "23.8%";
+    sidebarColumn.style.marginLeft = "0.5%";
 
-    //sidebarColumn.style.width = (canvas.clientWidth * 20) / 100;
+    sidebarColumn.style.height = canvas.clientHeight + "px";
+    sidebarColumn.style.marginTop = "1vh";
+    sidebarColumn.style.borderRadius = "4px";
 
     //start survey area handler
     const survey_area = document.createElement("div");
@@ -1061,7 +1063,7 @@ function handleClickOnGdprButton() {
     divTitle.style.marginTop = "4vh";
     divTitle.style.marginBottom = "2vh";
     divTitle.style.fontWeight = "bold";
-    divTitle.style.fontSize = "2vh";
+    divTitle.style.fontSize = "1.5vh";
 
     divTitle.appendChild(textNode);
     survey_area.appendChild(divTitle);
@@ -1077,7 +1079,7 @@ function handleClickOnGdprButton() {
     undo.className = "row";
     undo.style.position = "absolute";
     undo.style.bottom = "0";
-    undo.style.marginBottom = "20vh";
+    undo.style.marginBottom = "10vh";
     undo.style.display = "flex";
     undo.style.alignItems = "center";
 

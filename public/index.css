@@ -1,33 +1,11 @@
-* {
-  box-sizing: border-box;
-}
-
-body,
-html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow-x: hidden;
-  overflow-y: hidden;
-}
 #canvas {
-  height: 86vh !important;
-  width: 97% !important;
+  height: 86vh;
+  width: 98.4% !important;
   background-color: #f0f0f0;
+  display: block;
   justify-content: center;
   align-items: center;
   margin: 1vh 3vh 0 3vh;
-  border-radius: 4px;
-}
-
-.sidebar-open {
-  height: 86vh !important;
-  width: 22.9% !important;
-  background-color: #f0f0f0;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1vh !important;
   border-radius: 4px;
 }
 
