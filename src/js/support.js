@@ -41,6 +41,15 @@ import loading from "../../resources/loading.gif";
 import gdprAchived from "../../resources/GDPR_achieved.png";
 import gdprImage from "../../resources/gdpr_gray.png";
 
+const questionButton = document.getElementById("questionButton");
+questionButton.addEventListener("click", function () {
+  displayDynamicAlert(
+    "If you are in Edit Mode, you can freely edit the diagram. However, when you are in GDPR Mode, you cannot edit the diagram. To edit it again, you must close the GDPR panel.",
+    "gdpr",
+    8000
+  );
+});
+
 //close sideBarSurvey
 function closeSideBarSurvey() {
   const mainColumn = document.querySelector(".main-column");
@@ -1262,15 +1271,22 @@ export function displayDynamicAlert(message, type, time) {
   const alertContainer = document.getElementById("alertContainer");
   const alertDiv = document.createElement("div");
   alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+
   alertDiv.setAttribute("role", "alert");
-  if (type != "danger") {
+  var start = " <strong>Important!</strong>";
+  if (type != "danger" && type != "warning") {
     alertDiv.style.color = "#10ad74";
     alertDiv.style.backgroundColor = "white";
-    alertDiv.style.border = "0.1vh solid black";
+    alertDiv.style.border = "0.1vh solid white";
+    start = "";
+    alertDiv.style.boxShadow =
+      "0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1)";
   }
 
-  alertDiv.innerHTML = `
-        <strong>Important!</strong> ${message}
+  alertDiv.innerHTML =
+    start +
+    `
+         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
   const closeButton = alertDiv.querySelector(".btn-close");
@@ -1299,19 +1315,26 @@ export function displayDynamicPopUp(message) {
     alertDiv.style.position = "fixed";
     alertDiv.style.right = "50vh";
     alertDiv.style.left = "50vh";
-    alertDiv.style.width = "50%";
+    alertDiv.style.width = "40%";
+    alertDiv.style.left = "30%";
+
     alertDiv.style.bottom = "82%";
     alertDiv.style.zIndex = "1050";
     alertDiv.style.backgroundColor = "white";
-    alertDiv.style.border = "0.1vh solid black";
+    alertDiv.style.border = "0.1vh solid white";
     alertDiv.style.color = "#10ad74";
     alertDiv.style.fontSize = "1.6vh";
+    alertDiv.style.boxShadow =
+      "0 4px 8px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.1)";
 
     alertDiv.innerHTML = `<center>
       <strong>${message}</strong>
       <hr>
-      <button type="button" style="font-size:1.4vh" class="btn btn-outline-success yes-btn">Yes</button>
-      <button type="button" style="font-size:1.4vh" class="btn btn-outline-danger no-btn">No</button>
+      <div class="row">
+      <div class="col">
+      <button type="button" class="yes-btn">Yes</button></div>
+      <div class="col">
+      <button type="button" class="no-btn">No</button></div></div>
     </center>`;
 
     alertContainer.appendChild(alertDiv);

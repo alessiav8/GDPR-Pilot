@@ -47,15 +47,17 @@
         "
       ></div>
       <div class="row" style="height: 100vh">
-        <div class="col" style="margin-right: 10vh">
-          <div id="mode">Edit Mode</div>
+        <div class="col-9" style="margin-left: 13%" id="mode">Edit Mode</div>
+        <div class="col-1" style="margin-left: 3.5%">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
+            width="2vh"
+            height="2vh"
             fill="currentColor"
             class="bi bi-question-circle"
+            style="margin-bottom: 2%; cursor: pointer"
             viewBox="0 0 16 16"
+            id="questionButton"
           >
             <path
               d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"
@@ -98,9 +100,11 @@
         <!-- settings area for the functions: export, import, check GDPR -->
         <div class="row" id="settings_area">
           <!-- import -->
-          <div class="col">
+          <div class="col-setting">
             <div id="import_button">
               <svg
+                width="1920px"
+                height="1080px"
                 fill="#555555"
                 class="button-icon"
                 viewBox="0 0 1024 1024"
@@ -116,9 +120,11 @@
           </div>
           <!-- end import -->
           <!-- export -->
-          <div class="col">
+          <div class="col-setting">
             <div id="export_button">
               <svg
+                width="1920px"
+                height="1080px"
                 class="button-icon"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -143,17 +149,41 @@
             <div class="label_button" id="label_export_button">Export</div>
           </div>
           <!-- end export -->
+        </div>
 
+        <div class="row" id="settings_area_gdpr">
           <!-- GDPR compliant -->
-          <div class="col">
+          <div class="col-setting">
             <button id="gdpr_compliant_button" class="button-gdpr"></button>
             <div class="label_button_gdpr" id="label_gdpr_compliance_button">
               Ensure GDPR compliance
             </div>
           </div>
-
           <!-- end GDPR compliant -->
+          <div class="col-setting">
+            <svg
+              id="undo_button"
+              xmlns="http://www.w3.org/2000/svg"
+              width="1901px"
+              height="1070px"
+              fill="#555555"
+              class="button-icon bi bi-arrow-counterclockwise"
+              viewBox="0 0 16 16"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"
+              />
+              <path
+                d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"
+              />
+            </svg>
+            <div class="label_button_undo_gdpr" id="label_button_undo_gdpr">
+              Reset GDPR Changes
+            </div>
+          </div>
         </div>
+
         <!-- end settings area -->
       </div>
     </div>

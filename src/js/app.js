@@ -196,6 +196,9 @@ const GatewayTypes = [
   "bpmn:ComplexGateway",
   "bpmn:EventBasedGateway",
 ];
+const undo_button = document.getElementById("undo_button");
+undo_button.addEventListener("click", handleUndoGdpr);
+
 //
 
 //this function returns true to me if there is an extended element that has a meta tag in it
@@ -1091,7 +1094,7 @@ function handleClickOnGdprButton() {
     areaDropDowns.className = "container";
     areaDropDowns.id = "areaDropDowns";
     areaDropDowns.style.overflow = "auto";
-    areaDropDowns.style.maxHeight = "65vh";
+    areaDropDowns.style.maxHeight = "75vh";
     survey_area.appendChild(areaDropDowns);
 
     const undo = document.createElement("div");
@@ -1102,7 +1105,7 @@ function handleClickOnGdprButton() {
     undo.style.display = "flex";
     undo.style.alignItems = "center";
 
-    const undo_button = document.createElement("button");
+    /* const undo_button = document.createElement("button");
     undo_button.className = "btn btn-outline-danger";
     undo_button.textContent = "Undo everything";
     undo_button.style.fontSize = "1.5vh";
@@ -1113,7 +1116,7 @@ function handleClickOnGdprButton() {
     const areaWidth = survey_area.offsetWidth;
     const leftValue = areaWidth / 2 - undo_button.offsetWidth / 2;
     undo.style.marginLeft = `${leftValue}px`;
-    undo_button.addEventListener("click", handleUndoGdpr);
+    undo_button.addEventListener("click", handleUndoGdpr);*/
     checkQuestion();
   }
 }
@@ -1182,6 +1185,7 @@ function handleUndoGdpr() {
 
 function undoProcedure() {
   setGdprButtonCompleted(false);
+  var hasBeenModified = false;
   getMetaInformationResponse().then((response) => {
     for (let question in response) {
       if (response[question] != null) {
@@ -1191,6 +1195,8 @@ function undoProcedure() {
             break;
           case "questionA":
             editMetaInfo("A", null);
+            hasBeenModified = true;
+            break;
           case "questionB":
             response[question].forEach((element) => {
               if (element.id != "response") {
@@ -1199,8 +1205,8 @@ function undoProcedure() {
               }
             });
             editMetaInfo("B", null);
+            hasBeenModified = true;
             break;
-
           case "questionC":
           case "questionD":
           case "questionE":
@@ -1213,6 +1219,7 @@ function undoProcedure() {
             deleteGdprPath(id);
             const letter = question[question.length - 1];
             editMetaInfo(letter, null);
+            hasBeenModified = true;
             break;
           default:
             break;
@@ -1223,7 +1230,7 @@ function undoProcedure() {
     if (group) {
       modeling.removeShape(group);
     }
-    reorderDiagram();
+    if (hasBeenModified) reorderDiagram();
     closeSideBarSurvey();
     handleSideBar(false);
     removeChatGPTTipFromAll();
