@@ -1063,7 +1063,7 @@ function handleClickOnGdprButton() {
     const close_survey = document.createElement("span");
     close_survey.classList.add("close-btn");
     close_survey.textContent = "X";
-    close_survey.style.marginTop = "2.5vh";
+    close_survey.style.marginTop = "1vh";
     close_survey.style.marginRight = "3.5vh";
 
     close_survey.addEventListener("click", () => {
@@ -1081,7 +1081,7 @@ function handleClickOnGdprButton() {
 
     const divTitle = document.createElement("div");
     divTitle.className = "container-centered";
-    divTitle.style.marginTop = "4vh";
+    divTitle.style.marginTop = "5vh";
     divTitle.style.marginBottom = "2vh";
     divTitle.style.fontWeight = "bold";
     divTitle.style.fontSize = "2vh";
