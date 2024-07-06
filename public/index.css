@@ -153,14 +153,14 @@ html {
   font-size: 1.2vh;
   display: none;
   position: absolute;
-  transform: translateY(-350%), translateX(20%);
+  transform: translateY(-150%);
 }
 
 .label_button_undo_gdpr {
   font-size: 1.2vh;
   display: none;
   position: absolute;
-  transform: translateY(-350%), translateX(20%);
+  transform: translateY(-150%);
 }
 
 #export_button:hover + .label_button {
@@ -376,15 +376,6 @@ input[type="checkbox"]:checked::before {
   margin: 0.2vh 0 0.2vh 0;
 }
 
-.label_button {
-  margin-top: 0vh;
-}
-.label_button_gdpr {
-  margin-top: 5vh;
-}
-.label_button_undo_gdpr {
-  margin-top: 5vh;
-}
 .col-setting {
   display: flex;
   flex-direction: column;
