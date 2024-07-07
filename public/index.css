@@ -71,7 +71,7 @@ html {
   background-color: #f0f0f0;
   text-align: center;
   text-decoration: none;
-  margin: 88vh 25vh 20vh;
+  margin: 88vh 27vh 20vh;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
   gap: 1vh;
