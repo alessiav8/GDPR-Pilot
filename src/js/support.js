@@ -777,16 +777,16 @@ async function createDropDown(
 
 //funtion to set the gdpr button as completed or remove the complete button
 export function setGdprButtonCompleted(isCompleted) {
-  const gdpr_button = document.querySelector("#gdpr_compliant_button");
+  /*const gdpr_button = document.querySelector("#gdpr_compliant_button");
   gdpr_button.style.backgroundImage = `url(${gdprAchived})`;
   if (
     gdpr_button.style.backgroundImage != `url(${gdprAchived})` &&
     isCompleted
   ) {
-    gdpr_button.style.backgroundImage = `url(${gdprAchived})`;
+    //gdpr_button.style.backgroundImage = `url(${gdprAchived})`;
   } else {
     gdpr_button.style.backgroundImage = `url(${gdprImage})`;
-  }
+  }*/
 }
 //
 
