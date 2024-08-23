@@ -63,8 +63,10 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function (
     //removeChatGPTTipFromAll();
 
     const settings_area = document.getElementById("settings_area");
-    if (settings_area) {
-      settings_area.style.display = "none";
+    const settings_area_gdpr = document.getElementById("settings_area_gdpr");
+    if (settings_area && settings_area_gdpr) {
+      settings_area.style.visibility = "hidden";
+      settings_area_gdpr.style.visibility = "hidden";
       const canvas = document.getElementById("canvas");
       if (canvas) canvas.style.height = "95vh";
       const mode = document.getElementById("mode");
@@ -133,7 +135,9 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function (
       second.detach();
       viewer.attachTo("#canvas");
       if (settings_area) {
-        settings_area.style.display = "flex";
+        settings_area.style.visibility = "visible";
+        settings_area_gdpr.style.visibility = "visible";
+
         if (canvas) canvas.style.height = "86vh";
         if (mode) mode.innerHTML = "Edit Mode";
       }

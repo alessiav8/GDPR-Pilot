@@ -3294,6 +3294,7 @@ export async function fromXMLToText(xml) {
         : subset.id;
       var childToIterate = subset.children;
       childToIterate = childToIterate.filter(
+        //filtro gli elementi in modo che ci siano solo quelli che mi interessano per la descriione logica
         (item) =>
           item.type != "bpmn:DataInputAssociatio" &&
           item.type != "bpmn:DataStoreReference" &&

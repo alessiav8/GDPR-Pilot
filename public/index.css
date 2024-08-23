@@ -44,39 +44,6 @@ html {
   font-weight: bold;
 }
 
-#settings_area {
-  cursor: pointer;
-  width: 10% !important;
-  position: absolute;
-  height: 6vh;
-  padding: 8px 8px;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  text-align: center;
-  text-decoration: none;
-  margin: 88vh 5vh;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
-  gap: 1vh;
-  z-index: 10;
-}
-
-#settings_area_gdpr {
-  cursor: pointer;
-  width: 10% !important;
-  position: absolute;
-  height: 6vh;
-  padding: 8px 8px;
-  border-radius: 4px;
-  background-color: #f0f0f0;
-  text-align: center;
-  text-decoration: none;
-  margin: 88vh 27vh 20vh;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(1vh, 0.5fr));
-  gap: 1vh;
-  z-index: 10;
-}
 .canvas-style {
   height: 92vh !important;
   width: 97% !important;
@@ -359,25 +326,66 @@ input[type="checkbox"]:checked::before {
   flex-direction: column;
   align-items: center;
 }
+.col-setting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 .button-icon {
-  width: 100%;
-  height: 100%;
-  margin: 0.2vh 0 0.2vh 0;
+  width: 90%;
+  height: 90%;
+  min-width: 90% !important;
+  min-height: 90% !important;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .button-gdpr {
   width: 100%;
   height: 100%;
+  min-width: 60% !important;
+  min-height: 60% !important;
   background-repeat: no-repeat;
   background-position: center center;
   background-size: contain;
   border: 0.3vh solid #f0f0f0;
-  margin: 0.2vh 0 0.2vh 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.col-setting {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+#settings_area,
+#settings_area_gdpr {
+  cursor: pointer;
+  width: 10%;
+  min-height: 40px;
+  min-width: 100px;
+  position: absolute;
+  height: 6vh;
+  padding: 0.6% 0.6%;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  text-align: center;
+  text-decoration: none;
+  margin: 88vh 5vh 20vh;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(40px, 0.5fr));
+  gap: 1vh;
+  z-index: 10;
+}
+
+#settings_area_gdpr {
+  margin: 88vh 27vh;
+  grid-template-columns: repeat(auto-fit, minmax(40px, 0.5fr));
+  margin-left: clamp(170px, 27vh, 20vh);
+}
+
+#settings_area {
+  padding: 1vh;
+  margin-right: clamp(170px, 88vh, 88vh);
 }
