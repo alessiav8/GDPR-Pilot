@@ -41,7 +41,13 @@ import right_to_be_informed_of_data_breaches from "../../resources/gdpr_complian
 //
 
 import diagram_to_test_text_generation from "../../resources/diagram_to_test_text_generation.bpmn";
-import diagram_goal_to_achieve from "../../resources/diagram_goal_to_achieve.bpmn";
+import diagram_goal_to_achieve from "../../resources/test_diagrams/Diagram_goal_to_achieve.bpmn";
+import diagram_job_applications from "../../resources/test_diagrams/jobApplication_diagram.bpmn";
+import diagram_student_process from "../../resources/test_diagrams/student_diagram.bpmn";
+import diagram_containers from "../../resources/test_diagrams/container_diagram.bpmn";
+import diagram_access_management from "../../resources/test_diagrams/access_management_process.bpmn";
+import diagram_phone_version_two from "../../resources/test_diagrams/demand_phone_company.bpmn";
+
 import {
   yesdropDownA,
   nodropDownA,
@@ -222,7 +228,7 @@ function getExtension(element, type) {
 
 //function that loads the first diagram displayed at every load
 document.addEventListener("DOMContentLoaded", async function () {
-  await loadDiagram(diagram_goal_to_achieve);
+  await loadDiagram(diagram_student_process);
   localStorage.setItem("popUpVisualized", false);
 });
 // end function to load the first diagram
@@ -1039,7 +1045,7 @@ export function cleanSelection() {
 
 //function to handle the click of the gdpr button ---> open side bar
 function handleClickOnGdprButton() {
-  viewer.get("canvas").zoom("fit-viewport");
+  viewer.get("canvas").zoom(0.5);
   handleSideBar(true);
   cleanSelection();
   const mainColumn = document.querySelector(".main-column");
@@ -1067,11 +1073,7 @@ function handleClickOnGdprButton() {
     close_survey.style.marginRight = "3.5vh";
 
     close_survey.addEventListener("click", () => {
-      closeSideBarSurvey();
-      handleSideBar(false);
-      decolorEverySelected();
-      removeChatGPTTipFromAll();
-      localStorage.setItem("isOpenB", false);
+      handleCloseOnGdprPanel();
     });
 
     survey_area.appendChild(close_survey);
@@ -1121,6 +1123,14 @@ function handleClickOnGdprButton() {
   }
 }
 //
+
+function handleCloseOnGdprPanel() {
+  closeSideBarSurvey();
+  handleSideBar(false);
+  decolorEverySelected();
+  removeChatGPTTipFromAll();
+  localStorage.setItem("isOpenB", false);
+}
 
 async function startPrediction() {
   try {
@@ -1177,6 +1187,7 @@ function handleUndoGdpr() {
   displayDynamicPopUp("Are you sure?").then((conferma) => {
     if (conferma) {
       undoProcedure();
+      handleCloseOnGdprPanel();
     }
     decolorEverySelected();
   });
@@ -2497,12 +2508,15 @@ export function createAGroup() {
   if (parentRoot.type == "bpmn:Collaboration") {
     //se c'è una collaborazione e quindi lo devo andare ad inserire all'interno di una partecipazione
     parentRoot = getParticipantFromCollaboration(parentRoot);
+    console.log("parentRoot: ", parentRoot, parentRoot.x, parentRoot.y);
     oldP = {
       x: parentRoot.x - 500,
       y: parentRoot.y,
       width: parentRoot.width + 500,
       height: parentRoot.height + 200,
     };
+    console.log("oldP: ", oldP);
+
     //mi salvo le coordinate della partecipazione
   }
 
@@ -2511,6 +2525,9 @@ export function createAGroup() {
   if (start != null) {
     var x = 0;
     var y = start.y - 400;
+  } else {
+    var x = 0;
+    var y = 0;
   }
 
   if (oldP) {
@@ -2536,7 +2553,8 @@ export function createAGroup() {
     if (oldP != null) {
       modeling.resizeShape(parentRoot, oldP);
     }
-    modeling.createShape(groupShape, { x: x, y: y }, parentRoot);
+    modeling.createShape(groupShape, { x: 50, y: 0 }, parentRoot);
+    console.log("coord group", x, y);
   } catch (error) {
     console.error("error in creating/resizing group");
   }
