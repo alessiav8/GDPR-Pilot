@@ -84,6 +84,11 @@ const moddle_2 = new BpmnModdle({ zeebe: zeebeModdle });
 const second_viewer = new BpmnModeler({});
 var secondViewerOnly = new NavigatedViewer({});
 
+//initialization of the principal viewer
+//three different viewer were used
+//the primary viewer
+//one for the process inside each pattern (only viewable)
+//one to put inside the call activities the reference of the process
 var viewer = new BpmnJS({
   container: "#canvas",
   moddleExtensions: {
@@ -202,10 +207,9 @@ const GatewayTypes = [
   "bpmn:ComplexGateway",
   "bpmn:EventBasedGateway",
 ];
+
 const undo_button = document.getElementById("undo_button");
 undo_button.addEventListener("click", handleUndoGdpr);
-
-//
 
 //this function returns true to me if there is an extended element that has a meta tag in it
 function getExtension(element, type) {
@@ -237,7 +241,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 //message:the message i want to send to chatGPT
 export async function callChatGpt(message) {
   const url = "http://localhost:3000/api/call_chat_gpt";
-
   const makeRequest = async (retryCount = 0) => {
     try {
       const response = await axios.get(url, {
@@ -256,11 +259,21 @@ export async function callChatGpt(message) {
         // Rate limit error
         const retryAfter = error.response.headers["retry-after-ms"] || 3000; // Default to 3 seconds if not provided
         console.log(`Rate limit exceeded. Retrying after ${retryAfter}ms`);
+        displayDynamicAlert(
+          "Something went wrong with the LLM predictions. Please try again later.",
+          "danger",
+          3000
+        );
         await new Promise((resolve) => setTimeout(resolve, retryAfter));
         return makeRequest(retryCount + 1);
       } else {
         // Other errors or max retries exceeded
         console.error("There was a problem with the request:", error);
+        displayDynamicAlert(
+          "Something went wrong with the LLM predictions. Please try again later.",
+          "danger",
+          3000
+        );
         throw error;
       }
     }
@@ -472,6 +485,46 @@ async function loadDiagram(diagram) {
           }
         );
 
+        eventBus.on("commandStack.elements.move.preExecute", function (event) {
+          console.log("CHANBED", event);
+          var context = event.context;
+          var delta = context.delta;
+          var shapes = context.shapes;
+          shapes.forEach((shape) => {
+            console.log("SHAPe", shape);
+            var outgoings = shape.outgoing;
+            var messages =
+              outgoings && outgoings.length > 0
+                ? outgoings.filter(
+                    (outgoing) => outgoing.type === "bpmn:MessageFlow"
+                  )
+                : [];
+            console.log("messages", messages);
+            messages.forEach((message) => {
+              var waypoints = message.waypoints; //il primo è da dove parte, il secondo è dove arriva
+              console.log(waypoints, "waypoints");
+
+              modeling.reconnectStart(message, shape, {
+                x: shape.x + shape.width / 2,
+                y: shape.y + shape.height / 2,
+              });
+            });
+
+            var messagesIn = shape.ingoing
+              ? shape.ingoing.filter(
+                  (message) => message.type === "bpmn:MessageFlow"
+                )
+              : [];
+
+            messagesIn.forEach((message) => {
+              modeling.reconnectEnd(message, shape, {
+                x: shape.x + shape.width / 2,
+                y: shape.y + shape.height / 2,
+              });
+            });
+          });
+        });
+
         eventBus.on("element.changed", function (event) {
           const element = event.element; //sequence flow element
           if (element && element.type === "bpmn:SequenceFlow") {
@@ -576,6 +629,30 @@ async function loadDiagram(diagram) {
   }
 }
 //end function to load the diagram
+
+//function to reorder the messages flows
+function reorderMessages() {
+  var elementRegistry = viewer.get("elementRegistry");
+  var messages = elementRegistry
+    .getAll()
+    .filter((item) => item.type == "bpmn:MessageFlow");
+  messages.forEach((message) => {
+    var source = message.source;
+    var target = message.target;
+    if (source && target) {
+      modeling.reconnectEnd(message, target, {
+        x: target.x + target.width / 2,
+        y: target.y + target.height / 2,
+      });
+
+      modeling.reconnectStart(message, source, {
+        x: source.x + source.width / 2,
+        y: source.y + source.height / 2,
+      });
+    }
+  });
+}
+//
 
 async function handleClick(event) {
   const elementClicked = event.element;
@@ -1045,7 +1122,6 @@ export function cleanSelection() {
 
 //function to handle the click of the gdpr button ---> open side bar
 function handleClickOnGdprButton() {
-  viewer.get("canvas").zoom(0.5);
   handleSideBar(true);
   cleanSelection();
   const mainColumn = document.querySelector(".main-column");
@@ -1121,6 +1197,7 @@ function handleClickOnGdprButton() {
     undo_button.addEventListener("click", handleUndoGdpr);*/
     checkQuestion();
   }
+  viewer.get("canvas").zoom("fit-viewport", "auto");
 }
 //
 
@@ -1715,6 +1792,7 @@ async function addActivityBetweenTwoElements(
     } else {
       reorderDiagram();
     }
+    reorderMessages();
   } catch (e) {
     console.error("Error in addBetween", e);
   }
@@ -2553,6 +2631,7 @@ export function createAGroup() {
     if (oldP != null) {
       modeling.resizeShape(parentRoot, oldP);
     }
+    //change in group position before was x,y
     modeling.createShape(groupShape, { x: 50, y: 0 }, parentRoot);
     console.log("coord group", x, y);
   } catch (error) {

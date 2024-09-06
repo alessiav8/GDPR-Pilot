@@ -374,7 +374,6 @@ input[type="checkbox"]:checked::before {
   text-decoration: none;
   margin: 88vh 5vh 20vh;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(40px, 0.5fr));
   gap: 1vh;
   z-index: 10;
 }
@@ -386,6 +385,12 @@ input[type="checkbox"]:checked::before {
 }
 
 #settings_area {
-  padding: 1vh;
   margin-right: clamp(170px, 88vh, 88vh);
+  grid-template-columns: repeat(auto-fit, minmax(35px, 0.5fr));
+  justify-content: center;
+  align-items: center;
+}
+
+#undo_button {
+  margin-top: 5%;
 }
