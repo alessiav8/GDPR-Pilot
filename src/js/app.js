@@ -486,12 +486,10 @@ async function loadDiagram(diagram) {
         );
 
         eventBus.on("commandStack.elements.move.preExecute", function (event) {
-          console.log("CHANBED", event);
           var context = event.context;
           var delta = context.delta;
           var shapes = context.shapes;
           shapes.forEach((shape) => {
-            console.log("SHAPe", shape);
             var outgoings = shape.outgoing;
             var messages =
               outgoings && outgoings.length > 0
@@ -499,11 +497,8 @@ async function loadDiagram(diagram) {
                     (outgoing) => outgoing.type === "bpmn:MessageFlow"
                   )
                 : [];
-            console.log("messages", messages);
             messages.forEach((message) => {
               var waypoints = message.waypoints; //il primo è da dove parte, il secondo è dove arriva
-              console.log(waypoints, "waypoints");
-
               modeling.reconnectStart(message, shape, {
                 x: shape.x + shape.width / 2,
                 y: shape.y + shape.height / 2,
@@ -3455,6 +3450,32 @@ export async function fromXMLToText(xml) {
       );
     }
   }
+
+  var content = await addNotes(content);
+  return content;
+}
+async function addNotes(content) {
+  try {
+    var setOfNotes = elementRegistry
+      .getAll()
+      .filter((item) => item.type == "bpmn:TextAnnotation");
+    for (const note of setOfNotes) {
+      var text = note.businessObject?.text || null;
+
+      var incoming = note.incoming || null;
+      var source = (incoming && incoming[0]?.source) || null;
+
+      if (incoming && source) {
+        content = await concatenateStringToBlob(
+          content,
+          `\n(A note was added to the element with ID: ${source.id} \nthe text in the note is: ${text})\n`
+        );
+      }
+    }
+  } catch (e) {
+    consol.log("Error in adding note", e);
+  }
+
   return content;
 }
 
