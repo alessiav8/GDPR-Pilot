@@ -232,7 +232,7 @@ function getExtension(element, type) {
 
 //function that loads the first diagram displayed at every load
 document.addEventListener("DOMContentLoaded", async function () {
-  await loadDiagram(diagram_student_process);
+  await loadDiagram(diagram);
   localStorage.setItem("popUpVisualized", false);
 });
 // end function to load the first diagram
@@ -327,6 +327,52 @@ async function loadDiagram(diagram) {
           return;
         });
         //
+
+        eventBus.on("drag.start", function (event) {
+          console.log("EVENT: ", event);
+          var context = event.context;
+          if (context.canStartConnect) {
+            var target = context.startTarget || null;
+            if (target) {
+              var id = target.businessObject.id;
+              var splitted = id.split("_");
+              if (
+                id.includes("consent") ||
+                id.includes("right") ||
+                splitted[0] == "consent" ||
+                splitted[0] == "right" ||
+                splitted[1] == "right"
+              ) {
+                displayDynamicAlert(
+                  "This action is not allowed",
+                  "danger",
+                  6000
+                );
+                event.preventDefault();
+                event.stopPropagation();
+              }
+            }
+          } else if (context.connectionStart) {
+            if (event.shape) {
+              var shape = event.shape;
+              var id = shape.id || null;
+              if (
+                id &&
+                (id.split("_")[0] == "consent" ||
+                  id.split("_")[0] == "right" ||
+                  id.split("_")[1] == "right")
+              ) {
+                displayDynamicAlert(
+                  "This action is not allowed",
+                  "danger",
+                  6000
+                );
+                event.preventDefault();
+                event.stopPropagation();
+              }
+            }
+          }
+        });
 
         //handle the remotion of a gdpr path
         viewer.on("shape.removed", function (event) {
@@ -437,25 +483,6 @@ async function loadDiagram(diagram) {
         });
         //
 
-        /* eventBus.on('connect.end', function(event) {
-                var context = event.context,
-                    source = context.source,
-                    hover = context.hover;
-                console.log("element",element,event)
-
-                    if (context && context.connection) {
-                      var connection = context.connection;
-                      if( (source.type=="bpmn:callActivity" || source.type=="bpmn:CallActivity" && gdprActivityQuestionsPrefix.some(item=> item== source.id.split('_')[0]) )
-                        || (hover.type=="bpmn:callActivity" || hover.type=="bpmn:CallActivity" && gdprActivityQuestionsPrefix.some(item=> item== hover.id.split('_')[0])) ){
-                          const compromise= confirm("In this way you are compromising the gdpr compliance. \n Are you sure you want to proceed? ");
-                          if(!compromise){
-                            modeling.removeConnection(connection);
-                          }
-                      }
-                    } else {
-                      console.log('Connessione non disponibile');
-                    }
-              });*/
         console.log("eventBus", eventBus);
 
         eventBus.on("element.click", handleClick);
@@ -1204,6 +1231,7 @@ function handleCloseOnGdprPanel() {
   localStorage.setItem("isOpenB", false);
 }
 
+//function to start the generation of the prediction (API call to OpenAI server)
 async function startPrediction() {
   try {
     const currentXML = await fromXMLToText();
@@ -1266,6 +1294,7 @@ function handleUndoGdpr() {
 }
 //
 
+//function started to remove every element inserted by the tool to achieve the gdpr compliance
 function undoProcedure() {
   setGdprButtonCompleted(false);
   var hasBeenModified = false;

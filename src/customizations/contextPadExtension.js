@@ -1,3 +1,5 @@
+//this file was used to personalize the context pad, to add the process for the GDPR compliance and to hide some not necessary components
+
 import { is } from "bpmn-js/lib/util/ModelUtil";
 
 import { assign } from "min-dash";
@@ -158,6 +160,7 @@ DisabledTypeChangeContextPadProvider.prototype.getContextPadEntries = function (
       delete entries["append.end-event"];
       delete entries["append.gateway"];
       delete entries["append.intermediate-event"];
+      delete entries["connect"];
 
       entries["open.new-page"] = {
         group: "connect",

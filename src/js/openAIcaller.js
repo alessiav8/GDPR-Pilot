@@ -1,3 +1,5 @@
+//file needed to generate the API call to OpenAI
+
 const express = require("express");
 const cors = require("cors");
 const app = express();

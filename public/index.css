@@ -343,6 +343,7 @@ input[type="checkbox"]:checked::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: clamp(2px, 0.01vh, 0.01vh);
 }
 
 .button-gdpr {
@@ -357,6 +358,7 @@ input[type="checkbox"]:checked::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: clamp(2px, 0.01vh, 0.01vh);
 }
 
 #settings_area,
@@ -381,7 +383,7 @@ input[type="checkbox"]:checked::before {
 #settings_area_gdpr {
   margin: 88vh 27vh;
   grid-template-columns: repeat(auto-fit, minmax(40px, 0.5fr));
-  margin-left: clamp(170px, 27vh, 20vh);
+  margin-left: clamp(180px, 27vh, 20vh);
 }
 
 #settings_area {

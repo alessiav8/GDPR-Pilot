@@ -298,17 +298,16 @@ async function predictionChatGPT(id) {
           break;
         case "dropDownD":
           const hasRightOfPortabilityReq = await callChatGpt(
-            "Consider to be a GDPR specialist that needs to understand the level of GDPR compliance of a process. The logical description of the process is this one" +
+            "Consider that you are a GDPR specialist analyzing the level of GDPR compliance of a process. The logical description of the process is as follows: " +
               description +
               ". This is the provided text description of the process: " +
               currentXML +
-              ".\n Objective: You have to understand if the process provided is compliant with the right to portability or not. By definition the Right of Portability is defined as follows: At any moment, the Data Subject (the person the data is about) can request the portability of the data associated with her to third parties, and the Data Controller (the entity that collects the data of the subject) has the obligation to satisfy this request.Right of Portability. When the Data Subject sends a request availing the right of portability, she needs to specify the third party at hand. The third party contacts the Data Controller which has to (i) retrieve all the data associated with the Data Subject, and (ii) retrieve any processing on the data that has been made. Then, they are both sent to a third party. Finally, the third party communicates to the Data Subject that the portability happened successfully. The design pattern in Fig. 6 implements the privacy constraint Right of Portability. \n In order to achieve this objective, follows this steps: " +
-              "\nStep1. Identify if there is an activity where the Data Subject requests the portability of her personal data to the Data Controller. The request must be initiated by the Data Subject and must arrive at the Data Controller check the exchanges of messages indicated in the textual description." +
-              "If this is the case, print just 'Yes' as the answer. " +
-              "an example of this behavior is " +
-              "{Participant: Data Controller <Activity name: Start process Type: StartEvent ID: Event_099wcs6 Exchange with other partecipations: no exchanges /> linked to: <Activity name: Ask for portability Type: IntermediateThrowEvent ID: Event_1mblmkr Exchange with other partecipations: Send a message to bpmn:ParticipantParticipant_1kasvod /> linked to: <Activity name: Answer received Type: IntermediateCatchEvent ID: Event_1788d8h Exchange with other partecipations: Receive a message from bpmn:ParticipantParticipant_1kasvod /> linked to: [Start Exclusive Gateway Gateway_1p0aatu (only one of the path can be taken) condition to check in order to proceed with the right path 'Was portability allowed?' different paths: Path of Gateway_1p0aatu taken if: 'yes' linked to <Activity name: Port data to a third party Type: SendTask ID: Activity_0pxfr9m Exchange with other partecipations: no exchanges /> linked to Gateway_0yoku9o Path of Gateway_1p0aatu taken if: 'no' linked to Gateway_0yoku9o End paths of ExclusiveGateway Gateway_1p0aatu ] [Closure Exclusive Gateway Gateway_0yoku9o] linked to: <Activity name: End process Type: EndEvent ID: Event_073kzrc Exchange with other partecipations: no exchanges /> End Participant: Data Controller} { Participant: Participant_1kasvod (empty pool) }" +
-              "\n If there aren't two different participants that can impersonate Data Subject and Data Controller, search for an activity which, from the name, suggests that it handles the user's right of portability, like 'Right to Portability handler' or  like‘Ask Portability’ those two are just examples . If you find it, print just 'Yes' as the answer; otherwise, print just 'No'. " +
-              "An example of another case in which you can print 'Yes' as the answer is when there is an activity requesting permission to port the data (data portability)\n. In every other case, or in case of insecurity, print 'No' as the answer. Provide a brief motivation for your answer."
+              ".\n Objective: Determine if the process is compliant with the right to data portability. According to the GDPR, the Right of Portability is defined as follows: The Data Subject (the person whose data is being processed) can, at any time, request that their personal data be transferred to a third party, and the Data Controller (the entity that collects the data) must comply with this request. The process typically involves retrieving all data associated with the Data Subject and any processing done on that data, and then sending it to the specified third party. Once the data transfer is completed, the third party must notify the Data Subject.\n To achieve this objective, follow these steps: " +
+              "\nStep 1. Look for an activity where the Data Subject requests the portability of their data to the Data Controller. The request must be initiated by the Data Subject and directed to the Data Controller. Check the message exchanges described in the process. If such a request exists, make a note of it." +
+              "\nStep 2. If there are no participants acting as both the Data Subject and Data Controller, look for an activity that explicitly refers to handling the right of portability, such as 'Right to Portability handler' or 'Ask Portability.' If you find such an activity, make a note of it." +
+              "\nStep 3. If portability is mentioned but there is no specific activity handling it (e.g., no activity named 'portability' or similar), or if there is ambiguity about whether the process handles it, make a note of this as well." +
+              "\nStep 4. Summarize the findings from the above steps and produce a final answer: 'Yes' if the process clearly handles the right to portability, or 'No' if it does not or if it is unclear. Additionally, provide a brief explanation justifying the answer." +
+              "\nIf portability is not mentioned or implied in any way, the final answer should be 'Yes'."
           );
 
           const hasRightOfPortability = hasRightOfPortabilityReq.content;
@@ -1078,7 +1077,14 @@ async function createUlandSelectActivities(
           try {
             // Get the setted activity
             const callSelected = await getSettedActivity("questionB");
-
+            console.log(
+              "callSelected",
+              callSelected,
+              "\n",
+              "selectedActivity ",
+              selectedActivities,
+              "\n"
+            );
             if (callSelected.length > 0) {
               // Remove consent from activities not selected
               callSelected.forEach((element) => {
