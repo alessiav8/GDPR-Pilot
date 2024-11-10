@@ -329,7 +329,6 @@ async function loadDiagram(diagram) {
         //
 
         eventBus.on("drag.start", function (event) {
-          console.log("EVENT: ", event);
           var context = event.context;
           if (context.canStartConnect) {
             var target = context.startTarget || null;
