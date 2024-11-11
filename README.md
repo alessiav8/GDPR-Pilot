@@ -1,6 +1,23 @@
 # GDPR Pilot
 
-This repository contains the codebase for my Master's thesis in the Computer Science Engineering program at Sapienza University. The GDPR-Pilot tool extends BPMN.io, allowing users to create and edit process models. It asks ten questions to check if any parts of a process do not meet GDPR rules. If a problem is found, the tool automatically adds a predefined pattern to fix it. The tool also uses an LLM to generate helpful suggestions to guide users in answering the ten questions.
+This repository contains the codebase for my Master's thesis, developed as part of the Computer Science Engineering program at Sapienza University. The GDPR-Pilot tool is designed as an extension of BPMN.io, providing users with a robust platform for creating, editing, and refining business process models with an emphasis on GDPR (General Data Protection Regulation) compliance.
+
+To ensure processes adhere to GDPR regulations, the tool guides users through ten critical questions that assess compliance with various obligations. These questions cover key areas, such as whether personal data is being processed and whether obligations like obtaining consent, providing access, data portability, and the right to object are fulfilled. By addressing these obligations, the tool helps identify and mitigate potential non-compliance risks.
+
+The obligations evaluated include:
+
+Consent: Ensuring transparency and explicit consent from data subjects, with clear communication of their rights, such as withdrawing consent, accessing data, and data portability.
+Right to Access: Allowing data subjects to request and view all data and processing details related to them.
+Data Portability: Enabling data transfers to third parties upon request.
+Right to Rectification: Facilitating the correction of inaccurate data.
+Right to Object: Supporting objections to data usage, potentially halting dependent processes.
+Automated Processing: Providing human intervention when decisions are automated.
+Restriction of Processing: Securely restricting data upon request and notifying relevant parties.
+Right to Erasure (Right to be Forgotten): Deleting data when it is no longer needed or upon valid requests.
+Data Breach Notification: Ensuring timely communication of data breaches to affected individuals and authorities.
+
+If a compliance gap is detected, the tool automatically applies a predefined pattern to address it. Additionally, it leverages an LLM to offer suggestions, guiding users through the compliance process and helping them respond effectively to each question.
+This approach simplifies GDPR compliance within process modeling, ensuring clarity and ease of adherence for all users.
 
 ## Installation
 
